@@ -1,0 +1,148 @@
+<div class="auth-wrap">
+  <aside class="auth-aside">
+    <h2>Qeydiyyatdan keçin</h2>
+    <p style="color:#cfe0f0">Bir dəfə qeydiyyatdan keçin — sonra bilet almaq 30 saniyə çəkir.</p>
+    <ul>
+      <li>Bütün biletləriniz bir hesabda</li>
+      <li>Sürətli ödəniş üçün yadda saxlanan məlumatlar</li>
+      <li>Endirim və kampaniyalardan xəbərdar olun</li>
+      <li>Elektron bilet (QR) — kağız lazım deyil</li>
+    </ul>
+  </aside>
+
+  <div class="auth-main">
+    <div class="auth-box">
+      <div class="auth-tabs">
+        <a href="/<%= locale %>/login">Daxil ol</a>
+        <a href="/<%= locale %>/qeydiyyat" class="is-active">Qeydiyyat</a>
+      </div>
+
+      <h1 style="font-size:1.6rem">Hesab yaradın</h1>
+      <p style="color:var(--ink-2)">Bütün xanalar * mütləqdir.</p>
+
+      <div class="alert alert--error" id="regError" style="display:none"></div>
+
+      <form id="registerForm">
+        <div class="form-row">
+          <div class="field" data-field>
+            <label>Ad *</label>
+            <input type="text" name="firstName" required />
+            <div class="field__error"></div>
+          </div>
+          <div class="field" data-field>
+            <label>Soyad *</label>
+            <input type="text" name="lastName" required />
+            <div class="field__error"></div>
+          </div>
+        </div>
+
+        <div class="field" data-field>
+          <label>E-poçt *</label>
+          <input type="email" name="email" placeholder="ad@salam.com" required />
+          <div class="field__error"></div>
+        </div>
+
+        <div class="field" data-field>
+          <label>Telefon *</label>
+          <input type="tel" name="phone" placeholder="+994 50 123 45 67" required />
+          <div class="field__error"></div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Sənədin növü</label>
+            <select name="docType">
+              <option value="fin">FİN kod</option>
+              <option value="id">Şəxsiyyət vəsiqəsi</option>
+              <option value="passport">Xarici pasport</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Sənədin nömrəsi</label>
+            <input type="text" name="docNumber" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field" data-field>
+            <label>Şifrə *</label>
+            <input type="password" name="password" placeholder="Ən azı 6 simvol" required />
+            <div class="field__error"></div>
+          </div>
+          <div class="field" data-field>
+            <label>Şifrənin təkrarı *</label>
+            <input type="password" name="passwordConfirm" required />
+            <div class="field__error"></div>
+          </div>
+        </div>
+
+        <label class="checkbox" style="margin-bottom:18px">
+          <input type="checkbox" name="newsOptIn" checked />
+          <span>Yeniliklər, endirimlər və cədvəl dəyişiklikləri barədə bildiriş almaq istəyirəm</span>
+        </label>
+
+        <label class="checkbox" style="margin-bottom:18px">
+          <input type="checkbox" name="terms" required />
+          <span><a href="/<%= locale %>/dasima-qaydalari" target="_blank">İstifadə şərtləri</a> və məxfilik siyasəti ilə razıyam</span>
+        </label>
+
+        <button type="submit" class="btn btn--primary btn--block btn--lg" id="regBtn">Qeydiyyatdan keç</button>
+      </form>
+
+      <p style="text-align:center;margin-top:20px;font-size:.9rem;color:var(--ink-2)">
+        Artıq hesabınız var? <a href="/<%= locale %>/login"><strong>Daxil olun</strong></a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var form = document.getElementById('registerForm');
+    var btn = document.getElementById('regBtn');
+    var errBox = document.getElementById('regError');
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      errBox.style.display = 'none';
+      form.querySelectorAll('[data-field]').forEach(function (f) { f.classList.remove('field--error'); });
+
+      var data = {
+        firstName: form.querySelector('[name=firstName]').value.trim(),
+        lastName: form.querySelector('[name=lastName]').value.trim(),
+        email: form.querySelector('[name=email]').value.trim(),
+        phone: form.querySelector('[name=phone]').value.trim(),
+        docType: form.querySelector('[name=docType]').value,
+        docNumber: form.querySelector('[name=docNumber]').value.trim(),
+        password: form.querySelector('[name=password]').value,
+        passwordConfirm: form.querySelector('[name=passwordConfirm]').value,
+        newsOptIn: form.querySelector('[name=newsOptIn]').checked
+      };
+
+      window.setLoading(btn, true);
+      var r = await window.api('/api/auth/register', data);
+      window.setLoading(btn, false);
+
+      if (r.ok) {
+        window.location.href = r.redirect;
+        return;
+      }
+      if (r.errors) {
+        Object.keys(r.errors).forEach(function (key) {
+          var input = form.querySelector('[name=' + key + ']');
+          if (input) {
+            var wrap = input.closest('[data-field]');
+            wrap.classList.add('field--error');
+            var err = wrap.querySelector('.field__error');
+            if (err) err.textContent = r.errors[key];
+          }
+        });
+        errBox.textContent = 'Zəhmət olmasa xanaları düzgün doldurun.';
+        errBox.style.display = 'block';
+      } else {
+        errBox.textContent = r.message || 'Qeydiyyat alınmadı';
+        errBox.style.display = 'block';
+      }
+    });
+  })();
+</script>

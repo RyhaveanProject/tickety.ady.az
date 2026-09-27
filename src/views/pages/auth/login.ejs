@@ -1,0 +1,84 @@
+<div class="auth-wrap">
+  <aside class="auth-aside">
+    <h2>Hesabınıza daxil olun</h2>
+    <p style="color:#cfe0f0">Biletlərinizi idarə edin, səfər tarixçənizi izləyin və balansınızı artırın.</p>
+    <ul>
+      <li>Biletləri bir yerdə saxla və QR kodla istifadə et</li>
+      <li>Səfər tarixçəsini və xərclərini izlə</li>
+      <li>Bileti onlayn qaytar</li>
+      <li>Balansla sürətli ödəniş</li>
+    </ul>
+  </aside>
+
+  <div class="auth-main">
+    <div class="auth-box">
+      <div class="auth-tabs">
+        <a href="/<%= locale %>/login" class="is-active">Daxil ol</a>
+        <a href="/<%= locale %>/qeydiyyat">Qeydiyyat</a>
+      </div>
+
+      <h1 style="font-size:1.6rem">Xoş gəlmisiniz</h1>
+      <p style="color:var(--ink-2)">Hesabınıza daxil olaraq bilet almağa davam edin.</p>
+
+      <div class="alert alert--error" id="loginError" style="display:none"></div>
+
+      <form id="loginForm">
+        <div class="field">
+          <label>E-poçt</label>
+          <input type="email" name="email" id="email" placeholder="ad@salam.com" autocomplete="email" required />
+        </div>
+        <div class="field">
+          <label>Şifrə</label>
+          <input type="password" name="password" id="password" placeholder="••••••••" autocomplete="current-password" required />
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+          <label class="checkbox" style="margin:0">
+            <input type="checkbox" name="remember" checked />
+            <span>Məni xatırla</span>
+          </label>
+          <a href="/<%= locale %>/sifre-berpa" style="font-size:.85rem">Şifrəni unutmusunuz?</a>
+        </div>
+        <button type="submit" class="btn btn--primary btn--block btn--lg" id="loginBtn">Daxil ol</button>
+      </form>
+
+      <div class="card" style="margin-top:22px;background:var(--bg);border-style:dashed">
+        <div class="card__body" style="padding:14px 16px;font-size:.83rem;color:var(--ink-2)">
+          <strong>Demo hesablar:</strong><br />
+          İstifadəçi: <code>user@ady.az</code> / <code>user123</code><br />
+          Admin: <code>admin@ady.az</code> / <code>admin123</code>
+        </div>
+      </div>
+
+      <p style="text-align:center;margin-top:20px;font-size:.9rem;color:var(--ink-2)">
+        Hesabınız yoxdur? <a href="/<%= locale %>/qeydiyyat"><strong>Qeydiyyatdan keçin</strong></a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var form = document.getElementById('loginForm');
+    var btn = document.getElementById('loginBtn');
+    var errBox = document.getElementById('loginError');
+    var next = '<%= next %>';
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      errBox.style.display = 'none';
+      window.setLoading(btn, true);
+      var r = await window.api('/api/auth/login', {
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+        remember: form.querySelector('[name=remember]').checked
+      });
+      window.setLoading(btn, false);
+      if (r.ok) {
+        window.location.href = next || r.redirect;
+      } else {
+        errBox.textContent = r.message || 'Daxil olmaq alınmadı';
+        errBox.style.display = 'block';
+      }
+    });
+  })();
+</script>
