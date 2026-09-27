@@ -1,0 +1,42 @@
+<section class="section">
+  <div class="container">
+    <div style="max-width:820px;margin:0 auto">
+      <div class="card mb-16"><div class="card__body text-center">
+        <div class="ico-box" style="margin:0 auto 14px;background:#e4f6ec">
+          <svg class="ico" viewBox="0 0 24 24" style="stroke:#0a7c4a"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+        <h1 style="font-size:1.5rem"><%= t('success.title') %></h1>
+        <p class="sec-note"><%= t('success.sub') %></p>
+        <div class="mono" style="font-size:1.3rem;font-weight:700;color:#00539b;letter-spacing:.14em"><%= order.pnr %></div>
+        <div class="sec-note"><%= t('success.pnr') %></div>
+      </div></div>
+
+      <% tickets.forEach(function(tk){ %>
+        <div class="card mb-16"><div class="card__body">
+          <div class="flex-between mb-16">
+            <div>
+              <h3 style="font-size:1.05rem"><%= order.trainNumber %> · <%= order.trainTitle %></h3>
+              <div class="sec-note"><%= order.fromName %> — <%= order.toName %> · <%= order.date %> · <%= order.departTime %></div>
+            </div>
+            <span class="badge badge--green"><%= t('status.confirmed') %></span>
+          </div>
+          <dl class="kv">
+            <dt><%= t('account.pnr') %></dt><dd class="mono"><%= tk.pnr %></dd>
+            <dt><%= t('checkout.passenger') %></dt><dd><%= tk.passengerName %></dd>
+            <dt><%= t('seats.wagon') %> / <%= t('seats.selected') %></dt><dd><%= tk.wagon %> / <%= tk.seat %></dd>
+            <dt><%= t('checkout.docType') %></dt><dd><%= tk.className %></dd>
+            <dt><%= t('common.price') %></dt><dd class="mono"><%= tk.price.toFixed(2) %> ₼</dd>
+          </dl>
+          <div class="flex-end mt-16 no-print">
+            <a href="/<%= locale %>/bilet/<%= tk._id %>/pdf" class="btn btn--primary btn--sm"><%= t('success.download') %></a>
+          </div>
+        </div></div>
+      <% }) %>
+
+      <div class="flex-end no-print">
+        <a href="/<%= locale %>/kabinet/biletler" class="btn btn--outline"><%= t('nav.myTickets') %></a>
+        <a href="/<%= locale %>/kabinet" class="btn btn--primary"><%= t('success.toAccount') %></a>
+      </div>
+    </div>
+  </div>
+</section>

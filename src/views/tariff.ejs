@@ -1,0 +1,22 @@
+<section class="section">
+  <div class="container">
+    <div class="section__head"><div><div class="eyebrow"><%= t('nav.tariffs') %></div><h1><%= t('nav.tariffs') %></h1></div></div>
+
+    <div class="layout-aside">
+      <aside class="admin-nav">
+        <% pages.forEach(function(p){ %>
+          <a href="/<%= locale %>/tarifler-ve-odenis/<%= p.slug %>"><span><%= p.title %></span></a>
+        <% }) %>
+      </aside>
+
+      <div>
+        <% pages.forEach(function(p){ %>
+          <div class="card mb-16"><div class="card__body">
+            <h2 style="font-size:1.2rem"><%= p.title %></h2>
+            <div style="color:#4a5b6b"><%- p.content %></div>
+          </div></div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</section>

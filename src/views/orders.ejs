@@ -1,0 +1,61 @@
+<section class="section">
+  <div class="container">
+    <div class="section__head"><div><div class="eyebrow"><%= t('nav.profile') %></div><h1><%= t('nav.myOrders') %></h1></div></div>
+
+    <div class="layout-aside">
+      <%- include('../partials/account-nav') %>
+
+      <div>
+        <% if (!orders.length) { %>
+          <div class="alert alert--info"><%= t('account.noOrders') %></div>
+        <% } %>
+
+        <% orders.forEach(function(o){ %>
+          <% var pay = payMap[String(o.payment)]; %>
+          <div class="card mb-16"><div class="card__body">
+            <div class="flex-between mb-16">
+              <div>
+                <h3 style="font-size:1.02rem"><%= o.orderNo %></h3>
+                <div class="sec-note"><%= o.trainNumber %> · <%= o.fromName %> — <%= o.toName %> · <%= o.date %> <%= o.departTime %></div>
+              </div>
+              <span class="badge badge--gray"><%= t('status.' + o.status) %></span>
+            </div>
+
+            <div class="table-wrap mb-16"><table class="data">
+              <thead><tr><th><%= t('checkout.passenger') %></th><th><%= t('seats.selected') %></th><th><%= t('checkout.docType') %></th><th><%= t('common.price') %></th></tr></thead>
+              <tbody>
+                <% o.passengers.forEach(function(p){ %>
+                  <tr>
+                    <td><%= [p.lastName, p.firstName].filter(Boolean).join(' ') %></td>
+                    <td><%= p.wagon %> / <%= p.seat %></td>
+                    <td><%= p.className %></td>
+                    <td class="mono"><%= p.price.toFixed(2) %> ₼</td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table></div>
+
+            <div class="flex-between">
+              <div class="sec-note">
+                <%= t('checkout.total') %>: <strong class="mono"><%= o.total.toFixed(2) %> ₼</strong>
+                <% if (pay) { %> · <%= pay.method === 'balance' ? t('payment.methodBalance') : t('payment.methodCard') %> <%= pay.card.masked %><% } %>
+              </div>
+              <div class="flex-end">
+                <% if (o.status === 'confirmed') { %>
+                  <a href="/<%= locale %>/ugur/<%= o._id %>" class="btn btn--primary btn--sm"><%= t('success.download') %></a>
+                <% } else if (['pending_payment'].indexOf(o.status) > -1) { %>
+                  <a href="/<%= locale %>/odenis/<%= o._id %>" class="btn btn--primary btn--sm"><%= t('payment.title') %></a>
+                <% } else if (['pending_admin', 'awaiting_verification', 'code_submitted'].indexOf(o.status) > -1) { %>
+                  <a href="/<%= locale %>/odenis-gozleme/<%= o._id %>" class="btn btn--outline btn--sm"><%= t('account.status') %></a>
+                <% } %>
+                <% if (['pending_payment', 'pending_admin', 'awaiting_verification', 'code_submitted'].indexOf(o.status) > -1) { %>
+                  <button class="btn btn--danger btn--sm" data-cancel-order="<%= o._id %>"><%= t('common.close') %></button>
+                <% } %>
+              </div>
+            </div>
+          </div></div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</section>

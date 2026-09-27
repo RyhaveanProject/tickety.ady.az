@@ -1,0 +1,73 @@
+<section class="section">
+  <div class="container">
+    <div class="section__head"><div><div class="eyebrow"><%= t('nav.profile') %></div><h1><%= t('account.profile') %></h1></div></div>
+
+    <div class="layout-aside">
+      <%- include('../partials/account-nav') %>
+
+      <div>
+        <div class="card mb-16"><div class="card__body">
+          <h3 style="font-size:1rem"><%= t('account.profile') %></h3>
+          <form id="profileForm">
+            <div class="field--row">
+              <div class="field">
+                <label><%= t('auth.lastName') %></label>
+                <input type="text" name="lastName" value="<%= user.lastName %>" required />
+              </div>
+              <div class="field">
+                <label><%= t('auth.firstName') %></label>
+                <input type="text" name="firstName" value="<%= user.firstName %>" required />
+              </div>
+            </div>
+            <div class="field--row">
+              <div class="field">
+                <label><%= t('auth.middleName') %></label>
+                <input type="text" name="middleName" value="<%= user.middleName || '' %>" />
+              </div>
+              <div class="field">
+                <label><%= t('auth.phone') %></label>
+                <input type="tel" name="phone" value="<%= user.phone || '' %>" />
+              </div>
+            </div>
+            <div class="field--row">
+              <div class="field">
+                <label><%= t('auth.passport') %></label>
+                <input type="text" name="passport" value="<%= user.passport || '' %>" />
+              </div>
+              <div class="field">
+                <label><%= t('checkout.birthDate') %></label>
+                <input type="date" name="birthDate" value="<%= user.birthDate ? new Date(user.birthDate).toISOString().slice(0,10) : '' %>" />
+              </div>
+            </div>
+            <div class="field">
+              <label><%= t('auth.email') %></label>
+              <input type="email" value="<%= user.email %>" readonly />
+            </div>
+            <button type="submit" class="btn btn--primary"><%= t('account.save') %></button>
+          </form>
+        </div></div>
+
+        <div class="card"><div class="card__body">
+          <h3 style="font-size:1rem"><%= t('auth.password') %></h3>
+          <form id="passwordForm">
+            <div class="field">
+              <label><%= t('auth.password') %> (cari)</label>
+              <input type="password" name="current" required />
+            </div>
+            <div class="field--row">
+              <div class="field">
+                <label><%= t('auth.newPassword') %></label>
+                <input type="password" name="password" minlength="6" required />
+              </div>
+              <div class="field">
+                <label><%= t('auth.passwordRepeat') %></label>
+                <input type="password" name="passwordRepeat" minlength="6" required />
+              </div>
+            </div>
+            <button type="submit" class="btn btn--outline"><%= t('common.save') %></button>
+          </form>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,35 @@
+<section class="section">
+  <div class="container">
+    <div style="max-width:860px;margin:0 auto">
+      <div class="section__head">
+        <div>
+          <div class="eyebrow"><%= new Date(item.publishedAt).toLocaleDateString('az-AZ') %></div>
+          <h1><%= item.title %></h1>
+        </div>
+      </div>
+
+      <div class="card mb-24"><div class="card__body">
+        <p style="font-size:1rem;color:#4a5b6b"><%= item.excerpt %></p>
+        <hr />
+        <%- item.content || ('<p>' + item.excerpt + '</p>') %>
+        <% if (item.sourceUrl) { %>
+          <p class="sec-note mt-24 mb-0">Mənbə: <a href="<%= item.sourceUrl %>" target="_blank" rel="noopener"><%= item.sourceUrl %></a></p>
+        <% } %>
+      </div></div>
+
+      <% if (related.length) { %>
+        <h2 style="font-size:1.15rem"><%= t('home.news') %></h2>
+        <div class="grid grid--3">
+          <% related.forEach(function(n){ %>
+            <a href="/<%= locale %>/xeberler/<%= n.slug %>" class="feature">
+              <div class="feature__body">
+                <div class="news-card__meta"><span><%= new Date(n.publishedAt).toLocaleDateString('az-AZ') %></span></div>
+                <h3 style="font-size:.98rem"><%= n.title %></h3>
+              </div>
+            </a>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</section>

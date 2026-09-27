@@ -1,0 +1,67 @@
+<section class="section">
+  <div class="container">
+    <div class="section__head">
+      <div><div class="eyebrow"><%= t('nav.profile') %></div><h1><%= t('account.title') %></h1></div>
+      <div class="badge badge--gold"><%= t('account.balance') %>: <%= (user.balance || 0).toFixed(2) %> ₼</div>
+    </div>
+
+    <div class="layout-aside">
+      <%- include('../partials/account-nav') %>
+
+      <div>
+        <div class="grid grid--3 mb-24">
+          <div class="stat"><div class="stat__label"><%= t('nav.myTickets') %></div><div class="stat__value"><%= tickets.length %></div></div>
+          <div class="stat"><div class="stat__label"><%= t('nav.myOrders') %></div><div class="stat__value"><%= orders.length %></div></div>
+          <div class="stat"><div class="stat__label"><%= t('account.balance') %></div><div class="stat__value"><%= (user.balance || 0).toFixed(2) %></div></div>
+        </div>
+
+        <div class="card mb-24">
+          <div class="card__head"><span><%= t('nav.myTickets') %></span><a href="/<%= locale %>/kabinet/biletler" class="btn btn--sm btn--outline"><%= t('home.seeAll') %></a></div>
+          <div class="card__body">
+            <% if (!tickets.length) { %>
+              <p class="sec-note mb-0"><%= t('account.noTickets') %></p>
+            <% } else { %>
+              <div class="table-wrap"><table class="data">
+                <thead><tr><th><%= t('account.pnr') %></th><th><%= t('table.route') %></th><th><%= t('common.date') %></th><th><%= t('seats.selected') %></th><th></th></tr></thead>
+                <tbody>
+                  <% tickets.forEach(function(tk){ %>
+                    <tr>
+                      <td class="mono"><%= tk.pnr %></td>
+                      <td><%= tk.fromName %> — <%= tk.toName %></td>
+                      <td><%= tk.date %> <%= tk.departTime %></td>
+                      <td><%= tk.wagon %> / <%= tk.seat %></td>
+                      <td><a href="/<%= locale %>/bilet/<%= tk._id %>/pdf" class="btn btn--sm btn--outline"><%= t('success.download') %></a></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table></div>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__head"><span><%= t('nav.myOrders') %></span><a href="/<%= locale %>/kabinet/sifarisler" class="btn btn--sm btn--outline"><%= t('home.seeAll') %></a></div>
+          <div class="card__body">
+            <% if (!orders.length) { %>
+              <p class="sec-note mb-0"><%= t('account.noOrders') %></p>
+            <% } else { %>
+              <div class="table-wrap"><table class="data">
+                <thead><tr><th>Sifariş</th><th><%= t('table.route') %></th><th><%= t('common.price') %></th><th><%= t('account.status') %></th></tr></thead>
+                <tbody>
+                  <% orders.forEach(function(o){ %>
+                    <tr>
+                      <td class="mono"><%= o.orderNo %></td>
+                      <td><%= o.fromName %> — <%= o.toName %><br /><span class="sec-note"><%= o.date %></span></td>
+                      <td class="mono"><%= o.total.toFixed(2) %> ₼</td>
+                      <td><span class="badge badge--gray"><%= t('status.' + o.status) %></span></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table></div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

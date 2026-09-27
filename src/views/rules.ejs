@@ -1,0 +1,25 @@
+<section class="section">
+  <div class="container">
+    <div class="section__head"><div><div class="eyebrow"><%= t('nav.rules') %></div><h1><%= t('nav.rules') %></h1></div></div>
+
+    <div class="layout-aside">
+      <aside class="admin-nav">
+        <% pages.forEach(function(p){ %>
+          <a href="/<%= locale %>/dasima-qaydalari/<%= p.slug %>"><span><%= p.title %></span></a>
+        <% }) %>
+      </aside>
+
+      <div class="grid grid--2">
+        <% pages.forEach(function(p){ %>
+          <a href="/<%= locale %>/dasima-qaydalari/<%= p.slug %>" class="feature">
+            <div class="feature__body">
+              <h3><%= p.title %></h3>
+              <p><%= p.excerpt %></p>
+              <span class="feature__link"><%= t('home.readMore') %></span>
+            </div>
+          </a>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</section>

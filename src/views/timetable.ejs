@@ -1,0 +1,63 @@
+<section class="section">
+  <div class="container">
+    <div class="section__head">
+      <div>
+        <div class="eyebrow"><%= dateText %></div>
+        <h1><%= t('timetable.title') %></h1>
+        <p><%= t('timetable.sub') %></p>
+      </div>
+    </div>
+
+    <div class="card mb-24"><div class="card__body">
+      <form method="get" action="/<%= locale %>/hereket-cedveli" class="grid grid--4" style="align-items:end">
+        <div>
+          <label><%= t('timetable.date') %></label>
+          <input type="date" name="date" value="<%= date %>" min="<%= today %>" max="<%= maxDate %>" />
+        </div>
+        <div>
+          <label><%= t('timetable.line') %></label>
+          <select name="line">
+            <option value="all" <%= line === 'all' ? 'selected' : '' %>>Bütün xətlər</option>
+            <option value="absheron" <%= line === 'absheron' ? 'selected' : '' %>>Abşeron dairəvi xətti</option>
+            <option value="domestic" <%= line === 'domestic' ? 'selected' : '' %>>Ölkədaxili</option>
+            <option value="georgia" <%= line === 'georgia' ? 'selected' : '' %>>Gürcüstan daxili</option>
+            <option value="international" <%= line === 'international' ? 'selected' : '' %>>Beynəlxalq</option>
+          </select>
+        </div>
+        <div>
+          <button type="submit" class="btn btn--primary btn--block"><%= t('timetable.show') %></button>
+        </div>
+      </form>
+    </div></div>
+
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th><%= t('table.train') %></th>
+            <th><%= t('table.route') %></th>
+            <th><%= t('table.depart') %></th>
+            <th><%= t('table.arrive') %></th>
+            <th><%= t('table.price') %></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (!rows.length) { %>
+            <tr><td colspan="6"><%= t('results.none') %></td></tr>
+          <% } %>
+          <% rows.forEach(function(r){ %>
+            <tr>
+              <td class="num"><strong><%= r.number %></strong><br /><span class="sec-note"><%= r.title %></span></td>
+              <td><%= r.from %> — <%= r.to %></td>
+              <td class="num"><%= r.depart %></td>
+              <td class="num"><%= r.arrive %></td>
+              <td class="num"><%= r.minPrice.toFixed(2) %> ₼</td>
+              <td><a href="/<%= locale %>/reysler?from=<%= r.fromCode %>&to=<%= r.toCode %>&date=<%= date %>&passengers=1" class="btn btn--sm btn--primary"><%= t('home.buyTicket') %></a></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

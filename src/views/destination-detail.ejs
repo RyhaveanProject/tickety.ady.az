@@ -1,0 +1,58 @@
+<section class="section">
+  <div class="container">
+    <div class="section__head">
+      <div>
+        <div class="eyebrow"><%= t('nav.destinations') %></div>
+        <h1><%= destination.title %></h1>
+        <p><%= destination.summary %></p>
+      </div>
+      <div class="badge badge--gold"><%= t('common.price') %> <%= destination.priceFrom.toFixed(2) %> ₼</div>
+    </div>
+
+    <div class="grid grid--3">
+      <div style="grid-column:span 2">
+        <div class="card mb-16"><div class="card__body">
+          <%- destination.content || '<p>' + destination.summary + '</p>' %>
+        </div></div>
+
+        <div class="card">
+          <div class="card__head"><span><%= t('nav.timetable') %> — <%= today %></span></div>
+          <div class="card__body">
+            <% if (!departures.length) { %>
+              <p class="sec-note mb-0"><%= t('results.none') %></p>
+            <% } else { %>
+              <div class="table-wrap"><table class="data">
+                <thead><tr><th><%= t('table.train') %></th><th><%= t('table.route') %></th><th><%= t('table.depart') %></th><th><%= t('table.price') %></th><th></th></tr></thead>
+                <tbody>
+                  <% departures.forEach(function(r){ %>
+                    <tr>
+                      <td class="num"><strong><%= r.number %></strong></td>
+                      <td><%= r.from %> — <%= r.to %></td>
+                      <td class="num"><%= r.depart %></td>
+                      <td class="num"><%= r.minPrice.toFixed(2) %> ₼</td>
+                      <td><a href="/<%= locale %>/reysler?from=<%= r.fromCode %>&to=<%= r.toCode %>&date=<%= today %>&passengers=1" class="btn btn--sm btn--primary"><%= t('home.buyTicket') %></a></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table></div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary">
+        <div class="card"><div class="card__body">
+          <h3 style="font-size:1rem"><%= t('search.pageTitle') %></h3>
+          <% if (station) { %>
+            <dl class="kv mb-16">
+              <dt>Stansiya</dt><dd><%= station.name %></dd>
+              <dt>Kod</dt><dd class="mono"><%= station.code %></dd>
+              <dt>Region</dt><dd><%= station.region %></dd>
+            </dl>
+          <% } %>
+          <a href="/<%= locale %>/bilet-axtar?to=<%= destination.stationCode %>" class="btn btn--primary btn--block"><%= t('home.buyTicket') %></a>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>

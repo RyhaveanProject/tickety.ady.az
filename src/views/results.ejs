@@ -1,0 +1,53 @@
+<section class="section">
+  <div class="container">
+    <div class="section__head">
+      <div>
+        <div class="eyebrow"><%= fromName %> — <%= toName %></div>
+        <h1><%= t('results.title') %></h1>
+        <p><%= dateText %> · <%= results.length %> <%= t('results.found') %></p>
+      </div>
+      <a href="/<%= locale %>/bilet-axtar" class="btn btn--outline"><%= t('results.change') %></a>
+    </div>
+
+    <% if (!results.length) { %>
+      <div class="alert alert--warn"><%= t('results.none') %></div>
+    <% } %>
+
+    <% results.forEach(function(r){ %>
+      <div class="trip">
+        <div>
+          <div class="trip__route">
+            <div class="trip__point">
+              <strong><%= r.departTime %></strong>
+              <span><%= r.fromName %></span>
+            </div>
+            <div class="trip__mid">
+              <div class="trip__dur"><%= r.durationText %></div>
+              <div class="trip__line"></div>
+              <div class="trip__dur"><%= r.stopsCount %> <%= t('results.stops') %></div>
+            </div>
+            <div class="trip__point">
+              <strong><%= r.arriveTime %></strong>
+              <span><%= r.toName %></span>
+            </div>
+          </div>
+          <div class="trip__meta">
+            <span><strong><%= t('results.train') %>:</strong> <%= r.trainNumber %></span>
+            <span><%= r.trainTitle %></span>
+            <span class="badge badge--blue"><%= r.date %></span>
+          </div>
+        </div>
+
+        <div class="trip__right">
+          <div class="trip__price"><%= r.minPrice.toFixed(2) %> ₼<small> <%= t('results.from') %></small></div>
+          <div class="trip__classes">
+            <% r.classes.forEach(function(c){ %>
+              <span class="chip"><%= c.title %> · <%= c.price.toFixed(2) %> ₼</span>
+            <% }) %>
+          </div>
+          <a href="/<%= locale %>/yer-secimi/<%= r.tripId %>?from=<%= from %>&to=<%= to %>&passengers=<%= passengers %>" class="btn btn--primary btn--sm"><%= t('results.select') %></a>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</section>

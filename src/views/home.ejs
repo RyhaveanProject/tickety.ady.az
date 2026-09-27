@@ -1,0 +1,243 @@
+<section class="hero">
+  <div class="container hero__inner">
+    <div class="eyebrow" style="color:#f2a900"><%= t('brand.railways') %></div>
+    <h1><%= t('home.heroTitle') %></h1>
+    <p class="hero__sub"><%= t('home.heroSub') %></p>
+    <div class="hero__stats">
+      <div class="hero__stat"><strong><%= timetable.absheron.length %></strong><span><%= t('home.statAbsheron') %></span></div>
+      <div class="hero__stat"><strong><%= timetable.domestic.length %></strong><span><%= t('home.statDomestic') %></span></div>
+      <div class="hero__stat"><strong><%= timetable.georgia.length %></strong><span><%= t('home.statGeorgia') %></span></div>
+      <div class="hero__stat"><strong><%= stations.length %></strong><span><%= t('home.statStations') %></span></div>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+  <%- include('../partials/search-form', { stations: stations, today: serverDate, maxDate: serverDateMax, prefill: null }) %>
+</div>
+
+<!-- ==================== Xidmətlər ==================== -->
+<section class="section section--tight">
+  <div class="container">
+    <div class="grid grid--4">
+      <div class="card"><div class="card__body">
+        <div class="ico-box"><svg class="ico" viewBox="0 0 24 24"><path d="M2 9a3 3 0 0 1 0 6v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3a3 3 0 0 1 0-6V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><path d="M13 5v2M13 17v2M13 11v2"/></svg></div>
+        <h3 style="font-size:1rem"><%= t('home.s1Title') %></h3>
+        <p style="color:var(--ink-2);font-size:.875rem;margin:0"><%= t('home.s1Text') %></p>
+      </div></div>
+      <div class="card"><div class="card__body">
+        <div class="ico-box"><svg class="ico" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div>
+        <h3 style="font-size:1rem"><%= t('home.s2Title') %></h3>
+        <p style="color:var(--ink-2);font-size:.875rem;margin:0"><%= t('home.s2Text') %></p>
+      </div></div>
+      <div class="card"><div class="card__body">
+        <div class="ico-box"><svg class="ico" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 17v4h-4"/></svg></div>
+        <h3 style="font-size:1rem"><%= t('home.s3Title') %></h3>
+        <p style="color:var(--ink-2);font-size:.875rem;margin:0"><%= t('home.s3Text') %></p>
+      </div></div>
+      <div class="card"><div class="card__body">
+        <div class="ico-box"><svg class="ico" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></div>
+        <h3 style="font-size:1rem"><%= t('home.s4Title') %></h3>
+        <p style="color:var(--ink-2);font-size:.875rem;margin:0"><%= t('home.s4Text') %></p>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== Populyar istiqamətlər ==================== -->
+<section class="section">
+  <div class="container">
+    <div class="section__head">
+      <div>
+        <div class="eyebrow"><%= t('home.travel') %></div>
+        <h2><%= t('home.popular') %></h2>
+        <p><%= t('home.popularSub') %></p>
+      </div>
+      <a href="/<%= locale %>/populyar-istiqametler" class="btn btn--outline"><%= t('home.seeAll') %></a>
+    </div>
+
+    <div class="grid grid--4">
+      <% destinations.forEach(function(d){ %>
+        <a href="/<%= locale %>/populyar-istiqametler/<%= d.slug %>" class="feature">
+          <div class="feature__img">
+            <svg class="ico ico--lg" viewBox="0 0 24 24" style="stroke:#00539b"><path d="M4 15V7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v8"/><rect x="2" y="15" width="20" height="4" rx="1"/><path d="M6 19v2M18 19v2M9 8h6"/></svg>
+          </div>
+          <div class="feature__body">
+            <h3><%= d.title %></h3>
+            <p><%= d.summary %></p>
+            <span class="feature__link"><%= t('home.readMore') %></span>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== Abşeron dairəvi xətti ==================== -->
+<section class="section" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="container">
+    <div class="section__head">
+      <div>
+        <div class="eyebrow"><%= t('nav.timetable') %></div>
+        <h2><%= t('home.absheronTitle') %></h2>
+        <p><%= serverDate %> · <%= t('home.absheronSub') %></p>
+      </div>
+      <a href="/<%= locale %>/hereket-cedveli" class="btn btn--outline"><%= t('home.fullTimetable') %></a>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th><%= t('table.train') %></th>
+            <th>Bakı</th><th>Biləcəri</th><th>Xırdalan</th><th>Sumqayıt</th>
+            <th><%= t('table.price') %></th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% timetable.absheron.slice(0, 12).forEach(function(trip){ %>
+            <tr>
+              <td class="num"><strong><%= trip.number %></strong></td>
+              <% ['BAK','BIL','XRD','SUM'].forEach(function(code){ %>
+                <% var st = trip.stopMap[code]; %>
+                <td class="num"><%= st ? (st.depart || st.arrive || '—') : '—' %></td>
+              <% }) %>
+              <td class="num"><%= (trip.minPrice || 0).toFixed(2) %> ₼</td>
+              <td><a href="/<%= locale %>/reysler?from=BAK&to=SUM&date=<%= serverDate %>&passengers=1" class="btn btn--sm btn--primary"><%= t('home.buyTicket') %></a></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== Ölkədaxili və Gürcüstan daxili reyslər ==================== -->
+<section class="section">
+  <div class="container">
+    <div class="timetable-tabs">
+      <button class="tab is-active" data-tab="domestic" data-tab-group="homeLines"><%= t('home.domestic') %></button>
+      <button class="tab" data-tab="georgia" data-tab-group="homeLines"><%= t('home.georgia') %></button>
+      <button class="tab" data-tab="international" data-tab-group="homeLines"><%= t('home.international') %></button>
+    </div>
+
+    <div data-panel="domestic" data-panel-group="homeLines" class="is-active">
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th><%= t('table.train') %></th><th><%= t('table.route') %></th><th><%= t('table.depart') %></th><th><%= t('table.arrive') %></th><th><%= t('table.price') %></th><th></th></tr></thead>
+          <tbody>
+            <% timetable.domestic.forEach(function(trip){ %>
+              <tr>
+                <td class="num"><strong><%= trip.number %></strong></td>
+                <td><%= trip.title %></td>
+                <td class="num"><%= trip.depart %></td>
+                <td class="num"><%= trip.arrive %></td>
+                <td class="num"><%= trip.minPrice.toFixed(2) %> ₼</td>
+                <td><a href="/<%= locale %>/reysler?from=<%= trip.from %>&to=<%= trip.to %>&date=<%= serverDate %>&passengers=1" class="btn btn--sm btn--primary"><%= t('home.buyTicket') %></a></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div data-panel="georgia" data-panel-group="homeLines" style="display:none">
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th><%= t('table.train') %></th><th><%= t('table.route') %></th><th><%= t('table.depart') %></th><th><%= t('table.arrive') %></th><th><%= t('table.price') %></th><th></th></tr></thead>
+          <tbody>
+            <% timetable.georgia.forEach(function(trip){ %>
+              <tr>
+                <td class="num"><strong><%= trip.number %></strong></td>
+                <td><%= trip.title %></td>
+                <td class="num"><%= trip.depart %></td>
+                <td class="num"><%= trip.arrive %></td>
+                <td class="num"><%= trip.minPrice.toFixed(2) %> ₼</td>
+                <td><a href="/<%= locale %>/reysler?from=<%= trip.from %>&to=<%= trip.to %>&date=<%= serverDate %>&passengers=1" class="btn btn--sm btn--primary"><%= t('home.buyTicket') %></a></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div data-panel="international" data-panel-group="homeLines" style="display:none">
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th><%= t('table.train') %></th><th><%= t('table.route') %></th><th><%= t('table.depart') %></th><th><%= t('table.arrive') %></th><th><%= t('table.price') %></th><th></th></tr></thead>
+          <tbody>
+            <% timetable.international.forEach(function(trip){ %>
+              <tr>
+                <td class="num"><strong><%= trip.number %></strong></td>
+                <td><%= trip.title %></td>
+                <td class="num"><%= trip.depart %></td>
+                <td class="num"><%= trip.arrive %></td>
+                <td class="num"><%= trip.minPrice.toFixed(2) %> ₼</td>
+                <td><a href="/<%= locale %>/reysler?from=<%= trip.from %>&to=<%= trip.to %>&date=<%= serverDate %>&passengers=1" class="btn btn--sm btn--primary"><%= t('home.buyTicket') %></a></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== Xəbərlər ==================== -->
+<section class="section section--tight">
+  <div class="container">
+    <div class="section__head">
+      <div><div class="eyebrow"><%= t('nav.news') %></div><h2><%= t('home.news') %></h2></div>
+      <a href="/<%= locale %>/xeberler" class="btn btn--outline"><%= t('home.allNews') %></a>
+    </div>
+    <div class="grid grid--3">
+      <% news.forEach(function(n){ %>
+        <a href="/<%= locale %>/xeberler/<%= n.slug %>" class="feature">
+          <div class="feature__body">
+            <div class="news-card__meta"><span><%= new Date(n.publishedAt).toLocaleDateString('az-AZ') %></span></div>
+            <h3><%= n.title %></h3>
+            <p><%= n.excerpt %></p>
+            <span class="feature__link"><%= t('home.readMore') %></span>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== FAQ ==================== -->
+<section class="section section--tight" style="background:#fff;border-top:1px solid var(--line)">
+  <div class="container">
+    <div class="section__head"><div><div class="eyebrow"><%= t('nav.help') %></div><h2><%= t('home.faq') %></h2></div></div>
+    <div class="grid grid--2">
+      <% faqs.forEach(function(f){ %>
+        <div class="faq">
+          <div class="faq__q"><%= f.question %></div>
+          <div class="faq__a"><%= f.answer %></div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== Abunə ==================== -->
+<section class="section section--tight">
+  <div class="container">
+    <div class="card" style="background:linear-gradient(135deg,#00539b,#003c73);border:0">
+      <div class="card__body" style="display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap">
+        <div>
+          <h2 style="color:#fff;margin-bottom:6px"><%= t('footer.subscribe') %></h2>
+          <p style="color:#cfe0f0;margin:0"><%= t('home.subscribeText') %></p>
+        </div>
+        <form class="subscribe" style="min-width:320px">
+          <input type="email" name="email" placeholder="<%= t('footer.email') %>" required />
+          <button type="submit" class="btn btn--gold"><%= t('footer.subscribeBtn') %></button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  window.ADY_STATIONS = <%- JSON.stringify(stations.map(function(s){ return { code: s.code, name: s.name, nameEn: s.nameEn, region: s.region }; })) %>;
+</script>

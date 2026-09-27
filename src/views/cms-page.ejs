@@ -1,0 +1,36 @@
+<section class="section">
+  <div class="container">
+    <div class="section__head">
+      <div>
+        <div class="eyebrow"><%= page.group === 'rules' ? t('nav.rules') : page.group === 'tariffs' ? t('nav.tariffs') : t('brand.railways') %></div>
+        <h1><%= page.title %></h1>
+        <% if (page.excerpt) { %><p><%= page.excerpt %></p><% } %>
+      </div>
+    </div>
+
+    <div class="grid grid--3">
+      <div style="grid-column:span 2">
+        <div class="card"><div class="card__body">
+          <div style="color:#4a5b6b"><%- page.content %></div>
+        </div></div>
+      </div>
+
+      <% if (siblings && siblings.length) { %>
+        <div class="summary">
+          <div class="card">
+            <div class="card__head"><span><%= t('home.seeAll') %></span></div>
+            <div class="card__body">
+              <div class="admin-nav">
+                <% siblings.forEach(function(s){ %>
+                  <a href="/<%= locale %>/<%= page.group === 'tariffs' ? 'tarifler-ve-odenis' : page.group === 'rules' ? 'dasima-qaydalari' : 'sehife' %>/<%= s.slug %>">
+                    <span><%= s.title %></span>
+                  </a>
+                <% }) %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</section>

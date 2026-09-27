@@ -1,0 +1,19 @@
+<section class="section">
+  <div class="container">
+    <div style="max-width:620px;margin:0 auto">
+      <div class="section__head"><div><div class="eyebrow">QR / PNR</div><h1><%= t('verify.title') %></h1><p><%= t('verify.sub') %></p></div></div>
+
+      <div class="card mb-16"><div class="card__body">
+        <form id="verifyForm">
+          <div class="field">
+            <label>PNR</label>
+            <input type="text" name="pnr" class="mono" style="text-transform:uppercase;letter-spacing:.16em;font-size:1.1rem" maxlength="6" required />
+          </div>
+          <button type="submit" class="btn btn--primary btn--block"><%= t('verify.submit') %></button>
+        </form>
+      </div></div>
+
+      <div id="verifyResult"></div>
+    </div>
+  </div>
+</section>
