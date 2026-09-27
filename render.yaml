@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: ady-ticket-clone
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: SITE_URL
+        sync: false
+      - key: AUTO_SEED
+        value: "true"
+      - key: USE_MEMORY_DB
+        value: "false"
+      - key: PAYMENT_MODE
+        value: demo
