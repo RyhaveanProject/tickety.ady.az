@@ -1,10 +1,9 @@
 services:
   - type: web
-    name: ady-ticket-clone
+    name: ady-ticket
     runtime: node
     plan: free
     region: frankfurt
-    branch: main
     buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /healthz
@@ -21,5 +20,23 @@ services:
         value: "true"
       - key: USE_MEMORY_DB
         value: "false"
-      - key: PAYMENT_MODE
-        value: demo
+      # İdarəçi hesabı — dəyərləri Render panelindən özünüz daxil edin
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_FIRST_NAME
+        value: Sistem
+      - key: ADMIN_LAST_NAME
+        value: İdarəçi
+      - key: ADMIN_PHONE
+        sync: false
+      # Canlı məlumat mənbəyi
+      - key: LIVE_SOURCE_URL
+        value: https://ticket.ady.az
+      - key: LIVE_SYNC_ENABLED
+        value: "true"
+      - key: LIVE_SYNC_HOURS
+        value: "6"
+      - key: LIVE_SYNC_ON_BOOT
+        value: "true"
