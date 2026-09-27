@@ -1,0 +1,12 @@
+<div class="container">
+  <div class="empty" style="padding:90px 20px">
+    <div style="font-size:4.5rem;font-weight:800;color:var(--ady-blue);opacity:.85;line-height:1"><%= code %></div>
+    <h1 style="margin-top:14px"><%= code === 404 ? 'Səhifə tapılmadı' : 'Xəta' %></h1>
+    <p style="max-width:520px;margin:0 auto 24px"><%= message %></p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <a href="/<%= locale %>" class="btn btn--primary">Ana səhifə</a>
+      <a href="/<%= locale %>/bilet-axtar" class="btn btn--outline">Bilet al</a>
+      <a href="/<%= locale %>/komek" class="btn btn--ghost">Kömək</a>
+    </div>
+  </div>
+</div>

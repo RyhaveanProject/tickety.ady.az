@@ -1,0 +1,109 @@
+<div class="page-head">
+  <div class="container">
+    <div class="breadcrumb"><a href="/<%= locale %>">Ana səhifə</a> <span>/</span> <a href="/<%= locale %>/kabinet">Kabinet</a> <span>/</span> <span>Profil</span></div>
+    <h1>Profil məlumatları</h1>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="account-grid">
+      <%- include('../partials/account-nav', { active: 'profile' }) %>
+
+      <div class="grid" style="gap:20px">
+        <div class="card">
+          <div class="card__head">Şəxsi məlumatlar</div>
+          <div class="card__body">
+            <form id="profileForm">
+              <div class="form-row">
+                <div class="field"><label>Ad</label><input type="text" name="firstName" value="<%= currentUser.firstName %>" required /></div>
+                <div class="field"><label>Soyad</label><input type="text" name="lastName" value="<%= currentUser.lastName %>" required /></div>
+              </div>
+              <div class="form-row">
+                <div class="field"><label>Telefon</label><input type="tel" name="phone" value="<%= currentUser.phone %>" /></div>
+                <div class="field"><label>E-poçt (dəyişməz)</label><input type="email" value="<%= currentUser.email %>" disabled /></div>
+              </div>
+              <div class="form-row">
+                <div class="field">
+                  <label>Sənədin növü</label>
+                  <select name="docType">
+                    <option value="fin" <%= currentUser.docType === 'fin' ? 'selected' : '' %>>FİN kod</option>
+                    <option value="id" <%= currentUser.docType === 'id' ? 'selected' : '' %>>Şəxsiyyət vəsiqəsi</option>
+                    <option value="passport" <%= currentUser.docType === 'passport' ? 'selected' : '' %>>Xarici pasport</option>
+                  </select>
+                </div>
+                <div class="field"><label>Sənədin nömrəsi</label><input type="text" name="docNumber" value="<%= currentUser.docNumber || '' %>" /></div>
+              </div>
+              <label class="checkbox" style="margin-bottom:16px">
+                <input type="checkbox" name="newsOptIn" <%= currentUser.newsOptIn ? 'checked' : '' %> />
+                <span>Yeniliklər barədə bildiriş al</span>
+              </label>
+              <button type="submit" class="btn btn--primary" id="saveProfile">Yadda saxla</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__head">Şifrənin dəyişdirilməsi</div>
+          <div class="card__body">
+            <form id="passwordForm">
+              <div class="form-row">
+                <div class="field"><label>Cari şifrə</label><input type="password" name="currentPassword" required /></div>
+                <div class="field"><label>Yeni şifrə</label><input type="password" name="newPassword" required minlength="6" /></div>
+              </div>
+              <div class="field"><label>Yeni şifrənin təkrarı</label><input type="password" name="newPasswordConfirm" required minlength="6" /></div>
+              <button type="submit" class="btn btn--primary" id="savePassword">Şifrəni dəyiş</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__head">Balans</div>
+          <div class="card__body" style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+            <div>
+              <div style="font-size:1.6rem;font-weight:700;color:var(--ady-blue)"><%= (currentUser.balance || 0).toFixed(2) %> ₼</div>
+              <small style="color:var(--muted)">Cari balans</small>
+            </div>
+            <a href="/<%= locale %>/balans-artirilmasi" class="btn btn--gold">Balansı artır</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  (function () {
+    var pf = document.getElementById('profileForm');
+    pf.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var btn = document.getElementById('saveProfile');
+      window.setLoading(btn, true);
+      var r = await window.api('/api/auth/profile', {
+        firstName: pf.querySelector('[name=firstName]').value,
+        lastName: pf.querySelector('[name=lastName]').value,
+        phone: pf.querySelector('[name=phone]').value,
+        docType: pf.querySelector('[name=docType]').value,
+        docNumber: pf.querySelector('[name=docNumber]').value,
+        newsOptIn: pf.querySelector('[name=newsOptIn]').checked
+      });
+      window.setLoading(btn, false);
+      window.toast(r.message || (r.ok ? 'Yeniləndi' : 'Xəta'), r.ok ? 'success' : 'error');
+    });
+
+    var pw = document.getElementById('passwordForm');
+    pw.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var btn = document.getElementById('savePassword');
+      window.setLoading(btn, true);
+      var r = await window.api('/api/auth/change-password', {
+        currentPassword: pw.querySelector('[name=currentPassword]').value,
+        newPassword: pw.querySelector('[name=newPassword]').value,
+        newPasswordConfirm: pw.querySelector('[name=newPasswordConfirm]').value
+      });
+      window.setLoading(btn, false);
+      window.toast(r.message || (r.ok ? 'Dəyişdirildi' : 'Xəta'), r.ok ? 'success' : 'error');
+      if (r.ok) pw.reset();
+    });
+  })();
+</script>

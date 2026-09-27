@@ -1,0 +1,94 @@
+<div class="container">
+  <div class="success-hero">
+    <div class="success-icon">✓</div>
+    <h1 style="margin-bottom:8px">Bilet uğurla alındı</h1>
+    <p style="color:var(--ink-2)">
+      Ödəniş təsdiqləndi. Elektron biletləriniz aşağıda göstərilir — QR kodu stansiyada yoxlanılır.
+    </p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px">
+      <a href="/<%= locale %>/bilet/<%= order._id %>/pdf" class="btn btn--primary">
+        ⬇ Bileti yüklə (PDF)
+      </a>
+      <button type="button" class="btn btn--outline" onclick="window.print()">🖨 Çap et</button>
+      <a href="/<%= locale %>/kabinet/biletler" class="btn btn--ghost">Mənim biletlərim</a>
+    </div>
+  </div>
+
+  <div class="card" style="max-width:900px;margin:0 auto 26px">
+    <div class="card__body" style="display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap">
+      <div>
+        <small style="color:var(--muted)">Sifariş nömrəsi</small>
+        <div style="font-weight:700;font-size:1.05rem"><%= order.orderNo %></div>
+      </div>
+      <div>
+        <small style="color:var(--muted)">Marşrut</small>
+        <div style="font-weight:700"><%= order.fromName %> → <%= order.toName %></div>
+      </div>
+      <div>
+        <small style="color:var(--muted)">Qatar / Tarix</small>
+        <div style="font-weight:700"><%= order.trainNumber %> · <%= order.date %></div>
+      </div>
+      <div>
+        <small style="color:var(--muted)">Yola düşmə</small>
+        <div style="font-weight:700"><%= order.departTime %></div>
+      </div>
+      <div>
+        <small style="color:var(--muted)">Ödənilmiş məbləğ</small>
+        <div style="font-weight:700;color:var(--green)"><%= order.total.toFixed(2) %> ₼</div>
+      </div>
+    </div>
+  </div>
+
+  <% tickets.forEach(function(t){ %>
+    <div class="ticket">
+      <div class="ticket__head">
+        <div>
+          <div style="font-size:.78rem;color:#b9cee2">BİLET KODU (PNR)</div>
+          <div class="ticket__pnr"><%= t.pnr %></div>
+        </div>
+        <div style="text-align:right">
+          <div class="badge <%= t.status === 'active' ? 'badge--green' : 'badge--gray' %>">
+            <%= t.status === 'active' ? 'Aktiv' : 'Qaytarılmış' %>
+          </div>
+          <div style="font-size:.78rem;color:#b9cee2;margin-top:6px">Qatar <%= t.trainNumber %></div>
+        </div>
+      </div>
+      <div class="ticket__body">
+        <div>
+          <div class="ticket__route">
+            <strong><%= t.fromName %></strong>
+            <span class="arrow">→</span>
+            <strong><%= t.toName %></strong>
+          </div>
+          <dl class="kv">
+            <dt>Sərnişin</dt><dd><%= t.passengerName %></dd>
+            <dt>Sənəd</dt><dd><%= t.docNumber %></dd>
+            <dt>Tarix</dt><dd><%= t.date %></dd>
+            <dt>Yola düşmə</dt><dd><%= t.departTime %></dd>
+            <dt>Çatma</dt><dd><%= t.arrivalTime %></dd>
+            <dt>Vaqon / Yer</dt><dd><%= t.wagon %> / <strong><%= t.seat %></strong></dd>
+            <dt>Sinif</dt><dd><%= t.className %></dd>
+            <dt>Qiymət</dt><dd><%= t.price.toFixed(2) %> AZN</dd>
+          </dl>
+        </div>
+        <div class="ticket__qr">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=<%= encodeURIComponent(t.qrData || t.pnr) %>"
+               alt="QR <%= t.pnr %>" />
+          <div style="font-family:'Courier New',monospace;font-size:.8rem;color:var(--muted)"><%= t.pnr %></div>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+
+  <div class="card" style="max-width:900px;margin:0 auto 40px">
+    <div class="card__body" style="font-size:.85rem;color:var(--ink-2)">
+      <strong>Vacib məlumat:</strong>
+      <ul style="margin:10px 0 0;padding-left:20px">
+        <li>Biletinizi səyahətdən əvvəl <a href="/<%= locale %>/bilet-yoxlama">bilet yoxlanışı</a> bölməsində yoxlaya bilərsiniz.</li>
+        <li>Yola düşməyə 15 dəqiqə qalmış biletin qaytarılması xidmət haqqı tutulmadan mümkündür, sonra <%= rules.refundServiceFee %> AZN tutulur.</li>
+        <li>Sərnişinin sənədi gediş zamanı mütləq təqdim olunmalıdır.</li>
+        <li>Dəstək: <a href="tel:<%= site.supportPhone.replace(/\s/g,'') %>"><%= site.supportPhone %></a> · <a href="mailto:<%= site.supportEmail %>"><%= site.supportEmail %></a></li>
+      </ul>
+    </div>
+  </div>
+</div>

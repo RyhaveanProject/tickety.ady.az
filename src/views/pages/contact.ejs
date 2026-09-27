@@ -1,0 +1,64 @@
+<div class="page-head">
+  <div class="container">
+    <div class="breadcrumb"><a href="/<%= locale %>">Ana səhifə</a> <span>/</span> <span>Əlaqə</span></div>
+    <h1>Əlaqə</h1>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="two-col">
+      <div class="card">
+        <div class="card__head">Bizə yazın</div>
+        <div class="card__body">
+          <% if (sent) { %>
+            <div class="alert alert--success">Mesajınız göndərildi. Tezliklə əlaqə saxlayacağıq.</div>
+          <% } %>
+          <form action="/api/contact" method="POST">
+            <div class="form-row">
+              <div class="field"><label>Ad, soyad *</label><input type="text" name="name" required /></div>
+              <div class="field"><label>E-poçt *</label><input type="email" name="email" required /></div>
+            </div>
+            <div class="form-row">
+              <div class="field"><label>Telefon</label><input type="tel" name="phone" /></div>
+              <div class="field">
+                <label>Mövzu</label>
+                <select name="subject">
+                  <option value="Bilet alışı">Bilet alışı</option>
+                  <option value="Ödəniş">Ödəniş</option>
+                  <option value="Biletin qaytarılması">Biletin qaytarılması</option>
+                  <option value="Şikayət">Şikayət</option>
+                  <option value="Təklif">Təklif</option>
+                  <option value="Digər">Digər</option>
+                </select>
+              </div>
+            </div>
+            <div class="field"><label>Mesajınız *</label><textarea name="message" required></textarea></div>
+            <button type="submit" class="btn btn--primary">Göndər</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="grid" style="gap:16px">
+        <div class="card"><div class="card__body">
+          <h3 style="font-size:1rem">📞 Çağrı mərkəzi</h3>
+          <p style="margin:0"><a href="tel:<%= site.supportPhone.replace(/\s/g,'') %>"><%= site.supportPhone %></a></p>
+          <small style="color:var(--muted)">24/7</small>
+        </div></div>
+        <div class="card"><div class="card__body">
+          <h3 style="font-size:1rem">✉️ E-poçt</h3>
+          <p style="margin:0"><a href="mailto:<%= site.supportEmail %>"><%= site.supportEmail %></a></p>
+          <small style="color:var(--muted)">48 saat ərzində cavab</small>
+        </div></div>
+        <div class="card"><div class="card__body">
+          <h3 style="font-size:1rem">📍 Ünvan</h3>
+          <p style="margin:0"><%= site.address %></p>
+        </div></div>
+        <div class="card"><div class="card__body">
+          <h3 style="font-size:1rem">🎫 Bilet yoxlanışı</h3>
+          <p style="margin:0"><a href="/<%= locale %>/bilet-yoxlama">Bilet kodunu yoxla →</a></p>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,185 @@
+<div class="page-head">
+  <div class="container">
+    <div class="breadcrumb">
+      <a href="/<%= locale %>">Ana səhifə</a> <span>/</span>
+      <a href="/<%= locale %>/reysler?from=<%= from %>&to=<%= to %>&date=<%= trip.date %>&passengers=<%= passengers %>">Reyslər</a>
+      <span>/</span> <span>Yer seçimi</span>
+    </div>
+    <h1>Yer seçimi</h1>
+    <p style="color:var(--ink-2);margin:0">
+      <%= fromName %> → <%= toName %> · <%= trip.date %> · Qatar <strong><%= trip.trainNumber %></strong>
+    </p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="steps">
+      <div class="step is-done"><span class="step__num">✓</span> Reys seçimi</div>
+      <div class="step is-active"><span class="step__num">2</span> Yer seçimi</div>
+      <div class="step"><span class="step__num">3</span> Sərnişin məlumatları</div>
+      <div class="step"><span class="step__num">4</span> Ödəniş</div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <% classMaps.forEach(function(map, mi){ %>
+          <% if (!map) return; %>
+          <div class="card" style="margin-bottom:20px" data-class-block="<%= map.code %>" <%= mi > 0 ? 'hidden' : '' %>>
+            <div class="card__head">
+              <span><%= map.title %> — <%= map.price.toFixed(2) %> ₼ / sərnişin</span>
+              <span class="badge badge--green"><%= map.freeCount %> yer boş</span>
+            </div>
+            <div class="card__body">
+              <div class="wagon-tabs">
+                <% map.wagons.forEach(function(w, wi){ %>
+                  <button type="button" class="tbtn wagon-btn <%= wi === 0 ? 'is-active' : '' %>"
+                          data-wagon="<%= w.wagon %>" data-class="<%= map.code %>"
+                          data-wagon-taken="<%= w.takenCount %>">
+                    Vaqon <%= w.wagon %>
+                  </button>
+                <% }) %>
+              </div>
+
+              <div class="seat-legend">
+                <span><i class="free"></i>Boş</span>
+                <span><i class="taken"></i>Tutulub</span>
+                <span><i class="sel"></i>Seçilmiş</span>
+              </div>
+
+              <% map.wagons.forEach(function(w, wi){ %>
+                <div class="wagon" data-wagon-panel="<%= map.code %>-<%= w.wagon %>" <%= wi > 0 ? 'hidden' : '' %>>
+                  <div class="wagon__label">VAQON <%= w.wagon %> · <%= map.title %></div>
+                  <% for (var r = 1; r <= map.rows; r++) { %>
+                    <div class="seat-row">
+                      <span class="seat-row__num"><%= r %></span>
+                      <% map.letters.forEach(function(l, li){ %>
+                        <% var seatObj = w.seats.find(function(s){ return s.seat === (r + l); }); %>
+                        <% if (li === Math.ceil(map.letters.length / 2)) { %><span class="aisle"></span><% } %>
+                        <button type="button"
+                                class="seat <%= seatObj && seatObj.taken ? 'is-taken' : '' %>"
+                                data-seat="<%= r + l %>"
+                                data-class="<%= map.code %>"
+                                data-wagon="<%= w.wagon %>"
+                                data-price="<%= map.price %>"
+                                <%= seatObj && seatObj.taken ? 'disabled' : '' %>>
+                          <%= r + l %>
+                        </button>
+                      <% }) %>
+                    </div>
+                  <% } %>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+
+      <div>
+        <div class="card order-summary">
+          <div class="card__head">Seçilmiş yerlər</div>
+          <div class="card__body">
+            <div class="summary-row"><span>Marşrut</span><strong><%= fromName %> → <%= toName %></strong></div>
+            <div class="summary-row"><span>Tarix</span><strong><%= trip.date %></strong></div>
+            <div class="summary-row"><span>Sərnişin sayı</span><strong><%= passengers %></strong></div>
+
+            <div id="selectedList" style="margin:16px 0">
+              <p style="color:var(--muted);font-size:.85rem;margin:0">Hələ yer seçilməyib</p>
+            </div>
+
+            <div class="summary-row summary-row--total">
+              <span>Ümumi</span>
+              <span><span id="totalPrice">0.00</span> ₼</span>
+            </div>
+
+            <button type="button" class="btn btn--primary btn--block btn--lg" id="continueBtn" disabled style="margin-top:16px">
+              Davam et
+            </button>
+            <p style="font-size:.78rem;color:var(--muted);margin:10px 0 0;text-align:center">
+              Maksimum 4 bilet bir sifarişdə
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  (function () {
+    var selected = [];
+    var maxSeats = Number('<%= passengers %>');
+    var tripId = '<%= trip._id %>';
+    var from = '<%= from %>';
+    var to = '<%= to %>';
+    var locale = '<%= locale %>';
+
+    var list = document.getElementById('selectedList');
+    var totalEl = document.getElementById('totalPrice');
+    var continueBtn = document.getElementById('continueBtn');
+
+    function render() {
+      if (!selected.length) {
+        list.innerHTML = '<p style="color:var(--muted);font-size:.85rem;margin:0">Hələ yer seçilməyib</p>';
+      } else {
+        list.innerHTML = selected.map(function (s) {
+          return '<div class="summary-row"><span>' + s.class + ' · Vaqon ' + s.wagon + ' · Yer ' + s.seat +
+                 '</span><strong>' + Number(s.price).toFixed(2) + ' ₼</strong></div>';
+        }).join('');
+      }
+      var total = selected.reduce(function (a, s) { return a + Number(s.price); }, 0);
+      totalEl.textContent = total.toFixed(2);
+      continueBtn.disabled = selected.length === 0;
+    }
+
+    document.querySelectorAll('.seat').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var key = btn.dataset.class + '|' + btn.dataset.wagon + '|' + btn.dataset.seat;
+        var idx = selected.findIndex(function (s) { return s.key === key; });
+        if (idx > -1) {
+          selected.splice(idx, 1);
+          btn.classList.remove('is-selected');
+          render();
+          return;
+        }
+        if (selected.length >= maxSeats) {
+          window.toast('Maksimum ' + maxSeats + ' yer seçə bilərsiniz', 'error');
+          return;
+        }
+        selected.push({
+          key: key,
+          seat: btn.dataset.seat,
+          wagon: Number(btn.dataset.wagon),
+          classCode: btn.dataset.class,
+          class: btn.closest('[data-class-block]').querySelector('.card__head span').textContent.split(' —')[0].trim(),
+          price: Number(btn.dataset.price)
+        });
+        btn.classList.add('is-selected');
+        render();
+      });
+    });
+
+    document.querySelectorAll('.wagon-btn').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var cls = b.dataset.class;
+        document.querySelectorAll('.wagon-btn[data-class="' + cls + '"]').forEach(function (x) { x.classList.remove('is-active'); });
+        b.classList.add('is-active');
+        document.querySelectorAll('[data-wagon-panel^="' + cls + '-"]').forEach(function (p) { p.hidden = true; });
+        document.querySelector('[data-wagon-panel="' + cls + '-' + b.dataset.wagon + '"]').hidden = false;
+      });
+    });
+
+    continueBtn.addEventListener('click', function () {
+      if (!selected.length) return;
+      var payload = selected.map(function (s) {
+        return { seat: s.seat, wagon: s.wagon, classCode: s.classCode, price: s.price };
+      });
+      var url = '/' + locale + '/rezervasyon/' + tripId +
+        '?from=' + encodeURIComponent(from) + '&to=' + encodeURIComponent(to) +
+        '&seats=' + encodeURIComponent(JSON.stringify(payload));
+      window.location.href = url;
+    });
+
+    render();
+  })();
+</script>

@@ -1,0 +1,30 @@
+<div class="page-head">
+  <div class="container">
+    <div class="breadcrumb"><a href="/<%= locale %>">Ana səhifə</a> <span>/</span> <span>Kömək</span></div>
+    <h1>Kömək və tez-tez verilən suallar</h1>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container" style="max-width:860px">
+    <% faqs.forEach(function(f){ %>
+      <div class="faq">
+        <div class="faq__q"><%= f.question %></div>
+        <div class="faq__a"><%= f.answer %></div>
+      </div>
+    <% }) %>
+
+    <div class="card" style="margin-top:30px">
+      <div class="card__body" style="display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center">
+        <div>
+          <h3 style="margin-bottom:4px">Cavab tapmadınız?</h3>
+          <p style="color:var(--ink-2);margin:0">Dəstək xidmətimiz 24/7 sizinlədir.</p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a href="tel:<%= site.supportPhone.replace(/\s/g,'') %>" class="btn btn--primary"><%= site.supportPhone %></a>
+          <a href="/<%= locale %>/elaqe" class="btn btn--outline">Əlaqə formu</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

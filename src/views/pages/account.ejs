@@ -1,0 +1,87 @@
+<div class="page-head">
+  <div class="container">
+    <div class="breadcrumb"><a href="/<%= locale %>">Ana səhifə</a> <span>/</span> <span>Şəxsi kabinet</span></div>
+    <h1>Şəxsi kabinet</h1>
+    <p style="color:var(--ink-2);margin:0">Xoş gəldiniz, <%= currentUser.firstName %>!</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="account-grid">
+      <%- include('../partials/account-nav', { active: 'dashboard' }) %>
+
+      <div>
+        <div class="stat-cards">
+          <div class="stat-card"><strong><%= stats.trips %></strong><span>Ümumi bilet</span></div>
+          <div class="stat-card"><strong><%= stats.active %></strong><span>Aktiv bilet</span></div>
+          <div class="stat-card"><strong><%= stats.spent.toFixed(2) %> ₼</strong><span>Xərclənmiş məbləğ</span></div>
+        </div>
+
+        <div class="card" style="margin-bottom:20px">
+          <div class="card__head">
+            <span>Aktiv biletlər</span>
+            <a href="/<%= locale %>/kabinet/biletler" class="btn btn--sm btn--ghost">Hamısı</a>
+          </div>
+          <div class="card__body">
+            <% if (!activeTickets.length) { %>
+              <div class="empty">
+                <div class="empty__icon">🎫</div>
+                <p>Aktiv biletiniz yoxdur.</p>
+                <a href="/<%= locale %>/bilet-axtar" class="btn btn--primary">Bilet al</a>
+              </div>
+            <% } else { %>
+              <% activeTickets.slice(0, 5).forEach(function(t){ %>
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid var(--line);flex-wrap:wrap">
+                  <div>
+                    <div style="font-weight:700"><%= t.fromName %> → <%= t.toName %></div>
+                    <div style="font-size:.82rem;color:var(--muted)">
+                      <%= t.date %> · <%= t.departTime %> · Qatar <%= t.trainNumber %> · Vaqon <%= t.wagon %> · Yer <strong><%= t.seat %></strong>
+                    </div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <span class="badge badge--blue"><%= t.pnr %></span>
+                    <a href="/<%= locale %>/kabinet/bilet/<%= t._id %>" class="btn btn--sm btn--outline">Bax</a>
+                  </div>
+                </div>
+              <% }) %>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__head">
+            <span>Son sifarişlər</span>
+            <a href="/<%= locale %>/kabinet/sifarisler" class="btn btn--sm btn--ghost">Hamısı</a>
+          </div>
+          <div class="card__body">
+            <% if (!orders.length) { %>
+              <p style="color:var(--muted);margin:0">Sifariş yoxdur.</p>
+            <% } else { %>
+              <div class="table-wrap" style="border:0">
+                <table class="data" style="min-width:520px">
+                  <thead><tr><th>Sifariş №</th><th>Marşrut</th><th>Tarix</th><th>Məbləğ</th><th>Status</th></tr></thead>
+                  <tbody>
+                    <% orders.slice(0, 6).forEach(function(o){ %>
+                      <tr>
+                        <td class="num"><%= o.orderNo %></td>
+                        <td><%= o.fromName %> → <%= o.toName %></td>
+                        <td><%= o.date %></td>
+                        <td class="num"><%= o.total.toFixed(2) %> ₼</td>
+                        <td>
+                          <span class="badge <%= o.status === 'paid' ? 'badge--green' : (o.status === 'pending' ? 'badge--gold' : 'badge--gray') %>">
+                            <%= { paid: 'Ödənilib', pending: 'Gözləyir', cancelled: 'Ləğv edilib', refunded: 'Qaytarılıb', partially_refunded: 'Qismən qaytarılıb' }[o.status] || o.status %>
+                          </span>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

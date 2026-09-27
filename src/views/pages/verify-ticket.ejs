@@ -1,0 +1,24 @@
+<div class="page-head">
+  <div class="container">
+    <div class="breadcrumb"><a href="/<%= locale %>">Ana səhifə</a> <span>/</span> <span>Bilet yoxlanışı</span></div>
+    <h1>Bilet yoxlanışı</h1>
+    <p style="color:var(--ink-2);margin:0">Bilet kodunu (PNR) daxil edərək biletin etibarlılığını yoxlayın</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container" style="max-width:620px">
+    <div class="card">
+      <div class="card__body">
+        <form id="verifyForm">
+          <div class="field">
+            <label>Bilet kodu (PNR)</label>
+            <input type="text" name="pnr" placeholder="A1B2C3" maxlength="6" style="text-transform:uppercase;letter-spacing:4px;text-align:center;font-size:1.2rem" required />
+          </div>
+          <button type="submit" class="btn btn--primary btn--block">Yoxla</button>
+        </form>
+        <div id="verifyResult" style="margin-top:20px"></div>
+      </div>
+    </div>
+  </div>
+</section>

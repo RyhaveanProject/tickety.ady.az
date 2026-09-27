@@ -1,0 +1,77 @@
+<div class="page-head">
+  <div class="container">
+    <div class="breadcrumb"><a href="/<%= locale %>">Ana səhifə</a> <span>/</span> <span>Bilet al</span></div>
+    <h1>Qatara online bilet al</h1>
+    <p style="color:var(--ink-2);margin:0">
+      Dəmir yolu ilə şəhər və rayonlara səyahət üçün qatara online bilet almaq çox sadə prosesdir.
+    </p>
+  </div>
+</div>
+
+<div class="container" style="margin-top:-6px">
+  <%- include('../partials/search-form', { stations: stations, today: today, maxDate: maxDate, prefill: prefill }) %>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="grid grid--3">
+      <div class="card"><div class="card__body">
+        <div style="font-size:1.6rem;margin-bottom:10px">1️⃣</div>
+        <h3 style="font-size:1rem">Reysi seç</h3>
+        <p style="color:var(--ink-2);font-size:.875rem;margin:0">Gediş və təyinat stansiyasını, tarixi göstərin — uyğun reysləri göstərəcəyik.</p>
+      </div></div>
+      <div class="card"><div class="card__body">
+        <div style="font-size:1.6rem;margin-bottom:10px">2️⃣</div>
+        <h3 style="font-size:1rem">Yeri özün təyin et</h3>
+        <p style="color:var(--ink-2);font-size:.875rem;margin:0">Vaqon sxemindən istədiyin yeri seç. Boş və tutulmuş yerlər aydın göstərilir.</p>
+      </div></div>
+      <div class="card"><div class="card__body">
+        <div style="font-size:1.6rem;margin-bottom:10px">3️⃣</div>
+        <h3 style="font-size:1rem">Kartla ödə</h3>
+        <p style="color:var(--ink-2);font-size:.875rem;margin:0">Bank kartı (Visa/Mastercard/MilliKart) və ya balansla ödə. Elektron bilet dərhal hazır olur.</p>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section section--tight" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="container">
+    <div class="grid grid--2" style="gap:34px">
+      <div>
+        <h2 style="font-size:1.15rem">Bilet satışı qaydaları</h2>
+        <ul style="color:var(--ink-2);font-size:.9rem;padding-left:20px">
+          <li>Satış yola düşmədən <strong><%= rules.salesOpenDaysBefore %> gün</strong> əvvəl açılır.</li>
+          <li>Satış yola düşmədən <strong><%= rules.salesCloseHoursBefore %> saat</strong> əvvəl bağlanır.</li>
+          <li>Bir sifarişdə maksimum <strong><%= rules.maxTicketsPerOrder %> bilet</strong> almaq olar.</li>
+          <li>Hər sərnişin üçün ad, soyad və sənəd nömrəsi mütləqdir.</li>
+          <li>Stansiyaya yola düşmədən ən azı 20 dəqiqə əvvəl gəlmək tövsiyə olunur.</li>
+        </ul>
+      </div>
+      <div>
+        <h2 style="font-size:1.15rem">Qaytarma qaydası</h2>
+        <ul style="color:var(--ink-2);font-size:.9rem;padding-left:20px">
+          <li>Bilet alındıqdan sonrakı <strong><%= rules.freeRefundMinutes %> dəqiqə</strong> ərzində qaytarılarsa xidmət haqqı tutulmur.</li>
+          <li><%= rules.freeRefundMinutes %> dəqiqədən sonra qaytarıldıqda <strong><%= rules.refundServiceFee %> AZN</strong> xidmət haqqı tutulur.</li>
+          <li>Yola düşməyə 5 dəqiqə qalmış biletin qaytarılması mümkün deyil.</li>
+          <li>Qaytarma şəxsi kabinetdən "Qaytar" düyməsi ilə edilir.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section__head"><div><div class="eyebrow">Sürətli keçid</div><h2>Populyar marşrutlar</h2></div></div>
+    <div class="grid grid--4">
+      <% [['BAK','SUM','Bakı','Sumqayıt'],['BAK','GAN','Bakı','Gəncə'],['BAK','GAZ','Bakı','Qazax'],['BAK','AJC','Bakı','Astara']].forEach(function(p){ %>
+        <a class="card" href="/<%= locale %>/reysler?from=<%= p[0] %>&to=<%= p[1] %>&date=<%= today %>&passengers=1" style="text-decoration:none">
+          <div class="card__body">
+            <div style="font-weight:700;color:var(--ady-blue)"><%= p[2] %> → <%= p[3] %></div>
+            <small style="color:var(--muted)">Bilet axtar →</small>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+  </div>
+</section>

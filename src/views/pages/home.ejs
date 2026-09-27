@@ -1,0 +1,203 @@
+<section class="hero">
+  <div class="container hero__inner">
+    <div class="eyebrow" style="color:#f2a900">Azərbaycan Dəmir Yolları</div>
+    <h1>Qatara online bilet al — səyahətə bu gün başla</h1>
+    <p class="hero__sub">Bakı–Abşeron xətti, ölkədaxili və beynəlxalq reyslər. Biletini bir neçə dəqiqədə al, elektron bileti telefonunda saxla.</p>
+    <div class="hero__stats">
+      <div class="hero__stat"><strong><%= timetable.absheron.length %></strong><span>Abşeron xətti reysi</span></div>
+      <div class="hero__stat"><strong><%= timetable.domestic.length %></strong><span>Ölkədaxili reys</span></div>
+      <div class="hero__stat"><strong><%= stations.length %></strong><span>Stansiya</span></div>
+      <div class="hero__stat"><strong>4</strong><span>Maks. bilet / sifariş</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+  <%- include('../partials/search-form', { stations: stations, today: serverDate, maxDate: serverDateTomorrow, prefill: null }) %>
+</div>
+
+<!-- ==================== Populyar istiqamətlər ==================== -->
+<section class="section">
+  <div class="container">
+    <div class="section__head">
+      <div>
+        <div class="eyebrow">Səyahət</div>
+        <h2>Populyar istiqamətlər</h2>
+        <p>ADY ilə Azərbaycanı kəşf et</p>
+      </div>
+      <a href="/<%= locale %>/populyar-istiqametler" class="btn btn--outline">Hamısına bax</a>
+    </div>
+
+    <div class="grid grid--4">
+      <% destinations.forEach(function(d){ %>
+        <a href="/<%= locale %>/populyar-istiqametler/<%= d.slug %>" class="feature">
+          <% if (d.image) { %>
+            <img src="<%= d.image %>" alt="<%= d.title %>" class="feature__img" loading="lazy" />
+          <% } else { %>
+            <div class="feature__img" style="display:grid;place-items:center;font-size:2rem">🚆</div>
+          <% } %>
+          <div class="feature__body">
+            <h3><%= d.title %></h3>
+            <p><%= d.summary %></p>
+            <span class="feature__link">Ətraflı oxu →</span>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== Xidmətlər ==================== -->
+<section class="section section--tight" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="container">
+    <div class="grid grid--4">
+      <div class="card"><div class="card__body">
+        <div style="font-size:1.7rem;margin-bottom:10px">🎫</div>
+        <h3 style="font-size:1rem">Online bilet</h3>
+        <p style="color:var(--ink-2);font-size:.875rem;margin:0">Reysləri seç, yeri özün təyin et, kartla ödə.</p>
+      </div></div>
+      <div class="card"><div class="card__body">
+        <div style="font-size:1.7rem;margin-bottom:10px">💳</div>
+        <h3 style="font-size:1rem">Balans artırılması</h3>
+        <p style="color:var(--ink-2);font-size:.875rem;margin:0">Fiziki kartın balansını onlayn artır.</p>
+      </div></div>
+      <div class="card"><div class="card__body">
+        <div style="font-size:1.7rem;margin-bottom:10px">📱</div>
+        <h3 style="font-size:1rem">QR bilet</h3>
+        <p style="color:var(--ink-2);font-size:.875rem;margin:0">Elektron bilet QR kod ilə — kağız lazım deyil.</p>
+      </div></div>
+      <div class="card"><div class="card__body">
+        <div style="font-size:1.7rem;margin-bottom:10px">↩️</div>
+        <h3 style="font-size:1rem">Asan qaytarma</h3>
+        <p style="color:var(--ink-2);font-size:.875rem;margin:0">Bileti şəxsi kabinetdən qaytar.</p>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== Hərəkət cədvəli ==================== -->
+<section class="section">
+  <div class="container">
+    <div class="section__head">
+      <div>
+        <div class="eyebrow">Cədvəl</div>
+        <h2>Abşeron dairəvi xətti üzrə qatarların hərəkət cədvəli</h2>
+        <p><%= serverDate %> tarixinə — Bakı, Biləcəri, Xırdalan, Sumqayıt</p>
+      </div>
+      <a href="/<%= locale %>/hereket-cedveli" class="btn btn--outline">Tam cədvəl</a>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Qatar</th><th>Bakı</th><th>Biləcəri</th><th>Xırdalan</th><th>Sumqayıt</th><th>Ətraflı</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% timetable.absheron.slice(0, 12).forEach(function(t){ %>
+            <tr>
+              <td class="num"><strong><%= t.number %></strong></td>
+              <% ['BAK','BIL','XRD','SUM'].forEach(function(code){ %>
+                <% var st = t.stops.find(function(s){ return s.code === code; }); %>
+                <td class="num"><%= st ? (st.depart || st.arrive || '—') : '—' %></td>
+              <% }) %>
+              <td><a href="/<%= locale %>/reysler?from=BAK&to=SUM&date=<%= serverDate %>&passengers=1" class="btn btn--sm btn--primary">Bilet al</a></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== Ölkədaxili reyslər ==================== -->
+<section class="section section--tight">
+  <div class="container">
+    <div class="section__head">
+      <div>
+        <div class="eyebrow">Ölkə daxili</div>
+        <h2>Bakı — Qazax istiqaməti</h2>
+        <p>Sürətli qatar xidməti artıq Gəncə, Tovuz və Ağstafa üzərindən Qazaxa qədər</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr><th>Qatar</th><th>Bakı</th><th>Gəncə</th><th>Tovuz</th><th>Ağstafa</th><th>Qazax</th><th></th></tr>
+        </thead>
+        <tbody>
+          <% timetable.domestic.forEach(function(t){ %>
+            <tr>
+              <td class="num"><strong><%= t.number %></strong></td>
+              <% ['BAK','GAN','TOV','AGS','QAZ'].forEach(function(code){ %>
+                <% var st = t.stops.find(function(s){ return s.code === code; }); %>
+                <td class="num"><%= st ? (st.arrive || st.depart || '—') : '—' %></td>
+              <% }) %>
+              <td><a href="/<%= locale %>/reysler?from=BAK&to=GAZ&date=<%= serverDate %>&passengers=1" class="btn btn--sm btn--primary">Bilet al</a></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== Xəbərlər ==================== -->
+<section class="section">
+  <div class="container">
+    <div class="section__head">
+      <div>
+        <div class="eyebrow">Xəbərlər</div>
+        <h2>Son xəbərlər</h2>
+      </div>
+      <a href="/<%= locale %>/xeberler" class="btn btn--outline">Bütün xəbərlər</a>
+    </div>
+    <div class="grid grid--3">
+      <% news.forEach(function(n){ %>
+        <a href="/<%= locale %>/xeberler/<%= n.slug %>" class="feature">
+          <% if (n.image) { %><img src="<%= n.image %>" alt="<%= n.title %>" class="feature__img" loading="lazy" /><% } %>
+          <div class="feature__body">
+            <div class="news-card__meta"><span><%= new Date(n.publishedAt).toLocaleDateString('az-AZ') %></span></div>
+            <h3><%= n.title %></h3>
+            <p><%= n.excerpt %></p>
+            <span class="feature__link">Ətraflı →</span>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== FAQ ==================== -->
+<section class="section section--tight" style="background:#fff;border-top:1px solid var(--line)">
+  <div class="container">
+    <div class="section__head"><div><div class="eyebrow">Kömək</div><h2>Tez-tez verilən suallar</h2></div></div>
+    <div class="grid grid--2">
+      <% faqs.forEach(function(f){ %>
+        <div class="faq">
+          <div class="faq__q"><%= f.question %></div>
+          <div class="faq__a"><%= f.answer %></div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== Abunə ==================== -->
+<section class="section section--tight">
+  <div class="container">
+    <div class="card" style="background:linear-gradient(135deg,#00539b,#003c73);border:0">
+      <div class="card__body" style="display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap">
+        <div>
+          <h2 style="color:#fff;margin-bottom:6px">Dəyişikliklər barədə bildiriş</h2>
+          <p style="color:#cfe0f0;margin:0">Yeni reyslər, endirimlər və cədvəl dəyişiklikləri barədə ilk sən bil.</p>
+        </div>
+        <form id="subscribeForm" class="subscribe" style="min-width:320px">
+          <input type="email" name="email" placeholder="Elektron poçt" required />
+          <button type="submit" class="btn btn--gold">Abunə ol</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>

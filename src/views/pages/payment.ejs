@@ -1,0 +1,248 @@
+<div class="page-head">
+  <div class="container">
+    <div class="breadcrumb"><a href="/<%= locale %>">Ana səhifə</a> <span>/</span> <span>Ödəniş</span></div>
+    <h1>Ödəniş</h1>
+    <p style="color:var(--ink-2);margin:0">Sifariş № <strong><%= order.orderNo %></strong> · Ümumi <strong><%= order.total.toFixed(2) %> ₼</strong></p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="steps">
+      <div class="step is-done"><span class="step__num">✓</span> Reys</div>
+      <div class="step is-done"><span class="step__num">✓</span> Yer</div>
+      <div class="step is-done"><span class="step__num">✓</span> Sərnişin</div>
+      <div class="step is-active"><span class="step__num">4</span> Ödəniş</div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="card">
+          <div class="card__head">
+            <span>Ödəniş üsulu</span>
+            <span class="badge badge--green">🔒 Təhlükəsiz ödəniş</span>
+          </div>
+          <div class="card__body">
+            <div class="pay-methods" style="margin-bottom:22px">
+              <label class="pay-method is-active" data-method="card">
+                <input type="radio" name="payMethod" value="card" checked hidden />
+                <span class="pay-method__icon">💳</span>
+                <span class="pay-method__text">
+                  <strong>Bank kartı</strong>
+                  <small>Visa · Mastercard · MilliKart — 3D Secure</small>
+                </span>
+              </label>
+              <label class="pay-method" data-method="balance">
+                <input type="radio" name="payMethod" value="balance" hidden />
+                <span class="pay-method__icon">💰</span>
+                <span class="pay-method__text">
+                  <strong>Balansdan ödəniş</strong>
+                  <small>Cari balans: <%= (balance || 0).toFixed(2) %> ₼</small>
+                </span>
+              </label>
+            </div>
+
+            <!-- ============ Kart forması ============ -->
+            <div id="cardForm" data-method-panel="card">
+              <div class="card-visual">
+                <div class="card-visual__chip"></div>
+                <div class="card-visual__num" id="cvNum">•••• •••• •••• ••••</div>
+                <div class="card-visual__row">
+                  <div>CARD HOLDER<b id="cvName">AD SOYAD</b></div>
+                  <div>EXPIRES<b id="cvExp">MM/YY</b></div>
+                </div>
+              </div>
+
+              <div class="field" data-field>
+                <label>Kart nömrəsi *</label>
+                <input type="text" id="cardNumber" inputmode="numeric" placeholder="0000 0000 0000 0000" maxlength="23" autocomplete="cc-number" />
+                <div class="field__error">Kart nömrəsi yanlışdır (Luhn yoxlanışı)</div>
+              </div>
+
+              <div class="field" data-field>
+                <label>Kart sahibinin adı *</label>
+                <input type="text" id="holderName" placeholder="AD SOYAD" autocomplete="cc-name" />
+                <div class="field__error">Ad və soyadı daxil edin</div>
+              </div>
+
+              <div class="form-row">
+                <div class="field" data-field>
+                  <label>Bitmə tarixi *</label>
+                  <input type="text" id="expiry" placeholder="MM/YY" maxlength="5" inputmode="numeric" autocomplete="cc-exp" />
+                  <div class="field__error">Tarix yanlışdır</div>
+                </div>
+                <div class="field" data-field>
+                  <label>CVV *</label>
+                  <input type="password" id="cvv" placeholder="•••" maxlength="4" inputmode="numeric" autocomplete="cc-csc" />
+                  <div class="field__error">CVV yanlışdır</div>
+                </div>
+              </div>
+
+              <div class="alert alert--info" style="font-size:.82rem">
+                <strong>Demo rejim:</strong> Ödəniş şlüzü simulyasiya olunur. Təsdiq kodu: <strong><%= (typeof demoOtp !== 'undefined' && demoOtp) ? demoOtp : '1234' %></strong>.
+                Kart <strong>0000</strong> ilə bitirsə, bank rəddi ssenarisi işə düşür.
+              </div>
+
+              <button type="button" class="btn btn--primary btn--block btn--lg" id="payCardBtn">
+                <%= order.total.toFixed(2) %> ₼ ödə
+              </button>
+            </div>
+
+            <!-- ============ Balans paneli ============ -->
+            <div id="balancePanel" data-method-panel="balance" hidden>
+              <div class="alert alert--info">
+                Cari balansınız: <strong><%= (balance || 0).toFixed(2) %> ₼</strong><br />
+                Ödəniləcək: <strong><%= order.total.toFixed(2) %> ₼</strong>
+              </div>
+              <button type="button" class="btn btn--primary btn--block btn--lg" id="payBalanceBtn">Balansdan ödə</button>
+              <% if ((balance || 0) < order.total) { %>
+                <p style="font-size:.85rem;color:var(--red);margin-top:10px">
+                  Balans kifayət etmir. <a href="/<%= locale %>/balans-artirilmasi">Balansı artır →</a>
+                </p>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card order-summary">
+          <div class="card__head">Sifarişin xülasəsi</div>
+          <div class="card__body">
+            <div class="summary-row"><span>Qatar</span><strong><%= order.trainNumber %></strong></div>
+            <div class="summary-row"><span>Marşrut</span><strong><%= order.fromName %> → <%= order.toName %></strong></div>
+            <div class="summary-row"><span>Tarix</span><strong><%= order.date %></strong></div>
+            <div class="summary-row"><span>Yola düşmə</span><strong><%= order.departTime %></strong></div>
+            <% (order.passengers || []).forEach(function(p){ %>
+              <div class="summary-row">
+                <span><%= p.firstName %> <%= p.lastName %><br /><small style="color:var(--muted)">Vaqon <%= p.wagon %> · Yer <%= p.seat %> · <%= p.className %></small></span>
+                <strong><%= p.price.toFixed(2) %> ₼</strong>
+              </div>
+            <% }) %>
+            <div class="summary-row"><span>Xidmət haqqı</span><strong><%= (order.serviceFee || 0).toFixed(2) %> ₼</strong></div>
+            <div class="summary-row summary-row--total">
+              <span>Ümumi</span><span><%= order.total.toFixed(2) %> ₼</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ OTP modal ============ -->
+<div class="modal-backdrop" id="otpModal">
+  <div class="modal">
+    <h3>3D Secure təsdiqi</h3>
+    <p style="color:var(--ink-2);font-size:.9rem">
+      <span id="otpMaskedCard"></span> kartına göndərilən təsdiq kodunu daxil edin.
+    </p>
+    <div class="field">
+      <label>Təsdiq kodu</label>
+      <input type="text" id="otpInput" maxlength="6" inputmode="numeric" placeholder="••••" style="text-align:center;font-size:1.4rem;letter-spacing:8px" />
+    </div>
+    <div class="alert alert--warn" id="otpHint"></div>
+    <div class="modal__actions">
+      <button type="button" class="btn btn--outline" id="otpCancel">Ləğv et</button>
+      <button type="button" class="btn btn--primary" id="otpConfirm">Təsdiqlə</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var orderId = '<%= order._id %>';
+    var locale = '<%= locale %>';
+    var paymentId = null;
+
+    /* ---- Ödəniş üsulu seçimi ---- */
+    document.querySelectorAll('.pay-method').forEach(function (m) {
+      m.addEventListener('click', function () {
+        document.querySelectorAll('.pay-method').forEach(function (x) { x.classList.remove('is-active'); });
+        m.classList.add('is-active');
+        var method = m.dataset.method;
+        document.querySelectorAll('[data-method-panel]').forEach(function (p) {
+          p.hidden = p.dataset.methodPanel !== method;
+        });
+      });
+    });
+
+    /* ---- Kart forması ---- */
+    var cardNumber = document.getElementById('cardNumber');
+    var holderName = document.getElementById('holderName');
+    var expiry = document.getElementById('expiry');
+    var cvv = document.getElementById('cvv');
+
+    cardNumber.addEventListener('input', function () {
+      var v = cardNumber.value.replace(/\D/g, '').slice(0, 19);
+      cardNumber.value = v.replace(/(.{4})/g, '$1 ').trim();
+      document.getElementById('cvNum').textContent = (cardNumber.value || '•••• •••• •••• ••••').padEnd(19, ' •');
+    });
+    holderName.addEventListener('input', function () {
+      document.getElementById('cvName').textContent = (holderName.value || 'AD SOYAD').toUpperCase();
+    });
+    expiry.addEventListener('input', function () {
+      var v = expiry.value.replace(/\D/g, '').slice(0, 4);
+      expiry.value = v.length > 2 ? v.slice(0, 2) + '/' + v.slice(2) : v;
+      document.getElementById('cvExp').textContent = expiry.value || 'MM/YY';
+    });
+    cvv.addEventListener('input', function () { cvv.value = cvv.value.replace(/\D/g, '').slice(0, 4); });
+
+    /* ---- Kart ödənişi ---- */
+    var payCardBtn = document.getElementById('payCardBtn');
+    payCardBtn.addEventListener('click', async function () {
+      window.setLoading(payCardBtn, true);
+      var r = await window.api('/api/payment/card/init', {
+        orderId: orderId,
+        cardNumber: cardNumber.value,
+        holderName: holderName.value,
+        expiry: expiry.value,
+        cvv: cvv.value
+      });
+      window.setLoading(payCardBtn, false);
+
+      if (!r.ok) { window.toast(r.message || 'Ödəniş alınmadı', 'error'); return; }
+
+      paymentId = r.paymentId;
+      document.getElementById('otpMaskedCard').textContent = r.maskedCard;
+      document.getElementById('otpHint').textContent = 'Demo rejim — təsdiq kodu: ' + r.demoOtp;
+      document.getElementById('otpInput').value = '';
+      document.getElementById('otpModal').classList.add('is-open');
+    });
+
+    document.getElementById('otpCancel').addEventListener('click', function () {
+      document.getElementById('otpModal').classList.remove('is-open');
+    });
+
+    document.getElementById('otpConfirm').addEventListener('click', async function () {
+      var btn = this;
+      window.setLoading(btn, true);
+      var r = await window.api('/api/payment/card/confirm', {
+        paymentId: paymentId,
+        otp: document.getElementById('otpInput').value
+      });
+      window.setLoading(btn, false);
+      if (r.ok) {
+        document.getElementById('otpModal').classList.remove('is-open');
+        window.toast('Ödəniş uğurludur!', 'success');
+        setTimeout(function () { window.location.href = r.redirect; }, 700);
+      } else {
+        window.toast(r.message || 'Kod yanlışdır', 'error');
+      }
+    });
+
+    /* ---- Balansla ödəniş ---- */
+    var payBalanceBtn = document.getElementById('payBalanceBtn');
+    payBalanceBtn.addEventListener('click', async function () {
+      window.setLoading(payBalanceBtn, true);
+      var r = await window.api('/api/payment/balance', { orderId: orderId });
+      window.setLoading(payBalanceBtn, false);
+      if (r.ok) {
+        window.toast('Ödəniş uğurludur!', 'success');
+        setTimeout(function () { window.location.href = r.redirect; }, 700);
+      } else {
+        window.toast(r.message || 'Ödəniş alınmadı', 'error');
+      }
+    });
+  })();
+</script>
