@@ -12,7 +12,9 @@
     "dev": "nodemon server.js",
     "seed": "node src/seed/seed.js",
     "seed:force": "node src/seed/seed.js --force",
-    "build": "npm install"
+    "build": "npm install",
+    "assets": "node scripts/make-assets.js",
+    "seed:ady": "node scripts/seed-ady.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
