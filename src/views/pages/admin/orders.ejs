@@ -1,0 +1,45 @@
+<section class="section">
+  <div class="container">
+    <div class="section__head">
+      <div><div class="eyebrow"><%= t('nav.panel') %></div><h1><%= t('admin.orders') %></h1></div>
+      <div class="flex">
+        <a href="?status=all" class="btn btn--sm <%= status === 'all' ? 'btn--primary' : 'btn--outline' %>">Hamısı</a>
+        <a href="?status=confirmed" class="btn btn--sm <%= status === 'confirmed' ? 'btn--primary' : 'btn--outline' %>">Təsdiqlənmiş</a>
+        <a href="?status=pending_admin" class="btn btn--sm <%= status === 'pending_admin' ? 'btn--primary' : 'btn--outline' %>">Gözləyən</a>
+        <a href="?status=refunded" class="btn btn--sm <%= status === 'refunded' ? 'btn--primary' : 'btn--outline' %>">Qaytarılmış</a>
+      </div>
+    </div>
+
+    <div class="layout-aside">
+      <%- include('../../partials/admin-nav') %>
+
+      <div>
+        <div class="table-wrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>Sifariş</th><th>İstifadəçi</th><th><%= t('table.route') %></th><th><%= t('common.date') %></th>
+                <th>Sərnişin</th><th><%= t('checkout.total') %></th><th><%= t('account.status') %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (!orders.length) { %><tr><td colspan="7">Sifariş yoxdur.</td></tr><% } %>
+              <% orders.forEach(function(o){ %>
+                <% var u = userMap[String(o.user)]; %>
+                <tr>
+                  <td class="mono"><%= o.orderNo %></td>
+                  <td><%= u ? [u.firstName, u.lastName].join(' ') : '—' %><br /><span class="sec-note"><%= u ? u.email : '' %></span></td>
+                  <td><%= o.fromName %> — <%= o.toName %><br /><span class="sec-note"><%= o.trainNumber %></span></td>
+                  <td><%= o.date %> <%= o.departTime %></td>
+                  <td><%= o.passengers.map(function(p){ return p.wagon + '/' + p.seat; }).join(', ') %></td>
+                  <td class="mono"><%= o.total.toFixed(2) %> ₼</td>
+                  <td><span class="badge badge--gray"><%= t('status.' + o.status) %></span></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

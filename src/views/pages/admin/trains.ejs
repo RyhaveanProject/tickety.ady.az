@@ -1,0 +1,44 @@
+<section class="section">
+  <div class="container">
+    <div class="section__head">
+      <div><div class="eyebrow"><%= t('nav.panel') %></div><h1><%= t('admin.trains') %></h1><p><%= total %> qatar şablonu</p></div>
+      <div class="flex">
+        <a href="?line=all" class="btn btn--sm <%= line === 'all' ? 'btn--primary' : 'btn--outline' %>">Hamısı</a>
+        <a href="?line=absheron" class="btn btn--sm <%= line === 'absheron' ? 'btn--primary' : 'btn--outline' %>">Abşeron</a>
+        <a href="?line=domestic" class="btn btn--sm <%= line === 'domestic' ? 'btn--primary' : 'btn--outline' %>">Ölkədaxili</a>
+        <a href="?line=georgia" class="btn btn--sm <%= line === 'georgia' ? 'btn--primary' : 'btn--outline' %>">Gürcüstan</a>
+        <a href="?line=international" class="btn btn--sm <%= line === 'international' ? 'btn--primary' : 'btn--outline' %>">Beynəlxalq</a>
+      </div>
+    </div>
+
+    <div class="layout-aside">
+      <%- include('../../partials/admin-nav') %>
+
+      <div>
+        <div class="table-wrap">
+          <table class="data">
+            <thead>
+              <tr><th>Nömrə</th><th>Ad</th><th>Xətt</th><th>Marşrut</th><th>Siniflər</th><th>Günlər</th></tr>
+            </thead>
+            <tbody>
+              <% trains.forEach(function(tr){ %>
+                <tr>
+                  <td class="num"><strong><%= tr.number %></strong></td>
+                  <td><%= tr.title %></td>
+                  <td><span class="badge badge--blue"><%= tr.line %></span></td>
+                  <td><%= (tr.stops[0] || {}).name %> — <%= (tr.stops[tr.stops.length - 1] || {}).name %></td>
+                  <td>
+                    <% tr.classes.forEach(function(c){ %>
+                      <span class="chip"><%= c.title %> · <%= c.price.toFixed(2) %> ₼</span>
+                    <% }) %>
+                  </td>
+                  <td class="sec-note"><%= (tr.weekdays || []).join(',') %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

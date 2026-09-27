@@ -1,0 +1,56 @@
+<section class="section">
+  <div class="container">
+    <div class="section__head">
+      <div>
+        <div class="eyebrow"><%= t('nav.panel') %></div>
+        <h1><%= t('admin.sync') %></h1>
+        <p>Mənbə: <a href="<%= sourceUrl %>" target="_blank" rel="noopener"><%= sourceUrl %></a></p>
+      </div>
+      <button class="btn btn--primary" data-admin-action="sync">Sinxronizasiyanı işlət</button>
+    </div>
+
+    <div class="layout-aside">
+      <%- include('../../partials/admin-nav') %>
+
+      <div>
+        <div class="grid grid--3 mb-24">
+          <div class="stat"><div class="stat__label">Avtomatik sinxronizasiya</div><div class="stat__value" style="font-size:1.1rem"><%= enabled ? 'Aktiv' : 'Söndürülüb' %></div></div>
+          <div class="stat"><div class="stat__label">İnterval</div><div class="stat__value" style="font-size:1.1rem"><%= intervalHours %> saat</div></div>
+          <div class="stat"><div class="stat__label">Son sinxronizasiya</div><div class="stat__value" style="font-size:1rem"><%= logs.length ? new Date(logs[0].createdAt).toLocaleString('az-AZ') : '—' %></div></div>
+        </div>
+
+        <div class="card mb-24"><div class="card__body">
+          <h3 style="font-size:1rem">Necə işləyir</h3>
+          <p class="sec-note mb-0">
+            Sistem gündəlik olaraq rəsmi mənbədən hərəkət cədvəlini, tarifləri və reysləri oxuyur.
+            Oxunan tarif dəyərləri məlumat bazasındakı reys qiymətlərinə tətbiq olunur və bütün reyslər
+            (Abşeron xətti, ölkədaxili, Gürcüstan daxili və beynəlxalq) canlı olaraq saytda göstərilir.
+            Mənbə təhlükəsizlik qatı ilə qorunduğu hallarda oxuma qeydə alınır və rəsmi cədvəl bazası göstərilir.
+          </p>
+        </div></div>
+
+        <div class="table-wrap">
+          <table class="data">
+            <thead>
+              <tr><th>Vaxt</th><th>Vəziyyət</th><th>HTTP</th><th>Stansiya</th><th>Qatar</th><th>Tarif</th><th>Qeyd</th></tr>
+            </thead>
+            <tbody>
+              <% if (!logs.length) { %><tr><td colspan="7">Sinxronizasiya qeydi yoxdur.</td></tr><% } %>
+              <% logs.forEach(function(l){ %>
+                <tr>
+                  <td class="sec-note"><%= new Date(l.createdAt).toLocaleString('az-AZ') %></td>
+                  <td><span class="badge badge--<%= l.status === 'success' ? 'green' : l.status === 'blocked' ? 'gold' : l.status === 'failed' ? 'red' : 'gray' %>"><%= l.status %></span></td>
+                  <td class="num"><%= l.httpStatus || '—' %></td>
+                  <td class="num"><%= l.stationsUpserted %></td>
+                  <td class="num"><%= l.trainsUpserted %></td>
+                  <td class="num"><%= l.faresUpserted %></td>
+                  <td class="sec-note"><%= l.message || '—' %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

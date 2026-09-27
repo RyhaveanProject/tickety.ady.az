@@ -1,0 +1,33 @@
+<section class="section">
+  <div class="container">
+    <div class="section__head">
+      <div><div class="eyebrow"><%= t('nav.panel') %></div><h1><%= t('admin.users') %></h1></div>
+    </div>
+
+    <div class="layout-aside">
+      <%- include('../../partials/admin-nav') %>
+
+      <div>
+        <div class="table-wrap">
+          <table class="data">
+            <thead>
+              <tr><th>Ad, soyad</th><th>E-poçt</th><th>Telefon</th><th>Rol</th><th><%= t('account.balance') %></th><th>Qeydiyyat</th></tr>
+            </thead>
+            <tbody>
+              <% users.forEach(function(u){ %>
+                <tr>
+                  <td><%= [u.lastName, u.firstName, u.middleName].filter(Boolean).join(' ') %></td>
+                  <td><%= u.email %></td>
+                  <td><%= u.phone || '—' %></td>
+                  <td><span class="badge badge--<%= u.role === 'admin' ? 'gold' : 'gray' %>"><%= u.role === 'admin' ? 'İdarəçi' : 'İstifadəçi' %></span></td>
+                  <td class="mono"><%= (u.balance || 0).toFixed(2) %> ₼</td>
+                  <td class="sec-note"><%= new Date(u.createdAt).toLocaleDateString('az-AZ') %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

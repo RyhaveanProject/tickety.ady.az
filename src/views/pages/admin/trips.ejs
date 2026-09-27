@@ -1,0 +1,74 @@
+<section class="section">
+  <div class="container">
+    <div class="section__head">
+      <div><div class="eyebrow"><%= t('nav.panel') %></div><h1><%= t('admin.trips') %></h1><p><%= dateText %></p></div>
+    </div>
+
+    <div class="layout-aside">
+      <%- include('../../partials/admin-nav') %>
+
+      <div>
+        <div class="card mb-24"><div class="card__body">
+          <form method="get" action="/<%= locale %>/admin/reysler" class="grid grid--4" style="align-items:end">
+            <div>
+              <label><%= t('timetable.date') %></label>
+              <input type="date" name="date" value="<%= date %>" min="<%= today %>" />
+            </div>
+            <div>
+              <label><%= t('timetable.line') %></label>
+              <select name="line">
+                <option value="all" <%= line === 'all' ? 'selected' : '' %>>Bütün xətlər</option>
+                <option value="absheron" <%= line === 'absheron' ? 'selected' : '' %>>Abşeron</option>
+                <option value="domestic" <%= line === 'domestic' ? 'selected' : '' %>>Ölkədaxili</option>
+                <option value="georgia" <%= line === 'georgia' ? 'selected' : '' %>>Gürcüstan</option>
+                <option value="international" <%= line === 'international' ? 'selected' : '' %>>Beynəlxalq</option>
+              </select>
+            </div>
+            <div><button type="submit" class="btn btn--primary btn--block"><%= t('timetable.show') %></button></div>
+          </form>
+        </div></div>
+
+        <div class="table-wrap">
+          <table class="data">
+            <thead>
+              <tr><th><%= t('table.train') %></th><th><%= t('table.route') %></th><th><%= t('table.depart') %></th><th><%= t('table.price') %></th><th></th></tr>
+            </thead>
+            <tbody>
+              <% if (!rows.length) { %><tr><td colspan="5"><%= t('results.none') %></td></tr><% } %>
+              <% rows.forEach(function(r){ %>
+                <tr>
+                  <td class="num"><strong><%= r.number %></strong><br /><span class="sec-note"><%= r.title %></span></td>
+                  <td><%= r.from %> — <%= r.to %></td>
+                  <td class="num"><%= r.depart %></td>
+                  <td class="num"><%= r.minPrice.toFixed(2) %> ₼</td>
+                  <td>
+                    <% if (r.tripId) { %>
+                      <a href="/<%= locale %>/admin/reys/<%= r.tripId %>" class="btn btn--sm btn--primary"><%= t('seats.manage') %></a>
+                    <% } else { %>
+                      <span class="sec-note">—</span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card mt-24"><div class="card__body">
+          <h3 style="font-size:1rem">Reys üzrə yer idarəetməsi</h3>
+          <p class="sec-note">Yer bağlamaq və boş yer açmaq üçün aşağıdaki reysi seçin. Bağlı yerlər satışda göstərilmir.</p>
+          <div class="admin-nav">
+            <% rows.forEach(function(r){ %>
+              <% if (r.tripId) { %>
+                <a href="/<%= locale %>/admin/reys/<%= r.tripId %>">
+                  <span><%= r.number %> · <%= r.from %> — <%= r.to %> · <%= r.depart %></span>
+                  <span class="badge badge--blue"><%= r.minPrice.toFixed(2) %> ₼</span>
+                </a>
+              <% } %>
+            <% }) %>
+          </div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>

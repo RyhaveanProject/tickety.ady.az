@@ -1,0 +1,112 @@
+<section class="section">
+  <div class="container">
+    <div class="section__head">
+      <div>
+        <div class="eyebrow"><%= trip.trainNumber %> · <%= dateText %></div>
+        <h1><%= trip.trainTitle %></h1>
+        <p><%= trip.stops[0].name %> — <%= trip.stops[trip.stops.length - 1].name %></p>
+      </div>
+      <a href="/<%= locale %>/admin/reysler" class="btn btn--outline"><%= t('seats.back') %></a>
+    </div>
+
+    <div class="layout-aside">
+      <%- include('../../partials/admin-nav') %>
+
+      <div>
+        <div class="card mb-24"><div class="card__body">
+          <h3 style="font-size:1rem"><%= t('admin.blockSeats') %></h3>
+          <p class="sec-note">Yer aralığını bağlamaq üçün "1-10" formasında yazın. Bağlı yerlər satışda göstərilmir.</p>
+          <div id="formNote" class="hidden"></div>
+          <form id="blockForm" data-trip-id="<%= trip._id %>" class="grid grid--4" style="align-items:end">
+            <div>
+              <label>Sinif</label>
+              <select name="classCode">
+                <% trip.classes.forEach(function(c){ %>
+                  <option value="<%= c.code %>"><%= c.title %> (<%= c.price.toFixed(2) %> ₼)</option>
+                <% }) %>
+              </select>
+            </div>
+            <div>
+              <label><%= t('seats.wagon') %></label>
+              <input type="number" name="wagon" min="1" value="1" required />
+            </div>
+            <div>
+              <label>Yer(lər)</label>
+              <input type="text" name="seat" placeholder="1-10" required />
+            </div>
+            <div>
+              <button type="submit" class="btn btn--primary btn--block"><%= t('admin.blockSeats') %></button>
+            </div>
+          </form>
+          <div class="flex-end mt-16">
+            <button class="btn btn--outline btn--sm" id="unblockAll" data-trip="<%= trip._id %>">Bütün yerləri aç</button>
+          </div>
+        </div></div>
+
+        <div class="seat-legend">
+          <span><i class="free"></i><%= t('seats.free') %></span>
+          <span><i class="taken"></i><%= t('seats.taken') %></span>
+          <span><i class="blocked"></i><%= t('seats.blocked') %></span>
+        </div>
+
+        <% maps.forEach(function(map){ %>
+          <div class="seatmap mb-24">
+            <div class="flex-between mb-16">
+              <div>
+                <h3 style="margin:0"><%= map.title %> — <%= map.price.toFixed(2) %> ₼</h3>
+                <div class="sec-note"><%= t('seats.freeCount') %>: <%= map.freeCount %> / <%= map.capacity %></div>
+              </div>
+              <select data-wagon-select="<%= map.code %>" style="max-width:180px">
+                <% map.wagons.forEach(function(w){ %>
+                  <option value="<%= w.wagon %>"><%= t('seats.wagon') %> <%= w.wagon %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <% map.wagons.forEach(function(w){ %>
+              <div class="wagon mb-8" data-wagon="<%= w.wagon %>" data-class="<%= map.code %>" <%= w.wagon === 1 ? '' : 'style="display:none"' %>>
+                <div class="wagon__head">
+                  <span><%= t('seats.wagon') %> <%= w.wagon %></span>
+                  <span class="sec-note"><%= t('seats.taken') %>: <%= w.takenCount %></span>
+                </div>
+                <div class="wagon__grid">
+                  <% w.seats.forEach(function(s){ %>
+                    <% if (s.blocked) { %>
+                      <button type="button" class="seat is-taken" data-unblock="<%= map.code %>:<%= w.wagon %>:<%= s.seat %>" data-trip="<%= trip._id %>" title="Aç"><%= s.seat %></button>
+                    <% } else { %>
+                      <button type="button" class="seat <%= s.taken ? 'is-taken' : '' %>" disabled><%= s.seat %></button>
+                    <% } %>
+                  <% }) %>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% }) %>
+
+        <div class="card">
+          <div class="card__head"><span>Bağlı yerlər</span></div>
+          <div class="card__body">
+            <% if (!blocks.length) { %>
+              <p class="sec-note mb-0">Bağlı yer yoxdur.</p>
+            <% } else { %>
+              <div class="table-wrap"><table class="data">
+                <thead><tr><th>Sinif</th><th><%= t('seats.wagon') %></th><th><%= t('seats.selected') %></th><th>Səbəb</th><th></th></tr></thead>
+                <tbody>
+                  <% blocks.forEach(function(b){ %>
+                    <tr>
+                      <td><%= b.classCode %></td>
+                      <td><%= b.wagon %></td>
+                      <td><%= b.seat %></td>
+                      <td class="sec-note"><%= b.reason || '—' %></td>
+                      <td><button class="btn btn--sm btn--outline" data-unblock="<%= b.classCode %>:<%= b.wagon %>:<%= b.seat %>" data-trip="<%= trip._id %>"><%= t('admin.unblock') %></button></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table></div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
