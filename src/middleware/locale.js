@@ -1,35 +1,28 @@
-const { dict, defaultLocale } = require('../config/i18n');
+const config = require('../config');
+const { translate, dicts } = require('../config/i18n');
 
-/**
- * Dil (locale) middleware-i.
- * Dil: ?lang=xx -> cookie -> istifadəçi -> default (az)
- */
+const localeNames = config.localeNames;
+
 function localeMiddleware(req, res, next) {
-  let lang = req.query.lang;
-
-  if (!lang && req.cookies && req.cookies.locale) lang = req.cookies.locale;
-  if (!lang && req.session && req.session.userLocale) lang = req.session.userLocale;
-
-  const available = Object.keys(dict);
-  if (!lang || !available.includes(lang)) lang = req.user && req.user.locale ? req.user.locale : defaultLocale;
-
-  req.locale = lang;
-  res.locals.locale = lang;
-  res.locals.lang = lang;
-
-  if (req.query.lang && available.includes(req.query.lang)) {
-    res.cookie('locale', lang, { maxAge: 365 * 24 * 3600 * 1000, httpOnly: false });
-    if (req.session) req.session.userLocale = lang;
+  let locale = req.query.lang || req.cookies.locale || (req.session && req.session.locale) || config.defaultLocale;
+  if (config.locales.indexOf(locale) === -1) locale = config.defaultLocale;
+  if (req.query.lang && config.locales.indexOf(req.query.lang) > -1) {
+    res.cookie('locale', locale, { maxAge: 365 * 24 * 60 * 60 * 1000, httpOnly: false, sameSite: 'lax' });
+    if (req.session) req.session.locale = locale;
   }
-
-  res.locals.t = (key, fallback) => {
-    const table = dict[lang] || dict[defaultLocale];
-    if (table[key] !== undefined) return table[key];
-    if (dict[defaultLocale][key] !== undefined) return dict[defaultLocale][key];
-    return fallback !== undefined ? fallback : key;
+  req.locale = locale;
+  res.locals.locale = locale;
+  res.locals.locales = config.locales;
+  res.locals.localeNames = localeNames;
+  res.locals.dict = dicts[locale] || dicts.az;
+  res.locals.t = function () {
+    return translate.apply(null, [locale].concat(Array.prototype.slice.call(arguments)));
   };
-
-  res.locals.localeNames = { az: 'AZ', en: 'EN', ru: 'RU' };
+  res.locals.path = req.path;
+  res.locals.query = req.query;
+  res.locals.site = config.site;
+  res.locals.rules = config.rules;
+  res.locals.year = new Date().getFullYear();
   next();
 }
 
