@@ -1,0 +1,12 @@
+<aside class="admin-nav">
+  <a href="/<%= locale %>/admin" class="<%= path === '/' + locale + '/admin' ? 'is-active' : '' %>"><span><%= t('admin.overview') %></span></a>
+  <a href="/<%= locale %>/admin/odenisler" class="<%= path.indexOf('/admin/odenisler') > -1 ? 'is-active' : '' %>">
+    <span><%= t('admin.payments') %></span>
+    <% if (typeof pending !== 'undefined' && pending > 0) { %><span class="badge badge--red"><%= pending %></span><% } %>
+  </a>
+  <a href="/<%= locale %>/admin/sifarisler" class="<%= path.indexOf('/admin/sifarisler') > -1 ? 'is-active' : '' %>"><span><%= t('admin.orders') %></span></a>
+  <a href="/<%= locale %>/admin/reysler" class="<%= path.indexOf('/admin/reys') > -1 ? 'is-active' : '' %>"><span><%= t('admin.trips') %></span></a>
+  <a href="/<%= locale %>/admin/qatarlar" class="<%= path.indexOf('/admin/qatarlar') > -1 ? 'is-active' : '' %>"><span><%= t('admin.trains') %></span></a>
+  <a href="/<%= locale %>/admin/istifadeciler" class="<%= path.indexOf('/admin/istifadeciler') > -1 ? 'is-active' : '' %>"><span><%= t('admin.users') %></span></a>
+  <a href="/<%= locale %>/admin/sinxronizasiya" class="<%= path.indexOf('/admin/sinxronizasiya') > -1 ? 'is-active' : '' %>"><span><%= t('admin.sync') %></span></a>
+</aside>

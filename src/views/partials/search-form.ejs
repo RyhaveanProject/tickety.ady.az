@@ -1,0 +1,48 @@
+<form class="searchbar" id="searchForm" method="get" action="/<%= locale %>/reysler">
+  <div class="searchbar__field">
+    <label><%= t('search.from') %></label>
+    <div class="combo" data-combo>
+      <input type="text" id="fromInput" name="from" data-combo-input autocomplete="off"
+             placeholder="<%= t('search.selectStation') %>"
+             value="<%= prefill && prefill.from ? prefill.from : '' %>" required />
+      <button type="button" class="combo__clear" data-combo-clear aria-label="Təmizlə">×</button>
+      <div class="combo__list" data-combo-list></div>
+    </div>
+  </div>
+
+  <button type="button" class="searchbar__swap" id="swapBtn" aria-label="Dəyişdir">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 16-4-4 4-4M3 12h18M17 8l4 4-4 4"/></svg>
+  </button>
+
+  <div class="searchbar__field">
+    <label><%= t('search.to') %></label>
+    <div class="combo" data-combo>
+      <input type="text" id="toInput" name="to" data-combo-input autocomplete="off"
+             placeholder="<%= t('search.selectStation') %>"
+             value="<%= prefill && prefill.to ? prefill.to : '' %>" required />
+      <button type="button" class="combo__clear" data-combo-clear aria-label="Təmizlə">×</button>
+      <div class="combo__list" data-combo-list></div>
+    </div>
+  </div>
+
+  <div class="searchbar__field">
+    <label><%= t('search.date') %></label>
+    <input type="date" name="date" value="<%= today %>" min="<%= today %>" max="<%= maxDate %>" required />
+  </div>
+
+  <div class="searchbar__field">
+    <label><%= t('search.passengers') %></label>
+    <select name="passengers">
+      <% [1,2,3,4].forEach(function(n){ %>
+        <option value="<%= n %>" <%= prefill && prefill.passengers === n ? 'selected' : '' %>><%= n %></option>
+      <% }) %>
+    </select>
+  </div>
+
+  <div class="searchbar__field">
+    <button type="submit" class="btn btn--primary searchbar__submit btn--block">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <%= t('search.submit') %>
+    </button>
+  </div>
+</form>

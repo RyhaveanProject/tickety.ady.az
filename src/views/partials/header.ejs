@@ -1,0 +1,70 @@
+<div class="topbar">
+  <div class="container topbar__inner">
+    <div class="topbar__left">
+      <a href="tel:1822" class="topbar__link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <span>1822</span>
+      </a>
+      <a href="mailto:<%= site.supportEmail %>" class="topbar__link hide-sm"><%= site.supportEmail %></a>
+      <span class="topbar__link hide-sm"><%= site.supportPhoneLandline %></span>
+    </div>
+    <div class="topbar__right">
+      <a href="/<%= locale %>/bilet-yoxlama" class="topbar__link"><%= t('nav.verify') %></a>
+      <div class="lang">
+        <% ['az','en','ru'].forEach(function(l){ %>
+          <a href="?lang=<%= l %>" class="lang__item <%= locale === l ? 'is-active' : '' %>"><%= localeNames[l] %></a>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<header class="header">
+  <div class="container header__inner">
+    <a href="/<%= locale %>" class="brand">
+      <img src="/public/assets/logo.svg" alt="ADY" class="brand__logo" />
+      <span class="brand__text">
+        <strong>ADY</strong>
+        <small><%= t('brand.railways') %></small>
+      </span>
+    </a>
+
+    <button class="burger" id="burger" aria-label="Menyu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+
+    <nav class="nav" id="mainNav">
+      <a href="/<%= locale %>/bilet-axtar" class="nav__link nav__link--cta">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3a3 3 0 0 1 0-6V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
+        <%= t('nav.tickets') %>
+      </a>
+      <a href="/<%= locale %>/hereket-cedveli" class="nav__link <%= path.indexOf('hereket-cedveli') > -1 ? 'is-active' : '' %>"><%= t('nav.timetable') %></a>
+      <a href="/<%= locale %>/tarifler-ve-odenis" class="nav__link <%= path.indexOf('tarif') > -1 ? 'is-active' : '' %>"><%= t('nav.tariffs') %></a>
+      <a href="/<%= locale %>/dasima-qaydalari" class="nav__link <%= path.indexOf('dasima') > -1 ? 'is-active' : '' %>"><%= t('nav.rules') %></a>
+      <a href="/<%= locale %>/populyar-istiqametler" class="nav__link <%= path.indexOf('populyar') > -1 ? 'is-active' : '' %>"><%= t('nav.destinations') %></a>
+      <a href="/<%= locale %>/xeberler" class="nav__link <%= path.indexOf('xeber') > -1 ? 'is-active' : '' %>"><%= t('nav.news') %></a>
+      <a href="/<%= locale %>/elaqe" class="nav__link <%= path.indexOf('elaqe') > -1 ? 'is-active' : '' %>"><%= t('nav.contact') %></a>
+
+      <% if (currentUser) { %>
+        <div class="nav__user" id="userMenu">
+          <button class="nav__userBtn" id="userMenuBtn" aria-expanded="false">
+            <span class="avatar"><%= currentUser.firstName.charAt(0) %><%= currentUser.lastName.charAt(0) %></span>
+            <span class="hide-sm"><%= currentUser.firstName %></span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="dropdown" id="userDropdown">
+            <a href="/<%= locale %>/kabinet" class="dropdown__item"><%= t('nav.profile') %></a>
+            <a href="/<%= locale %>/kabinet/biletler" class="dropdown__item"><%= t('nav.myTickets') %></a>
+            <a href="/<%= locale %>/kabinet/sifarisler" class="dropdown__item"><%= t('nav.myOrders') %></a>
+            <a href="/<%= locale %>/balans-artirilmasi" class="dropdown__item"><%= t('nav.balance') %> <span class="badge badge--gold"><%= (currentUser.balance || 0).toFixed(2) %> ₼</span></a>
+            <% if (isAdmin) { %><a href="/<%= locale %>/admin" class="dropdown__item dropdown__item--admin"><%= t('nav.panel') %></a><% } %>
+            <button class="dropdown__item dropdown__item--danger" data-logout><%= t('nav.logout') %></button>
+          </div>
+        </div>
+      <% } else { %>
+        <a href="/<%= locale %>/login" class="btn btn--ghost btn--sm"><%= t('nav.login') %></a>
+        <a href="/<%= locale %>/qeydiyyat" class="btn btn--primary btn--sm"><%= t('nav.register') %></a>
+      <% } %>
+    </nav>
+  </div>
+</header>
