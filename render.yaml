@@ -32,6 +32,29 @@ services:
       - key: ADMIN_PHONE
         sync: false
       # Canlı məlumat mənbəyi
+      # Sosial platformalar — dəyər verildikdə alt hissədə göstərilir
+      - key: SOCIAL_FACEBOOK
+        sync: false
+      - key: SOCIAL_INSTAGRAM
+        sync: false
+      - key: SOCIAL_YOUTUBE
+        sync: false
+      - key: SOCIAL_X
+        sync: false
+      - key: SOCIAL_LINKEDIN
+        sync: false
+      - key: SOCIAL_TIKTOK
+        sync: false
+      - key: SOCIAL_TELEGRAM
+        sync: false
+      - key: SOCIAL_WHATSAPP
+        sync: false
+      - key: APP_GOOGLE_PLAY
+        sync: false
+      - key: APP_APP_STORE
+        sync: false
+
+      # Canlı məlumat mənbəyi
       - key: LIVE_SOURCE_URL
         value: https://ticket.ady.az
       - key: LIVE_SYNC_ENABLED
