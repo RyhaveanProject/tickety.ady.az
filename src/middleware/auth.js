@@ -1,6 +1,6 @@
-const User = require('../models/User');
+const { User } = require('../models/index');
 
-/** İstifadəçini hər sorğuda yükləyir (session-dakı id ilə) */
+/* MongoDB hazır olana qədər sorğunu gözlədir */
 async function loadUser(req, res, next) {
   res.locals.currentUser = null;
   res.locals.isAdmin = false;
@@ -8,42 +8,44 @@ async function loadUser(req, res, next) {
     if (req.session && req.session.userId) {
       const user = await User.findById(req.session.userId).lean();
       if (user) {
-        req.user = user;
+        req.currentUser = user;
         res.locals.currentUser = user;
         res.locals.isAdmin = user.role === 'admin';
       } else {
-        req.session.userId = null;
+        delete req.session.userId;
       }
     }
   } catch (e) {
-    console.error('[auth] loadUser xəta:', e.message);
+    /* DB əlçatan deyilsə girişsiz davam et */
   }
   next();
 }
 
-/** Giriş tələb edən səhifələr */
 function requireAuth(req, res, next) {
-  if (req.user) return next();
-  if (req.xhr || req.path.startsWith('/api/')) {
-    return res.status(401).json({ ok: false, error: 'auth_required' });
-  }
-  req.session.returnTo = req.originalUrl;
-  return res.redirect(`/${req.locale || 'az'}/login?next=${encodeURIComponent(req.originalUrl)}`);
+  const wantsJson = req.xhr || (req.headers.accept || '').includes('application/json');
+  if (req.currentUser) return next();
+  if (wantsJson) return res.status(401).json({ ok: false, message: 'Giriş tələb olunur', redirect: '/az/login' });
+  const locale = res.locals.locale || 'az';
+  return res.redirect('/' + locale + '/login?next=' + encodeURIComponent(req.originalUrl));
 }
 
-/** Yalnız admin */
 function requireAdmin(req, res, next) {
-  if (req.user && req.user.role === 'admin') return next();
+  const wantsJson = req.xhr || (req.headers.accept || '').includes('application/json');
+  if (req.currentUser && req.currentUser.role === 'admin') return next();
+  if (wantsJson) return res.status(403).json({ ok: false, message: 'İcazə yoxdur' });
+  const locale = res.locals.locale || 'az';
   return res.status(403).render('pages/error', {
-    title: '403',
+    title: 'İcazə yoxdur',
     code: 403,
     message: 'Bu səhifəyə giriş icazəniz yoxdur.'
   });
 }
 
-/** Guest (giriş etməmiş) */
 function requireGuest(req, res, next) {
-  if (req.user) return res.redirect(`/${req.locale || 'az'}`);
+  if (req.currentUser) {
+    const locale = res.locals.locale || 'az';
+    return res.redirect('/' + locale + '/kabinet');
+  }
   next();
 }
 
