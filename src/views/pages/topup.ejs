@@ -1,0 +1,74 @@
+<section class="section">
+  <div class="container">
+    <div class="section__head"><div><div class="eyebrow"><%= t('nav.profile') %></div><h1><%= t('account.topup') %></h1></div></div>
+
+    <div class="layout-aside">
+      <%- include('../partials/account-nav') %>
+
+      <div>
+        <div class="grid grid--2">
+          <div class="card"><div class="card__body">
+            <div class="stat mb-16">
+              <div class="stat__label"><%= t('account.balance') %></div>
+              <div class="stat__value"><%= (user.balance || 0).toFixed(2) %> ₼</div>
+            </div>
+
+            <div id="formNote" class="hidden"></div>
+
+            <form id="topupForm">
+              <div class="field">
+                <label><%= t('account.topupAmount') %></label>
+                <input type="number" name="amount" min="1" max="1000" step="0.01" value="20" required />
+                <div class="field__hint">1 - 1000 ₼</div>
+              </div>
+
+              <div class="field">
+                <label><%= t('payment.cardNumber') %></label>
+                <input type="text" name="cardNumber" data-card-number placeholder="0000 0000 0000 0000" inputmode="numeric" required />
+              </div>
+              <div class="field">
+                <label><%= t('payment.cardHolder') %></label>
+                <input type="text" name="cardHolder" placeholder="AD SOYAD" required />
+              </div>
+              <div class="field--row">
+                <div class="field">
+                  <label><%= t('payment.expiry') %></label>
+                  <input type="text" name="cardExpiry" data-card-expiry placeholder="AA/İİ" inputmode="numeric" required />
+                </div>
+                <div class="field">
+                  <label><%= t('payment.cvv') %></label>
+                  <input type="password" name="cardCvv" data-card-cvv placeholder="000" inputmode="numeric" required />
+                </div>
+              </div>
+
+              <div class="alert alert--info text-sm"><%= t('payment.secure') %></div>
+              <button type="submit" class="btn btn--primary btn--block"><%= t('account.topupBtn') %></button>
+            </form>
+          </div></div>
+
+          <div class="card">
+            <div class="card__head"><span>Son əməliyyatlar</span></div>
+            <div class="card__body">
+              <% if (!payments.length) { %>
+                <p class="sec-note mb-0">Hələ əməliyyat yoxdur.</p>
+              <% } else { %>
+                <div class="table-wrap"><table class="data" style="min-width:0">
+                  <thead><tr><th><%= t('common.date') %></th><th><%= t('checkout.total') %></th><th><%= t('account.status') %></th></tr></thead>
+                  <tbody>
+                    <% payments.forEach(function(p){ %>
+                      <tr>
+                        <td><%= new Date(p.createdAt).toLocaleDateString('az-AZ') %></td>
+                        <td class="mono"><%= p.amount.toFixed(2) %> ₼</td>
+                        <td><span class="badge badge--<%= p.status === 'approved' ? 'green' : p.status === 'declined' ? 'red' : 'gray' %>"><%= t('status.' + p.status) %></span></td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table></div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

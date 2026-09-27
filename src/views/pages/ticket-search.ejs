@@ -1,0 +1,41 @@
+<section class="section">
+  <div class="container">
+    <div class="section__head">
+      <div>
+        <div class="eyebrow"><%= t('nav.tickets') %></div>
+        <h1><%= t('search.pageTitle') %></h1>
+        <p><%= t('search.pageSub') %></p>
+      </div>
+    </div>
+
+    <%- include('../partials/search-form', { stations: stations, today: today, maxDate: maxDate, prefill: prefill }) %>
+
+    <div class="grid grid--3" style="margin-top:34px">
+      <div class="card"><div class="card__body">
+        <h3 style="font-size:1rem"><%= t('search.howTitle') %></h3>
+        <ol style="color:var(--ink-2);font-size:.9rem;padding-left:20px;margin:0">
+          <li><%= t('search.how1') %></li>
+          <li><%= t('search.how2') %></li>
+          <li><%= t('search.how3') %></li>
+          <li><%= t('search.how4') %></li>
+        </ol>
+      </div></div>
+      <div class="card"><div class="card__body">
+        <h3 style="font-size:1rem"><%= t('search.rulesTitle') %></h3>
+        <ul style="color:var(--ink-2);font-size:.9rem;padding-left:20px;margin:0">
+          <li><%= t('search.rule1', rules.maxTicketsPerOrder) %></li>
+          <li><%= t('search.rule2', rules.salesOpenDaysBefore) %></li>
+          <li><%= t('search.rule3', rules.salesCloseHoursBefore) %></li>
+        </ul>
+      </div></div>
+      <div class="card"><div class="card__body">
+        <h3 style="font-size:1rem"><%= t('search.payTitle') %></h3>
+        <p style="color:var(--ink-2);font-size:.9rem;margin:0"><%= t('search.payText') %></p>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<script>
+  window.ADY_STATIONS = <%- JSON.stringify(stations.map(function(s){ return { code: s.code, name: s.name, nameEn: s.nameEn, region: s.region }; })) %>;
+</script>

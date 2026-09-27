@@ -1,0 +1,26 @@
+<section class="section">
+  <div class="container">
+    <div class="section__head"><div><div class="eyebrow"><%= t('nav.news') %></div><h1><%= t('nav.news') %></h1></div></div>
+
+    <div class="grid grid--3">
+      <% items.forEach(function(n){ %>
+        <a href="/<%= locale %>/xeberler/<%= n.slug %>" class="feature">
+          <div class="feature__body">
+            <div class="news-card__meta"><span><%= new Date(n.publishedAt).toLocaleDateString('az-AZ') %></span></div>
+            <h3><%= n.title %></h3>
+            <p><%= n.excerpt %></p>
+            <span class="feature__link"><%= t('home.readMore') %></span>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+
+    <% if (pages > 1) { %>
+      <div class="flex-end mt-24">
+        <% if (page > 1) { %><a href="?page=<%= page - 1 %>" class="btn btn--outline btn--sm">Əvvəlki</a><% } %>
+        <span class="sec-note" style="align-self:center"><%= page %> / <%= pages %></span>
+        <% if (page < pages) { %><a href="?page=<%= page + 1 %>" class="btn btn--outline btn--sm">Növbəti</a><% } %>
+      </div>
+    <% } %>
+  </div>
+</section>

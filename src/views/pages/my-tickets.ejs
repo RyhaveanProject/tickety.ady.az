@@ -1,0 +1,43 @@
+<section class="section">
+  <div class="container">
+    <div class="section__head"><div><div class="eyebrow"><%= t('nav.profile') %></div><h1><%= t('nav.myTickets') %></h1></div></div>
+
+    <div class="layout-aside">
+      <%- include('../partials/account-nav') %>
+
+      <div>
+        <% if (!tickets.length) { %>
+          <div class="alert alert--info"><%= t('account.noTickets') %></div>
+        <% } %>
+
+        <% tickets.forEach(function(tk){ %>
+          <div class="card mb-16"><div class="card__body">
+            <div class="flex-between mb-16">
+              <div>
+                <h3 style="font-size:1.05rem"><%= tk.trainNumber %> · <%= tk.trainTitle %></h3>
+                <div class="sec-note"><%= tk.fromName %> — <%= tk.toName %> · <%= tk.date %> · <%= tk.departTime %> — <%= tk.arriveTime %></div>
+              </div>
+              <div>
+                <% if (tk.status === 'active') { %><span class="badge badge--green"><%= t('status.confirmed') %></span>
+                <% } else { %><span class="badge badge--gray"><%= t('status.' + tk.status) %></span><% } %>
+              </div>
+            </div>
+            <dl class="kv">
+              <dt><%= t('account.pnr') %></dt><dd class="mono"><%= tk.pnr %></dd>
+              <dt><%= t('checkout.passenger') %></dt><dd><%= tk.passengerName %></dd>
+              <dt><%= t('seats.wagon') %> / <%= t('seats.selected') %></dt><dd><%= tk.wagon %> / <%= tk.seat %></dd>
+              <dt><%= t('checkout.docType') %></dt><dd><%= tk.className %></dd>
+              <dt><%= t('common.price') %></dt><dd class="mono"><%= tk.price.toFixed(2) %> ₼</dd>
+            </dl>
+            <div class="flex-end mt-16">
+              <a href="/<%= locale %>/bilet/<%= tk._id %>/pdf" class="btn btn--outline btn--sm"><%= t('success.download') %></a>
+              <% if (tk.status === 'active') { %>
+                <button class="btn btn--danger btn--sm" data-refund="<%= tk._id %>"><%= t('nav.refund') %></button>
+              <% } %>
+            </div>
+          </div></div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</section>

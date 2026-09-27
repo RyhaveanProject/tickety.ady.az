@@ -1,0 +1,142 @@
+<section class="section">
+  <div class="container">
+    <div class="section__head">
+      <div>
+        <div class="eyebrow"><%= trip.trainNumber %> · <%= trip.date %></div>
+        <h1><%= t('checkout.title') %></h1>
+        <p><%= t('checkout.sub') %></p>
+      </div>
+      <a href="/<%= locale %>/yer-secimi/<%= trip._id %>?from=<%= from %>&to=<%= to %>&passengers=<%= seats.length %>" class="btn btn--outline"><%= t('seats.back') %></a>
+    </div>
+
+    <div class="layout-aside">
+      <div>
+        <div class="card mb-16"><div class="card__body">
+          <h3 style="font-size:1rem"><%= t('table.route') %></h3>
+          <dl class="kv">
+            <dt><%= t('results.train') %></dt><dd><%= trip.trainNumber %> · <%= trip.trainTitle %></dd>
+            <dt><%= t('common.date') %></dt><dd><%= trip.date %></dd>
+            <dt><%= t('search.from') %></dt><dd><%= fromName %></dd>
+            <dt><%= t('search.to') %></dt><dd><%= toName %></dd>
+          </dl>
+        </div></div>
+
+        <div class="card"><div class="card__body">
+          <div id="formNote" class="hidden"></div>
+
+          <h3 style="font-size:1rem"><%= t('checkout.contact') %></h3>
+          <div class="field--row">
+            <div class="field">
+              <label for="contactPhone"><%= t('checkout.phone') %></label>
+              <input type="tel" id="contactPhone" value="<%= user.phone || '' %>" />
+            </div>
+            <div class="field">
+              <label for="contactEmail"><%= t('checkout.email') %></label>
+              <input type="email" id="contactEmail" value="<%= user.email %>" />
+            </div>
+          </div>
+
+          <% seats.forEach(function(s, i){ %>
+            <hr />
+            <h3 style="font-size:1rem"><%= t('checkout.passenger') %> <%= i + 1 %> <span class="badge badge--blue"><%= t('seats.wagon') %> <%= s.wagon %> · <%= s.seat %></span></h3>
+            <div class="field--row">
+              <div class="field">
+                <label><%= t('checkout.lastName') %></label>
+                <input type="text" data-p-lastname="<%= i %>" value="<%= i === 0 ? user.lastName : '' %>" required />
+              </div>
+              <div class="field">
+                <label><%= t('checkout.firstName') %></label>
+                <input type="text" data-p-firstname="<%= i %>" value="<%= i === 0 ? user.firstName : '' %>" required />
+              </div>
+            </div>
+            <div class="field--row">
+              <div class="field">
+                <label><%= t('checkout.middleName') %></label>
+                <input type="text" data-p-middlename="<%= i %>" value="<%= i === 0 ? (user.middleName || '') : '' %>" />
+              </div>
+              <div class="field">
+                <label><%= t('checkout.birthDate') %></label>
+                <input type="date" data-p-birthdate="<%= i %>" />
+              </div>
+            </div>
+            <div class="field--row">
+              <div class="field">
+                <label><%= t('checkout.docType') %></label>
+                <select data-p-doctype="<%= i %>">
+                  <option value="id"><%= t('checkout.docId') %></option>
+                  <option value="passport"><%= t('checkout.docPassport') %></option>
+                </select>
+              </div>
+              <div class="field">
+                <label><%= t('checkout.docNumber') %></label>
+                <input type="text" data-p-docnumber="<%= i %>" />
+              </div>
+            </div>
+          <% }) %>
+        </div></div>
+      </div>
+
+      <div class="summary">
+        <div class="card"><div class="card__body">
+          <h3 style="font-size:1rem"><%= t('checkout.summary') %></h3>
+          <% seats.forEach(function(s){ %>
+            <div class="summary__row">
+              <span><%= t('seats.wagon') %> <%= s.wagon %> · <%= s.seat %> — <%= s.className %></span>
+              <span class="mono"><%= s.price.toFixed(2) %> ₼</span>
+            </div>
+          <% }) %>
+          <div class="summary__row">
+            <span><%= t('checkout.serviceFee') %></span>
+            <span class="mono">0.00 ₼</span>
+          </div>
+          <div class="summary__total">
+            <span><%= t('checkout.total') %></span>
+            <span class="mono"><%= total.toFixed(2) %> ₼</span>
+          </div>
+          <button type="button" class="btn btn--primary btn--block btn--lg mt-16" id="toPayment"><%= t('checkout.next') %></button>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.getElementById('toPayment').addEventListener('click', async function () {
+    var btn = this;
+    var note = document.getElementById('formNote');
+    var seats = <%- JSON.stringify(seats.map(function(s){ return { wagon: s.wagon, seat: s.seat, classCode: s.classCode }; })) %>;
+    var passengers = [];
+    for (var i = 0; i < seats.length; i += 1) {
+      var fn = document.querySelector('[data-p-firstname="' + i + '"]');
+      var ln = document.querySelector('[data-p-lastname="' + i + '"]');
+      if (!fn.value || !ln.value) {
+        note.className = 'alert alert--error';
+        note.textContent = 'Sərnişin ' + (i + 1) + ': ad və soyad vacibdir';
+        return;
+      }
+      passengers.push({
+        firstName: fn.value,
+        lastName: ln.value,
+        middleName: (document.querySelector('[data-p-middlename="' + i + '"]') || {}).value || '',
+        birthDate: (document.querySelector('[data-p-birthdate="' + i + '"]') || {}).value || '',
+        docType: (document.querySelector('[data-p-doctype="' + i + '"]') || {}).value || 'id',
+        docNumber: (document.querySelector('[data-p-docnumber="' + i + '"]') || {}).value || '',
+        wagon: seats[i].wagon,
+        seat: seats[i].seat,
+        classCode: seats[i].classCode
+      });
+    }
+    window.setLoading(btn, true);
+    var r = await window.api('/api/booking/order', {
+      tripId: '<%= trip._id %>',
+      fromCode: '<%= from %>',
+      toCode: '<%= to %>',
+      passengers: passengers,
+      contactPhone: document.getElementById('contactPhone').value,
+      contactEmail: document.getElementById('contactEmail').value
+    });
+    window.setLoading(btn, false);
+    if (r.ok) { window.location.href = r.redirect; }
+    else { note.className = 'alert alert--error'; note.textContent = r.message; }
+  });
+</script>
