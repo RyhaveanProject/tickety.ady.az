@@ -1,178 +1,192 @@
 const crypto = require('crypto');
-const dayjs = require('dayjs');
-require('dayjs/locale/az');
-require('dayjs/locale/ru');
 
-/** Sifariş nömrəsi: ADY-260927-8F3K2 */
-function generateOrderNo() {
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let rnd = '';
-  for (let i = 0; i < 5; i++) rnd += alphabet[crypto.randomInt(0, alphabet.length)];
-  return `ADY-${dayjs().format('YYMMDD')}-${rnd}`;
+/* ---------- Kod / nömrə generatorları ---------- */
+function randomDigits(len) {
+  let s = '';
+  while (s.length < len) s += Math.floor(Math.random() * 10);
+  return s.slice(0, len);
 }
 
-/** Bilet kodu (PNR): 6 simvol */
+function generateOrderNo() {
+  const d = new Date();
+  const stamp = String(d.getFullYear()).slice(2) +
+    String(d.getMonth() + 1).padStart(2, '0') +
+    String(d.getDate()).padStart(2, '0');
+  return 'ADY' + stamp + randomDigits(6);
+}
+
 function generatePnr() {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let rnd = '';
-  for (let i = 0; i < 6; i++) rnd += alphabet[crypto.randomInt(0, alphabet.length)];
-  return rnd;
+  let s = '';
+  const bytes = crypto.randomBytes(6);
+  for (let i = 0; i < 6; i += 1) s += alphabet[bytes[i] % alphabet.length];
+  return s;
 }
 
-/** Deterministik psevdo-təsadüfi (eyni gün/eyni qatar üçün eyni nəticə) */
-function seededRandom(str) {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return function () {
-    h += 0x6d2b79f5;
-    let t = h;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
+function generateTxId(prefix) {
+  return (prefix || 'TX') + Date.now().toString(36).toUpperCase() + randomDigits(4);
 }
 
-/** "HH:mm" + dəqiqə -> "HH:mm" */
+/* ---------- Vaxt / tarix ---------- */
+function timeToMinutes(t) {
+  if (!t) return 0;
+  const parts = String(t).split(':');
+  return (parseInt(parts[0], 10) || 0) * 60 + (parseInt(parts[1], 10) || 0);
+}
+
+function minutesToTime(m) {
+  const total = ((m % 1440) + 1440) % 1440;
+  return String(Math.floor(total / 60)).padStart(2, '0') + ':' + String(total % 60).padStart(2, '0');
+}
+
+function formatDuration(minutes) {
+  const m = Math.max(0, Math.round(minutes));
+  const h = Math.floor(m / 60);
+  const r = m % 60;
+  if (h && r) return h + ' s ' + r + ' dəq';
+  if (h) return h + ' s';
+  return r + ' dəq';
+}
+
 function addMinutes(time, minutes) {
-  const [h, m] = String(time).split(':').map(Number);
-  const total = h * 60 + m + Number(minutes);
-  const hh = Math.floor((total % 1440) / 60);
-  const mm = total % 60;
-  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+  return minutesToTime(timeToMinutes(time) + minutes);
 }
 
-function timeToMinutes(time) {
-  const [h, m] = String(time).split(':').map(Number);
-  return h * 60 + m;
-}
-
-/** 145 -> "2 s 25 dəq" */
-function formatDuration(minutes, lang = 'az') {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  const hWord = { az: 's', en: 'h', ru: 'ч' }[lang] || 's';
-  const mWord = { az: 'dəq', en: 'min', ru: 'мин' }[lang] || 'dəq';
-  if (h === 0) return `${m} ${mWord}`;
-  if (m === 0) return `${h} ${hWord}`;
-  return `${h} ${hWord} ${m} ${mWord}`;
-}
-
-function formatMoney(value) {
+/* ---------- Pul ---------- */
+function formatMoney(value, symbol) {
   const n = Number(value || 0);
-  return n.toLocaleString('az-AZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return n.toFixed(2) + ' ' + (symbol || '₼');
 }
 
-function formatCardNumber(num) {
-  return String(num).replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
+/* ---------- Kart ---------- */
+function normalizeCardNumber(value) {
+  return String(value || '').replace(/\D/g, '').slice(0, 19);
 }
 
-function maskCard(num) {
-  const digits = String(num).replace(/\D/g, '');
-  return '**** **** **** ' + digits.slice(-4);
-}
-
-function detectCardBrand(num) {
-  const d = String(num).replace(/\D/g, '');
-  if (/^4/.test(d)) return 'Visa';
-  if (/^(5[1-5]|2[2-7])/.test(d)) return 'Mastercard';
-  if (/^9/.test(d)) return 'MilliKart';
-  if (/^6/.test(d)) return 'UnionPay';
-  return 'Kart';
-}
-
-/** Luhn alqoritmi ilə kart nömrəsi yoxlanışı */
-function isValidCardNumber(num) {
-  const d = String(num).replace(/\D/g, '');
-  if (d.length < 16 || d.length > 19) return false;
+function luhnValid(number) {
+  const n = normalizeCardNumber(number);
+  if (n.length < 13) return false;
   let sum = 0;
   let alt = false;
-  for (let i = d.length - 1; i >= 0; i--) {
-    let n = parseInt(d[i], 10);
+  for (let i = n.length - 1; i >= 0; i -= 1) {
+    let d = parseInt(n[i], 10);
     if (alt) {
-      n *= 2;
-      if (n > 9) n -= 9;
+      d *= 2;
+      if (d > 9) d -= 9;
     }
-    sum += n;
+    sum += d;
     alt = !alt;
   }
   return sum % 10 === 0;
 }
 
-function isValidExpiry(mmYY) {
-  const m = String(mmYY).match(/^(\d{2})\s*\/?\s*(\d{2})$/);
-  if (!m) return false;
-  const month = parseInt(m[1], 10);
-  const year = 2000 + parseInt(m[2], 10);
-  if (month < 1 || month > 12) return false;
-  const now = new Date();
-  const endOfMonth = new Date(year, month, 0, 23, 59, 59);
-  return endOfMonth >= now;
+function cardBrand(number) {
+  const n = normalizeCardNumber(number);
+  if (/^4/.test(n)) return 'Visa';
+  if (/^(5[1-5]|2[2-7])/.test(n)) return 'Mastercard';
+  if (/^(6|5[06-8])/.test(n)) return 'MilliKart';
+  return 'Kart';
 }
 
-/** AZ mobil nömrə formatı: +994XXXXXXXXX */
-function normalizePhone(phone) {
-  let d = String(phone || '').replace(/[^\d+]/g, '');
-  if (d.startsWith('00')) d = '+' + d.slice(2);
-  if (d.startsWith('0') && d.length === 10) d = '+994' + d.slice(1);
-  if (!d.startsWith('+') && d.length === 9) d = '+994' + d;
-  return d;
+function maskCard(number) {
+  const n = normalizeCardNumber(number);
+  if (n.length < 4) return '••••';
+  return '•••• •••• •••• ' + n.slice(-4);
 }
 
-function truncate(str, len = 120) {
-  if (!str) return '';
-  return str.length > len ? str.slice(0, len - 1) + '…' : str;
+function expiryValid(month, year) {
+  const m = parseInt(month, 10);
+  let y = parseInt(year, 10);
+  if (!m || !y || m < 1 || m > 12) return false;
+  if (y < 100) y += 2000;
+  const end = new Date(y, m, 0, 23, 59, 59);
+  return end.getTime() > Date.now();
 }
 
-function slugify(str) {
-  const map = { ə: 'e', ğ: 'g', ş: 's', ç: 'c', ö: 'o', ü: 'u', ı: 'i', İ: 'i', Ə: 'e' };
-  return String(str)
+/* ---------- Telefon / mətn ---------- */
+function normalizePhone(value) {
+  let v = String(value || '').replace(/[^\d+]/g, '');
+  if (v.startsWith('00')) v = '+' + v.slice(2);
+  if (/^0\d{9}$/.test(v)) v = '+994' + v.slice(1);
+  if (/^\d{9}$/.test(v)) v = '+994' + v;
+  return v;
+}
+
+function slugify(text) {
+  const map = { ə: 'e', ı: 'i', ş: 's', ç: 'c', ğ: 'g', ö: 'o', ü: 'u', Ə: 'e', İ: 'i', Ş: 's', Ç: 'c', Ğ: 'g', Ö: 'o', Ü: 'u' };
+  return String(text || '')
     .split('')
-    .map((ch) => map[ch] || ch)
+    .map((ch) => (map[ch] !== undefined ? map[ch] : ch))
     .join('')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
+    .replace(/^-+|-+$/g, '');
 }
 
-/** PDF üçün: Helvetica şriftində olmayan hərfləri sadələşdirir */
-function transliterate(str) {
-  const map = {
-    ə: 'e', Ə: 'E', ğ: 'g', Ğ: 'G', ş: 's', Ş: 'S', ç: 'c', Ç: 'C',
-    ö: 'o', Ö: 'O', ü: 'u', Ü: 'U', ı: 'i', İ: 'I', '₼': 'AZN'
-  };
-  return String(str || '').split('').map((ch) => map[ch] || ch).join('');
+function translit(text) {
+  const map = { ə: 'e', ı: 'i', ş: 's', ç: 'c', ğ: 'g', ö: 'o', ü: 'u', Ə: 'E', İ: 'I', Ş: 'S', Ç: 'C', Ğ: 'G', Ö: 'O', Ü: 'U', ı: 'i' };
+  return String(text || '')
+    .split('')
+    .map((ch) => (map[ch] !== undefined ? map[ch] : ch))
+    .join('');
 }
 
-/** Seat nömrəsi -> hərf-ədəd sırası üçün köməkçi */
-function seatSort(a, b) {
-  const pa = String(a).match(/(\d+)([A-Za-z]*)/);
-  const pb = String(b).match(/(\d+)([A-Za-z]*)/);
-  if (!pa || !pb) return String(a).localeCompare(String(b));
-  const na = parseInt(pa[1], 10);
-  const nb = parseInt(pb[1], 10);
-  if (na !== nb) return na - nb;
-  return (pa[2] || '').localeCompare(pb[2] || '');
+function truncate(text, len) {
+  const s = String(text || '');
+  return s.length > len ? s.slice(0, len - 1) + '…' : s;
+}
+
+/* ---------- Yer nömrələri ---------- */
+function seatNumbers(count) {
+  const arr = [];
+  for (let i = 1; i <= count; i += 1) arr.push(i);
+  return arr;
+}
+
+/* ---------- Tarix köməkçiləri ---------- */
+function todayISO() {
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
+}
+
+function isoAddDays(iso, days) {
+  const d = new Date(iso + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function dayOfWeek(iso) {
+  return new Date(iso + 'T00:00:00Z').getUTCDay(); // 0 = bazar
+}
+
+function azDate(iso) {
+  const months = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avqust', 'sentyabr', 'oktyabr', 'noyabr', 'dekabr'];
+  const d = new Date(iso + 'T00:00:00Z');
+  return d.getUTCDate() + ' ' + months[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
 }
 
 module.exports = {
+  randomDigits,
   generateOrderNo,
   generatePnr,
-  seededRandom,
-  addMinutes,
+  generateTxId,
   timeToMinutes,
+  minutesToTime,
   formatDuration,
+  addMinutes,
   formatMoney,
-  formatCardNumber,
+  normalizeCardNumber,
+  luhnValid,
+  cardBrand,
   maskCard,
-  detectCardBrand,
-  isValidCardNumber,
-  isValidExpiry,
+  expiryValid,
   normalizePhone,
-  truncate,
   slugify,
-  transliterate,
-  seatSort
+  translit,
+  truncate,
+  seatNumbers,
+  todayISO,
+  isoAddDays,
+  dayOfWeek,
+  azDate
 };
