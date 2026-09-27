@@ -1,0 +1,57 @@
+<div class="page-head">
+  <div class="container">
+    <div class="breadcrumb"><a href="/<%= locale %>">Ana səhifə</a> <span>/</span> <a href="/<%= locale %>/admin">Panel</a> <span>/</span> <span>Qatarlar</span></div>
+    <h1>Qatarlar və stansiyalar</h1>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <%- include('../../partials/admin-nav', { active: 'trains' }) %>
+
+    <div class="card" style="margin-bottom:22px">
+      <div class="card__head"><span>Qatar şablonları (<%= trains.length %>)</span></div>
+      <div class="card__body" style="padding:0">
+        <div class="table-wrap" style="border:0">
+          <table class="data">
+            <thead><tr><th>№</th><th>Ad</th><th>Xətt</th><th>Günlər</th><th>Marşrut</th><th>Siniflər</th></tr></thead>
+            <tbody>
+              <% trains.forEach(function(t){ %>
+                <tr>
+                  <td class="num"><strong><%= t.number %></strong></td>
+                  <td><%= t.title %></td>
+                  <td><span class="badge <%= t.line === 'absheron' ? 'badge--blue' : 'badge--gold' %>"><%= t.line === 'absheron' ? 'Abşeron' : 'Ölkədaxili' %></span></td>
+                  <td><%= { daily: 'Hər gün', work_days: 'İş günləri', non_work_days: 'Qeyri-iş', weekend: 'Həftəsonu' }[t.daysType] %></td>
+                  <td style="font-size:.82rem"><%= t.stops.map(function(s){ return s.stationCode; }).join(' → ') %></td>
+                  <td style="font-size:.82rem"><%= t.classes.map(function(c){ return c.title + ' (' + c.basePrice + '₼)'; }).join(', ') %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__head"><span>Stansiyalar (<%= stations.length %>)</span></div>
+      <div class="card__body" style="padding:0">
+        <div class="table-wrap" style="border:0">
+          <table class="data">
+            <thead><tr><th>Kod</th><th>Ad</th><th>İngilis</th><th>Region</th><th>Sıra</th></tr></thead>
+            <tbody>
+              <% stations.forEach(function(s){ %>
+                <tr>
+                  <td class="num"><strong><%= s.code %></strong></td>
+                  <td><%= s.name %></td>
+                  <td><%= s.nameEn || '—' %></td>
+                  <td><%= s.region || '—' %></td>
+                  <td class="num"><%= s.order || 0 %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

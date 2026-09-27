@@ -1,0 +1,36 @@
+<div class="page-head">
+  <div class="container">
+    <div class="breadcrumb"><a href="/<%= locale %>">Ana səhifə</a> <span>/</span> <a href="/<%= locale %>/admin">Panel</a> <span>/</span> <span>İstifadəçilər</span></div>
+    <h1>İstifadəçilər</h1>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <%- include('../../partials/admin-nav', { active: 'users' }) %>
+
+    <div class="card">
+      <div class="card__head"><span><%= users.length %> istifadəçi</span></div>
+      <div class="card__body" style="padding:0">
+        <div class="table-wrap" style="border:0">
+          <table class="data">
+            <thead><tr><th>Ad, soyad</th><th>E-poçt</th><th>Telefon</th><th>Sənəd</th><th>Balans</th><th>Rol</th><th>Qeydiyyat</th></tr></thead>
+            <tbody>
+              <% users.forEach(function(u){ %>
+                <tr>
+                  <td><strong><%= u.firstName %> <%= u.lastName %></strong></td>
+                  <td><%= u.email %></td>
+                  <td class="num"><%= u.phone %></td>
+                  <td class="num"><%= u.docNumber || '—' %></td>
+                  <td class="num"><%= (u.balance || 0).toFixed(2) %> ₼</td>
+                  <td><span class="badge <%= u.role === 'admin' ? 'badge--gold' : 'badge--blue' %>"><%= u.role %></span></td>
+                  <td><%= new Date(u.createdAt).toLocaleDateString('az-AZ') %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

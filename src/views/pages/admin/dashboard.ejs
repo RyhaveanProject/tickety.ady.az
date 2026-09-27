@@ -1,0 +1,78 @@
+<div class="page-head">
+  <div class="container">
+    <div class="breadcrumb"><a href="/<%= locale %>">Ana səhifə</a> <span>/</span> <span>İdarəetmə paneli</span></div>
+    <h1>İdarəetmə paneli</h1>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <%- include('../../partials/admin-nav', { active: 'dashboard' }) %>
+
+    <div class="grid grid--4" style="margin-bottom:26px">
+      <div class="stat-card"><strong><%= stats.users %></strong><span>İstifadəçi</span></div>
+      <div class="stat-card"><strong><%= stats.orders %></strong><span>Sifariş</span></div>
+      <div class="stat-card"><strong><%= stats.tickets %></strong><span>Bilet</span></div>
+      <div class="stat-card"><strong><%= stats.revenue.toFixed(2) %> ₼</strong><span>Ümumi gəlir</span></div>
+    </div>
+
+    <div class="grid grid--3" style="margin-bottom:26px">
+      <div class="card"><div class="card__body"><strong style="font-size:1.3rem"><%= stats.trains %></strong><div style="color:var(--muted);font-size:.85rem">Qatar şablonu</div></div></div>
+      <div class="card"><div class="card__body"><strong style="font-size:1.3rem"><%= stats.stations %></strong><div style="color:var(--muted);font-size:.85rem">Stansiya</div></div></div>
+      <div class="card"><div class="card__body"><strong style="font-size:1.3rem"><%= stats.todayTrips %></strong><div style="color:var(--muted);font-size:.85rem">Bugünkü reys</div></div></div>
+    </div>
+
+    <div class="card">
+      <div class="card__head">
+        <span>Son sifarişlər</span>
+        <a href="/<%= locale %>/admin/sifarisler" class="btn btn--sm btn--ghost">Hamısına bax</a>
+      </div>
+      <div class="card__body" style="padding:0">
+        <div class="table-wrap" style="border:0">
+          <table class="data">
+            <thead><tr><th>Sifariş №</th><th>İstifadəçi</th><th>Marşrut</th><th>Tarix</th><th>Məbləğ</th><th>Status</th></tr></thead>
+            <tbody>
+              <% recentOrders.forEach(function(o){ %>
+                <tr>
+                  <td class="num"><%= o.orderNo %></td>
+                  <td><%= o.user ? (o.user.firstName || '') : '—' %> <%= o.user ? (o.user.lastName || '') : '' %></td>
+                  <td><%= o.fromName %> → <%= o.toName %></td>
+                  <td><%= o.date %></td>
+                  <td class="num"><%= o.total.toFixed(2) %> ₼</td>
+                  <td><span class="badge <%= o.status === 'paid' ? 'badge--green' : (o.status === 'pending' ? 'badge--gold' : 'badge--gray') %>"><%= o.status %></span></td>
+                </tr>
+              <% }) %>
+              <% if (!recentOrders.length) { %><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">Sifariş yoxdur</td></tr><% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:22px">
+      <div class="card__head">Son 7 gün üzrə sifarişlər</div>
+      <div class="card__body">
+        <div id="chart7" style="display:flex;align-items:flex-end;gap:12px;height:180px"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  (async function () {
+    var r = await window.api('/api/admin/stats');
+    if (!r.ok) return;
+    var box = document.getElementById('chart7');
+    box.innerHTML = '';
+    var max = Math.max.apply(null, r.last7.map(function (d) { return d.orders; }).concat([1]));
+    r.last7.forEach(function (d) {
+      var h = Math.round((d.orders / max) * 150);
+      var col = document.createElement('div');
+      col.style.cssText = 'flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px';
+      col.innerHTML = '<div style="font-size:.8rem;font-weight:700;color:var(--ady-blue)">' + d.orders + '</div>' +
+        '<div style="width:100%;height:' + Math.max(h, 4) + 'px;background:linear-gradient(180deg,#00539b,#0070c9);border-radius:6px 6px 0 0"></div>' +
+        '<div style="font-size:.75rem;color:var(--muted)">' + d.date.slice(5) + '</div>';
+      box.appendChild(col);
+    });
+  })();
+</script>
