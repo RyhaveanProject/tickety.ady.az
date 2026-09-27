@@ -1,0 +1,15 @@
+<aside class="side-nav">
+  <div class="side-nav__user">
+    <span class="avatar"><%= currentUser.firstName.charAt(0) %><%= currentUser.lastName.charAt(0) %></span>
+    <div>
+      <strong><%= currentUser.firstName %> <%= currentUser.lastName %></strong>
+      <small><%= currentUser.email %></small>
+    </div>
+  </div>
+  <a href="/<%= locale %>/kabinet" class="<%= active === 'dashboard' ? 'is-active' : '' %>">İcmal <span>›</span></a>
+  <a href="/<%= locale %>/kabinet/biletler" class="<%= active === 'tickets' ? 'is-active' : '' %>">Mənim biletlərim <span>›</span></a>
+  <a href="/<%= locale %>/kabinet/sifarisler" class="<%= active === 'orders' ? 'is-active' : '' %>">Sifarişlərim <span>›</span></a>
+  <a href="/<%= locale %>/balans-artirilmasi" class="<%= active === 'topup' ? 'is-active' : '' %>">Balans artırılması <span>›</span></a>
+  <a href="/<%= locale %>/kabinet/profil" class="<%= active === 'profile' ? 'is-active' : '' %>">Profil məlumatları <span>›</span></a>
+  <a href="/<%= locale %>/bilet-yoxlama" class="<%= active === 'verify' ? 'is-active' : '' %>">Bilet yoxlanışı <span>›</span></a>
+</aside>
