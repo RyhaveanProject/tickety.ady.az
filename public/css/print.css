@@ -1,8 +1,11 @@
-/* Çap üçün üslublar — bilet səhifələri */
+/* Çap üçün üslub — bilet və xülasə səhifələri */
 @media print {
-  .topbar, .header, .footer, .no-print, .steps, .btn { display: none !important; }
-  body { background: #fff; }
-  .ticket, .card { box-shadow: none !important; border: 1px solid #ccc !important; page-break-inside: avoid; }
+  .topbar, .header, .footer, .toast, .searchbar, .btn, .admin-nav, .seat-legend, .no-print { display: none !important; }
+  body { background: #fff; color: #000; font-size: 12px; }
+  .card, .table-wrap, .trip { border: 1px solid #999 !important; box-shadow: none !important; }
   .container { max-width: 100%; padding: 0; }
-  .ticket__head { background: #00539b !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  a { color: #000; text-decoration: none; }
+  table.data th { background: #eee !important; color: #000 !important; }
+  .section { padding: 8px 0; }
+  .badge { border: 1px solid #999; }
 }
