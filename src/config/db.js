@@ -2,54 +2,43 @@ const mongoose = require('mongoose');
 const config = require('./index');
 
 let memoryServer = null;
+let connected = false;
 
-/**
- * MongoDB-yə qoşulur.
- * - MONGODB_URI varsa -> ona qoşulur (Atlas / lokal).
- * - Yoxdursa və USE_MEMORY_DB=true -> müvəqqəti yaddaş MongoDB-si işə salınır (demo).
- */
-async function connectDB() {
+async function connectDatabase() {
+  if (connected || mongoose.connection.readyState === 1) {
+    connected = true;
+    return mongoose.connection;
+  }
+
+  mongoose.set('strictQuery', true);
+
   let uri = config.mongoUri;
 
-  if (!uri) {
-    if (!config.useMemoryDb) {
-      throw new Error(
-        'MONGODB_URI təyin edilməyib. .env faylında MONGODB_URI dəyərini qeyd edin ' +
-        '(məsələn MongoDB Atlas pulsuz cluster) və ya USE_MEMORY_DB=true edin.'
-      );
-    }
+  if (config.useMemoryDb) {
     try {
       const { MongoMemoryServer } = require('mongodb-memory-server');
       memoryServer = await MongoMemoryServer.create();
       uri = memoryServer.getUri('ady_ticket');
-      console.log('[db] MONGODB_URI yoxdur -> müvəqqəti yaddaş MongoDB işə salındı (demo rejimi).');
-      console.log('[db] Diqqət: yaddaş rejimində məlumatlar server yenidən başladıqda silinir.');
+      console.log('[db] in-memory MongoDB işə salındı');
     } catch (e) {
-      throw new Error(
-        'MONGODB_URI təyin edilməyib və yaddaş MongoDB-si işə salına bilmədi (' + e.message + '). ' +
-        'Zəhmət olmasa MONGODB_URI dəyərini qeyd edin.'
-      );
+      console.warn('[db] in-memory MongoDB əlçatan deyil:', e.message);
     }
   }
 
-  mongoose.set('strictQuery', true);
   await mongoose.connect(uri, {
-    serverSelectionTimeoutMS: 20000,
+    serverSelectionTimeoutMS: 12000,
     maxPoolSize: 10
   });
 
-  const safeUri = uri.replace(/\/\/([^:]+):([^@]+)@/, '//$1:****@');
-  console.log('[db] MongoDB qoşuldu: ' + safeUri.split('?')[0]);
-
-  mongoose.connection.on('error', (err) => console.error('[db] Xəta:', err.message));
-  mongoose.connection.on('disconnected', () => console.warn('[db] Bağlantı kəsildi.'));
-
+  connected = true;
+  mongoose.connection.on('disconnected', () => { connected = false; });
+  mongoose.connection.on('connected', () => { connected = true; });
+  console.log('[db] MongoDB qoşuldu:', mongoose.connection.name);
   return mongoose.connection;
 }
 
-async function disconnectDB() {
-  await mongoose.connection.close();
-  if (memoryServer) await memoryServer.stop();
+function isConnected() {
+  return mongoose.connection.readyState === 1;
 }
 
-module.exports = { connectDB, disconnectDB, getMemoryServer: () => memoryServer };
+module.exports = { connectDatabase, isConnected, getMemoryServer: () => memoryServer };
