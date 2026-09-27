@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="<%= locale %>">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ADY — Azərbaycan Dəmir Yolları. Qatara online bilet al, hərəkət cədvəli, tariflər və ödəniş." />
+  <title><%= typeof title !== 'undefined' ? title : 'ADY | Azərbaycan Dəmir Yolları' %></title>
+  <link rel="icon" href="/public/assets/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/public/css/style.css" />
+  <link rel="stylesheet" href="/public/css/print.css" media="print" />
+  <%- typeof style !== 'undefined' ? style : '' %>
+</head>
+<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>">
+  <a href="#main" class="skip-link">Əsas məzmuna keç</a>
+
+  <%- include('../partials/header') %>
+
+  <main id="main">
+    <%- body %>
+  </main>
+
+  <%- include('../partials/footer') %>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    window.ADY = {
+      locale: '<%= locale %>',
+      siteUrl: '<%= site.siteUrl || "" %>',
+      isAuth: <%- currentUser ? 'true' : 'false' %>
+    };
+  </script>
+  <script src="/public/js/main.js" defer></script>
+  <%- typeof script !== 'undefined' ? script : '' %>
+</body>
+</html>
