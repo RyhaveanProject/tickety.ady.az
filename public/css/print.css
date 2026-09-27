@@ -1,0 +1,8 @@
+/* Çap üçün üslublar — bilet səhifələri */
+@media print {
+  .topbar, .header, .footer, .no-print, .steps, .btn { display: none !important; }
+  body { background: #fff; }
+  .ticket, .card { box-shadow: none !important; border: 1px solid #ccc !important; page-break-inside: avoid; }
+  .container { max-width: 100%; padding: 0; }
+  .ticket__head { background: #00539b !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
