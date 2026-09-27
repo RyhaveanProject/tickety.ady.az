@@ -1,0 +1,27 @@
+<section class="section">
+  <div class="container">
+    <div style="max-width:520px;margin:0 auto">
+      <div class="card">
+        <div class="card__body">
+          <h1 style="font-size:1.45rem"><%= t('auth.resetTitle') %></h1>
+          <div id="formNote" class="hidden"></div>
+          <form id="resetForm">
+            <div class="field">
+              <label for="email"><%= t('auth.email') %></label>
+              <input type="email" id="email" name="email" required />
+            </div>
+            <div class="field">
+              <label for="code"><%= t('auth.code') %></label>
+              <input type="text" id="code" name="code" value="<%= token %>" data-code required />
+            </div>
+            <div class="field">
+              <label for="password"><%= t('auth.newPassword') %></label>
+              <input type="password" id="password" name="password" required minlength="6" />
+            </div>
+            <button type="submit" class="btn btn--primary btn--block"><%= t('auth.resetSubmit') %></button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

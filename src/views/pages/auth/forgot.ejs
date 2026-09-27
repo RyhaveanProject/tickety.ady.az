@@ -1,0 +1,43 @@
+<section class="section">
+  <div class="container">
+    <div style="max-width:520px;margin:0 auto">
+      <div class="card">
+        <div class="card__body">
+          <h1 style="font-size:1.45rem"><%= t('auth.forgotTitle') %></h1>
+          <p class="sec-note mb-24"><%= t('auth.forgotSub') %></p>
+
+          <form id="forgotForm">
+            <div class="field">
+              <label for="email"><%= t('auth.email') %></label>
+              <input type="email" id="email" name="email" required />
+            </div>
+            <button type="submit" class="btn btn--primary btn--block"><%= t('auth.code') %> göndər</button>
+          </form>
+
+          <div id="resetBox" class="hidden mt-24">
+            <hr />
+            <h2 style="font-size:1.15rem"><%= t('auth.resetTitle') %></h2>
+            <form id="resetForm">
+              <div class="field">
+                <label for="resetEmail"><%= t('auth.email') %></label>
+                <input type="email" id="resetEmail" name="email" required />
+              </div>
+              <div class="field">
+                <label for="code"><%= t('auth.code') %></label>
+                <input type="text" id="code" name="code" data-code required />
+              </div>
+              <div class="field">
+                <label for="newPassword"><%= t('auth.newPassword') %></label>
+                <input type="password" id="newPassword" name="password" required minlength="6" />
+              </div>
+              <div id="formNote" class="hidden"></div>
+              <button type="submit" class="btn btn--primary btn--block"><%= t('auth.resetSubmit') %></button>
+            </form>
+          </div>
+
+          <p class="text-sm text-center mt-24 mb-0"><a href="/<%= locale %>/login"><%= t('nav.login') %></a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

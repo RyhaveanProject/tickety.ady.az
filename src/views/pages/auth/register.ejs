@@ -1,0 +1,64 @@
+<section class="section">
+  <div class="container">
+    <div style="max-width:620px;margin:0 auto">
+      <div class="card">
+        <div class="card__body">
+          <div class="eyebrow"><%= t('nav.register') %></div>
+          <h1 style="font-size:1.5rem"><%= t('auth.registerTitle') %></h1>
+          <p class="sec-note mb-24"><%= t('auth.registerSub') %></p>
+
+          <div id="formNote" class="hidden mb-16"></div>
+
+          <form id="registerForm" autocomplete="on">
+            <div class="field--row">
+              <div class="field">
+                <label for="lastName"><%= t('auth.lastName') %></label>
+                <input type="text" id="lastName" name="lastName" required />
+              </div>
+              <div class="field">
+                <label for="firstName"><%= t('auth.firstName') %></label>
+                <input type="text" id="firstName" name="firstName" required />
+              </div>
+            </div>
+            <div class="field">
+              <label for="middleName"><%= t('auth.middleName') %></label>
+              <input type="text" id="middleName" name="middleName" />
+            </div>
+            <div class="field--row">
+              <div class="field">
+                <label for="phone"><%= t('auth.phone') %></label>
+                <input type="tel" id="phone" name="phone" placeholder="+994" />
+              </div>
+              <div class="field">
+                <label for="passport"><%= t('auth.passport') %></label>
+                <input type="text" id="passport" name="passport" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="email"><%= t('auth.email') %></label>
+              <input type="email" id="email" name="email" required autocomplete="email" />
+            </div>
+            <div class="field--row">
+              <div class="field">
+                <label for="password"><%= t('auth.password') %></label>
+                <input type="password" id="password" name="password" required autocomplete="new-password" minlength="6" />
+              </div>
+              <div class="field">
+                <label for="passwordRepeat"><%= t('auth.passwordRepeat') %></label>
+                <input type="password" id="passwordRepeat" name="passwordRepeat" required minlength="6" />
+              </div>
+            </div>
+            <div class="field">
+              <label class="checkbox"><input type="checkbox" required /> <span><%= t('auth.agree') %></span></label>
+            </div>
+            <button type="submit" class="btn btn--primary btn--block btn--lg"><%= t('auth.submitRegister') %></button>
+          </form>
+
+          <p class="text-sm text-center mt-24 mb-0">
+            <a href="/<%= locale %>/login"><%= t('nav.login') %></a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
