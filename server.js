@@ -68,8 +68,17 @@ app.use('/api/payment', payLimiter);
 app.use('/api/balance', payLimiter);
 
 /* ==================== Lokalizasiya + istifadəçi ==================== */
+const { SOCIALS, APPS } = require('./src/config/social');
+
 app.use(localeMiddleware);
 app.use(loadUser);
+
+/* Sosial platformalar və tətbiq keçidləri bütün görünüşlərə ötürülür */
+app.use((req, res, next) => {
+  res.locals.socials = SOCIALS;
+  res.locals.apps = APPS;
+  next();
+});
 
 /* XHR aşkarlanması */
 app.use((req, res, next) => {
@@ -173,6 +182,16 @@ async function start() {
       await seedAll({ force: false });
     } catch (e) {
       console.warn('[start] ilkin məlumat yazıla bilmədi:', e.message);
+    }
+  }
+
+  /* ADY məzmunu və idarəçi hesabı — ilkin yazılışdan sonra tətbiq olunur */
+  if (isConnected()) {
+    try {
+      const { bootstrap } = require('./src/seed/bootstrap');
+      await bootstrap();
+    } catch (e) {
+      console.warn('[start] ADY məzmunu hazırlanmadı:', e.message);
     }
   }
 
