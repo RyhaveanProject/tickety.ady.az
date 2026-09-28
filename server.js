@@ -69,14 +69,32 @@ app.use('/api/balance', payLimiter);
 
 /* ==================== Lokalizasiya + istifadəçi ==================== */
 const { SOCIALS, APPS } = require('./src/config/social');
+const adyNotice = require('./src/config/adyContent');
 
 app.use(localeMiddleware);
 app.use(loadUser);
 
-/* Sosial platformalar və tətbiq keçidləri bütün görünüşlərə ötürülür */
-app.use((req, res, next) => {
+/* Sosial platformalar, tətbiq keçidləri və MongoDB-dən canlı bildiriş */
+const noticeCache = { text: null, ticker: null, at: 0 };
+app.locals.noticeCache = noticeCache; /* admin paneli yenilədikdə keş sıfırlanır */
+app.use(async (req, res, next) => {
   res.locals.socials = SOCIALS;
   res.locals.apps = APPS;
+  /* Bildiriş 60 saniyədə bir MongoDB-dən oxunur; admin yenilədikdə keş sıfırlanır
+     və növbəti sorğu dərhal yeni mətni göstərir */
+  if (Date.now() - noticeCache.at > 60000) {
+    noticeCache.at = Date.now();
+    try {
+      const { Setting } = require('./src/models/index');
+      const rows = await Setting.find({ key: { $in: ['notice', 'notice_ticker'] } }).lean();
+      rows.forEach((r) => {
+        if (r.key === 'notice') noticeCache.text = r.value === undefined || r.value === null ? '' : String(r.value);
+        if (r.key === 'notice_ticker') noticeCache.ticker = r.value === undefined || r.value === null ? '' : String(r.value);
+      });
+    } catch (e) { /* baza yoxdursa standart mətn göstərilir */ }
+  }
+  res.locals.notice = noticeCache.text !== null ? noticeCache.text : adyNotice.NOTICE;
+  res.locals.ticker = noticeCache.ticker !== null ? noticeCache.ticker : adyNotice.NOTICE_TICKER;
   next();
 });
 
@@ -118,12 +136,20 @@ app.get('/', (req, res) => {
   res.redirect('/' + locale);
 });
 
+/* Dil prefiksli marşrutlarda lokal (tərcüməçi) ŞƏRTSİZ quraşdırılır —
+   URL prefiksi ?lang= parametrindən və cookie-dən üstündür. Əvvəllər bu blok
+   yalnız req.query.lang !== lang olduqda işə düşdüyündən /en, /ru ünvanlarında
+   mətnlər tərcümə olunmurdu və dil dəyişmədiyini düşünürdülər. */
 app.use('/:lang(' + localesPattern + ')', (req, res, next) => {
   const lang = req.params.lang;
-  if (config.locales.indexOf(lang) > -1 && (req.query.lang !== lang)) {
+  if (config.locales.indexOf(lang) > -1) {
     res.cookie('locale', lang, { maxAge: 365 * 24 * 60 * 60 * 1000, httpOnly: false, sameSite: 'lax' });
     req.locale = lang;
     res.locals.locale = lang;
+    res.locals.locales = config.locales;
+    res.locals.localeNames = config.localeNames;
+    const { dicts } = require('./src/config/i18n');
+    res.locals.dict = dicts[lang] || dicts.az;
     res.locals.t = function () {
       const { translate } = require('./src/config/i18n');
       return translate.apply(null, [lang].concat(Array.prototype.slice.call(arguments)));
