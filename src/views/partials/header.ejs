@@ -11,8 +11,12 @@
     <div class="topbar__right">
       <a href="/<%= locale %>/bilet-yoxlama" class="topbar__link"><%= t('nav.verify') %></a>
       <div class="lang">
+        <%/* Dil dəyişdikdə eyni səhifə yeni dildə açılır (yol və sorğu saxlanılır) */%>
+        <% var qsParts = Object.keys(query || {}).filter(function(k){ return k !== 'lang'; })
+             .map(function(k){ return k + '=' + encodeURIComponent(query[k]); }); %>
+        <% var qs = qsParts.length ? '?' + qsParts.join('&') : ''; %>
         <% ['az','en','ru'].forEach(function(l){ %>
-          <a href="?lang=<%= l %>" class="lang__item <%= locale === l ? 'is-active' : '' %>"><%= localeNames[l] %></a>
+          <a href="/<%= l %><%= path %><%= qs %>" class="lang__item <%= locale === l ? 'is-active' : '' %>"><%= localeNames[l] %></a>
         <% }) %>
       </div>
     </div>
