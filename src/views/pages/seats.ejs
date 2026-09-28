@@ -16,25 +16,41 @@
       <span><i class="sel"></i><%= t('seats.selected') %></span>
     </div>
 
-    <% classMaps.forEach(function(map){ %>
-      <% if (!map) return; %>
-      <div class="seatmap" style="margin-bottom:20px">
-        <div class="section__head" style="margin-bottom:14px">
-          <div>
-            <h3 style="margin:0"><%= map.title %></h3>
-            <p class="sec-note"><%= map.price.toFixed(2) %> ₼ · <%= t('seats.freeCount') %>: <%= map.freeCount %> / <%= map.capacity %></p>
-          </div>
-          <select data-wagon-select="<%= map.code %>" style="max-width:180px">
-            <% map.wagons.forEach(function(w){ %>
-              <option value="<%= w.wagon %>"><%= t('seats.wagon') %> <%= w.wagon %></option>
-            <% }) %>
-          </select>
+    <%/* ============ 1-ci səviyyə: Sinif tabları (qiymət yanında) ============ */%>
+    <div class="class-tabs" id="classTabs">
+      <% classMaps.forEach(function(map, mi){ if (!map) return; %>
+        <button type="button"
+                class="class-tab <%= mi === 0 ? 'is-active' : '' %>"
+                data-class-tab="<%= map.code %>"
+                data-class-price="<%= map.price.toFixed(2) %>">
+          <span class="class-tab__title"><%= map.title %></span>
+          <span class="class-tab__price"><%= map.price.toFixed(2) %> ₼</span>
+          <span class="class-tab__free"><%= t('seats.freeCount') %>: <%= map.freeCount %></span>
+        </button>
+      <% }) %>
+    </div>
+
+    <%/* ============ 2-ci səviyyə: Vaqon seçimi ============ */%>
+    <% classMaps.forEach(function(map, mi){ if (!map) return; %>
+      <div class="class-panel <%= mi === 0 ? 'is-active' : '' %>" data-class-panel="<%= map.code %>"
+           data-class-code="<%= map.code %>" data-class-title="<%= map.title %>" data-class-price="<%= map.price %>">
+
+        <div class="wagon-picker">
+          <% map.wagons.forEach(function(w){ %>
+            <button type="button"
+                    class="wagon-pill <%= w.wagon === 1 ? 'is-active' : '' %>"
+                    data-wagon-pill="<%= w.wagon %>"
+                    data-wagon-free="<%= w.seats.length - w.takenCount %>">
+              <span class="wagon-pill__no"><%= t('seats.wagon') %> <%= w.wagon %></span>
+              <span class="wagon-pill__free"><%= w.seats.length - w.takenCount %> <%= t('seats.freeShort') %></span>
+            </button>
+          <% }) %>
         </div>
 
         <% map.wagons.forEach(function(w){ %>
           <div class="wagon" data-wagon="<%= w.wagon %>" data-class="<%= map.code %>" <%= w.wagon === 1 ? '' : 'style="display:none"' %>>
             <div class="wagon__head">
-              <span><%= t('seats.wagon') %> <%= w.wagon %></span>
+              <span><%= t('seats.wagon') %> <%= w.wagon %> · <%= map.title %> · <%= map.price.toFixed(2) %> ₼</span>
               <span class="sec-note"><%= t('seats.taken') %>: <%= w.takenCount %></span>
             </div>
             <div class="wagon__grid">
@@ -79,12 +95,37 @@
     var locale = '<%= locale %>';
     var selected = [];
 
+    /* ===== Sinif tabları: yalnız seçilmiş sinifin paneli görünür ===== */
+    document.querySelectorAll('[data-class-tab]').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        var code = tab.getAttribute('data-class-tab');
+        document.querySelectorAll('[data-class-tab]').forEach(function (t) { t.classList.remove('is-active'); });
+        tab.classList.add('is-active');
+        document.querySelectorAll('[data-class-panel]').forEach(function (p) {
+          p.classList.toggle('is-active', p.getAttribute('data-class-panel') === code);
+        });
+      });
+    });
+
+    /* ===== Vaqon pill-ləri: yalnız seçilmiş vaqonun sxemi görünür ===== */
+    document.querySelectorAll('[data-wagon-pill]').forEach(function (pill) {
+      pill.addEventListener('click', function () {
+        var panel = pill.closest('[data-class-panel]');
+        var wagonNo = pill.getAttribute('data-wagon-pill');
+        panel.querySelectorAll('[data-wagon-pill]').forEach(function (p) { p.classList.remove('is-active'); });
+        pill.classList.add('is-active');
+        panel.querySelectorAll('.wagon').forEach(function (el) {
+          el.style.display = el.getAttribute('data-wagon') === wagonNo ? 'block' : 'none';
+        });
+      });
+    });
+
     function render() {
       var box = document.getElementById('selectedSeats');
       var total = selected.reduce(function (s, x) { return s + Number(x.price); }, 0);
       document.getElementById('selectedTotal').textContent = total.toFixed(2) + ' ₼';
       box.textContent = selected.length
-        ? selected.map(function (x) { return x.wagon + '/' + x.seat; }).join(', ')
+        ? selected.map(function (x) { return x.className + ' · ' + x.wagon + '/' + x.seat; }).join('  |  ')
         : '<%= t("seats.noneSelected") %>';
       document.getElementById('continueBtn').disabled = selected.length !== need;
     }
@@ -108,16 +149,6 @@
           btn.classList.add('is-selected');
         }
         render();
-      });
-    });
-
-    document.querySelectorAll('[data-wagon-select]').forEach(function (sel) {
-      sel.addEventListener('change', function () {
-        var code = sel.getAttribute('data-wagon-select');
-        var w = sel.value;
-        document.querySelectorAll('.wagon[data-class="' + code + '"]').forEach(function (el) {
-          el.style.display = el.getAttribute('data-wagon') === w ? 'block' : 'none';
-        });
       });
     });
 

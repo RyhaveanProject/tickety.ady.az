@@ -43,7 +43,7 @@
   </div>
 </section>
 
-<!-- ==================== Populyar istiqamətlər ==================== -->
+<!-- ==================== Populyar istiqamətlər — üfüqi karusel ==================== -->
 <section class="section">
   <div class="container">
     <div class="section__head">
@@ -52,13 +52,17 @@
         <h2><%= t('home.popular') %></h2>
         <p>ADY ilə Azərbaycanı kəşf et</p>
       </div>
-      <a href="/<%= locale %>/populyar-istiqametler" class="btn btn--outline"><%= t('home.seeAll') %></a>
+      <div class="rail-nav">
+        <a href="/<%= locale %>/populyar-istiqametler" class="btn btn--outline"><%= t('home.seeAll') %></a>
+        <button type="button" class="rail-arrow" id="railPrev" aria-label="Əvvəlki">‹</button>
+        <button type="button" class="rail-arrow" id="railNext" aria-label="Növbəti">›</button>
+      </div>
     </div>
 
-    <div class="grid grid--4">
+    <div class="dest-rail" id="destRail">
       <% destinations.forEach(function(d){ %>
-        <a href="/<%= locale %>/populyar-istiqametler/<%= d.slug %>" class="feature">
-          <div class="feature__img"><img src="<%= d.image %>" alt="<%= d.title %>" /></div>
+        <a href="/<%= locale %>/populyar-istiqametler/<%= d.slug %>" class="feature dest-card">
+          <div class="feature__img"><img src="<%= d.image %>" alt="<%= d.title %>" loading="lazy" /></div>
           <div class="feature__body">
             <h3><%= d.title %></h3>
             <div class="feature__meta">
@@ -206,4 +210,41 @@
 
 <script>
   window.ADY_STATIONS = <%- JSON.stringify(stations.map(function(s){ return { code: s.code, name: s.name, nameEn: s.nameEn, region: s.region }; })) %>;
+</script>
+<script>
+  /* ====== Populyar istiqamətlər karuseli: avto-sürüşdürmə + ox düymələri ====== */
+  (function () {
+    var rail = document.getElementById('destRail');
+    if (!rail) return;
+    var nextBtn = document.getElementById('railNext');
+    var prevBtn = document.getElementById('railPrev');
+    var timer = null;
+
+    function step() {
+      var card = rail.querySelector('.dest-card');
+      return card ? card.getBoundingClientRect().width + 16 : 300;
+    }
+    function maxLeft() { return rail.scrollWidth - rail.clientWidth; }
+
+    function go(dir) {
+      var target = rail.scrollLeft + dir * step();
+      if (dir > 0 && target >= maxLeft() - 4) {
+        rail.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        rail.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
+      }
+    }
+
+    if (nextBtn) nextBtn.addEventListener('click', function () { go(1); restart(); });
+    if (prevBtn) prevBtn.addEventListener('click', function () { go(-1); restart(); });
+
+    function start() { timer = setInterval(function () { go(1); }, 4000); }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+    function restart() { stop(); start(); }
+
+    rail.addEventListener('mouseenter', stop);
+    rail.addEventListener('mouseleave', start);
+    rail.addEventListener('touchstart', stop, { passive: true });
+    start();
+  })();
 </script>
