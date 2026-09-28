@@ -40,6 +40,15 @@ router.get('/sifre-yenile', requireGuest, (req, res) => {
   res.render('pages/auth/reset', { title: 'Yeni şifrə', token: req.query.token || '' });
 });
 
+/* Rəsmi saytdakı ünvanlarla uyğunluq */
+router.get('/daxil-ol', requireGuest, (req, res) => {
+  res.render('pages/auth/login', { title: 'Daxil ol' });
+});
+
+router.get('/sifreni-unutdum', requireGuest, (req, res) => {
+  res.render('pages/auth/forgot', { title: 'Şifrənin bərpası' });
+});
+
 /* ==================== API ==================== */
 
 router.post('/api/auth/register', async (req, res) => {
@@ -101,6 +110,20 @@ router.post('/api/auth/login', async (req, res) => {
       return res.status(401).json({ ok: false, message: 'E-poçt və ya şifrə yanlışdır' });
     }
 
+    /* İdarəçi ilk girişdə şifrəni dəyişməlidir */
+    if (user.passwordResetForced) {
+      req.session.userId = String(user._id);
+      req.session.locale = user.locale || locale;
+      user.lastLoginAt = new Date();
+      await user.save();
+      return res.json({
+        ok: true,
+        message: 'Təhlükəsizlik üçün şifrəni dəyişin',
+        user: publicUser(user),
+        redirect: '/' + locale + '/sifre-yenile?forced=1'
+      });
+    }
+
     req.session.userId = String(user._id);
     req.session.locale = user.locale || locale;
     user.lastLoginAt = new Date();
@@ -158,6 +181,7 @@ router.post('/api/auth/reset', async (req, res) => {
     user.password = await User.hashPassword(b.password);
     user.resetCode = '';
     user.resetExpires = undefined;
+    user.passwordResetForced = false;
     await user.save();
 
     return res.json({ ok: true, message: 'Şifrə yeniləndi', redirect: '/' + res.locals.locale + '/login' });

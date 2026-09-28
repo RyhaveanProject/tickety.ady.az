@@ -28,8 +28,44 @@ async function pendingCount() {
 /* Panelin bütün səhifələri yalnız idarəçiyə açıqdır */
 pages.use(requireAdmin);
 
+/* İdarəçi hesabı ilk dəfə yaranıbsa müvəqqəti şifrə xəbərdarlığı */
+async function ensureEnvAdmin() {
+  try {
+    const email = String(config.adminEmail || '').trim().toLowerCase();
+    if (!email) return;
+    let user = await User.findOne({ email });
+    if (!user) {
+      if (!config.adminPassword) return;
+      user = await User.create({
+        firstName: config.adminFirstName || 'Sistem',
+        lastName: config.adminLastName || 'İdarəçi',
+        email,
+        password: await User.hashPassword(config.adminPassword),
+        role: 'admin',
+        managedFromEnv: true,
+        passwordResetForced: !!config.adminTempPassword,
+        locale: config.defaultLocale
+      });
+      console.log('[admin] hesab yaradıldı: ' + email);
+    } else if (user.role !== 'admin') {
+      user.role = 'admin';
+      await user.save();
+    }
+  } catch (e) {
+    console.warn('[admin] hesab hazırlanmadı:', e.message);
+  }
+}
+
+/* İdarəetmə panelinə giriş yoxlaması — girişsiz sorğu login səhifəsinə yönləndirilir */
+function adminEntry(req, res, next) {
+  if (req.currentUser && req.currentUser.role === 'admin') return next();
+  const wantsJson = req.xhr || (req.headers.accept || '').includes('application/json');
+  if (wantsJson) return res.status(403).json({ ok: false, message: 'İcazə yoxdur' });
+  return res.redirect('/' + config.defaultLocale + '/login?next=' + encodeURIComponent(req.originalUrl));
+}
+
 /* ==================== İcmal ==================== */
-pages.get('/', requireAdmin, async (req, res, next) => {
+pages.get('/', adminEntry, async (req, res, next) => {
   try {
     const startOfDay = dayjs().startOf('day').toDate();
     const [
@@ -383,4 +419,4 @@ api.get('/stats', requireAdmin, async (req, res) => {
   }
 });
 
-module.exports = { pages, api };
+module.exports = { pages, api, ensureEnvAdmin };

@@ -1,7 +1,8 @@
 const express = require('express');
-const { Station, Destination, News, Faq } = require('../models/index');
+const { Station, Destination, News, Faq, Page } = require('../models/index');
 const scheduleService = require('../services/scheduleService');
 const config = require('../config');
+const ady = require('../config/adyContent');
 const h = require('../utils/helpers');
 
 const router = express.Router();
@@ -17,7 +18,7 @@ router.get('/', async (req, res, next) => {
     const { today } = datesRange();
     const [stations, destinations, news, faqs, timetable] = await Promise.all([
       Station.find({ active: true }).sort({ order: 1 }).lean(),
-      Destination.find({ active: true }).sort({ order: 1 }).limit(8).lean(),
+      Destination.find({ active: true }).sort({ order: 1 }).limit(7).lean(),
       News.find({ active: true }).sort({ publishedAt: -1 }).limit(6).lean(),
       Faq.find({ active: true }).sort({ order: 1 }).limit(6).lean(),
       scheduleService.homeTimetable(today)
@@ -30,6 +31,9 @@ router.get('/', async (req, res, next) => {
       news,
       faqs,
       timetable,
+      homeCards: ady.HOME_CARDS,
+      notice: ady.NOTICE,
+      ticker: ady.NOTICE_TICKER,
       serverDate: today,
       serverDateMax: h.isoAddDays(today, config.rules.salesOpenDaysBefore)
     });
@@ -65,7 +69,11 @@ router.get('/hereket-cedveli', async (req, res, next) => {
 router.get('/populyar-istiqametler', async (req, res, next) => {
   try {
     const destinations = await Destination.find({ active: true }).sort({ order: 1 }).lean();
-    res.render('pages/destinations', { title: 'Populyar istiqamətlər', destinations });
+    res.render('pages/destinations', {
+      title: 'Populyar istiqamətlər',
+      subtitle: 'ADY-nin Ən Populyar İstiqamətləri',
+      destinations
+    });
   } catch (e) {
     next(e);
   }
@@ -89,12 +97,59 @@ router.get('/populyar-istiqametler/:slug', async (req, res, next) => {
     }
 
     res.render('pages/destination-detail', {
-      title: destination.title,
+      title: destination.title + ' — qatar bileti',
       destination,
       station,
       departures,
+      others: await Destination.find({ active: true, slug: { $ne: destination.slug } }).sort({ order: 1 }).limit(6).lean(),
       today,
       maxDate: h.isoAddDays(today, config.rules.salesOpenDaysBefore)
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+/* ==================== Sualım var ==================== */
+router.get('/sualim-var', (req, res) => res.redirect('/' + res.locals.locale + '/sualim-var/suallar'));
+
+router.get('/sualim-var/:slug', async (req, res, next) => {
+  try {
+    const slug = req.params.slug;
+    const page = await Page.findOne({ slug, group: 'sualim', active: true }).lean();
+    if (!page) return next();
+
+    const faqs = await Faq.find({ active: true }).sort({ order: 1 }).lean();
+    res.render('pages/ady-section', {
+      title: page.title,
+      section: ady.SECTIONS.sualim,
+      currentSlug: slug,
+      page,
+      faqs,
+      stations: []
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+/* ==================== Stansiyalar və dayanacaqlar ==================== */
+router.get('/stansiya-ve-vagzallar', (req, res) => res.redirect('/' + res.locals.locale + '/stansiya-ve-vagzallar/stansiya-ve-vagzallar'));
+
+router.get('/stansiya-ve-vagzallar/:slug', async (req, res, next) => {
+  try {
+    const slug = req.params.slug;
+    const page = await Page.findOne({ slug, group: 'stansiya', active: true }).lean();
+    if (!page) return next();
+
+    const stations = await Station.find({ active: true }).sort({ order: 1 }).lean();
+    res.render('pages/ady-section', {
+      title: page.title,
+      section: ady.SECTIONS.stansiya,
+      currentSlug: slug,
+      page,
+      faqs: [],
+      stations
     });
   } catch (e) {
     next(e);
