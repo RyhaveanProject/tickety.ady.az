@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="ADY — Azərbaycan Dəmir Yolları. Qatara online bilet al, hərəkət cədvəli, tariflər və ödəniş." />
+  <meta name="description" content="ADY — Azərbaycan Dəmir Yolları. Qatara onlayn bilet al, hərəkət cədvəli, tariflər və ödəniş." />
   <title><%= typeof title !== 'undefined' ? title : 'ADY | Azərbaycan Dəmir Yolları' %></title>
-  <link rel="icon" href="/public/assets/logo.svg" type="image/svg+xml" />
+  <link rel="icon" href="/assets/ady/logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/public/css/style.css" />
   <link rel="stylesheet" href="/public/css/print.css" media="print" />
   <%- typeof style !== 'undefined' ? style : '' %>
@@ -27,7 +27,8 @@
     window.ADY = {
       locale: '<%= locale %>',
       siteUrl: '<%= site.siteUrl || "" %>',
-      isAuth: <%- currentUser ? 'true' : 'false' %>
+      isAuth: <%- currentUser ? 'true' : 'false' %>,
+      socials: <%- JSON.stringify(socials || []) %>
     };
   </script>
   <script src="/public/js/main.js" defer></script>
