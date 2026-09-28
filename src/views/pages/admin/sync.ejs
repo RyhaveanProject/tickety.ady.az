@@ -20,6 +20,23 @@
         </div>
 
         <div class="card mb-24"><div class="card__body">
+          <h3 style="font-size:1rem">Baş səhifədəki xəbərdarlıq mesajı</h3>
+          <p class="sec-note">Mesaj MongoDB-də saxlanılır və bütün səhifələrdə canlı göstərilir. Boş saxlasanız, zolaq göstərilmir.</p>
+          <div id="noticeNote" class="hidden"></div>
+          <form id="noticeForm" class="mt-16">
+            <div class="field">
+              <label>Xəbərdarlıq mesajı</label>
+              <textarea name="notice" rows="3"><%= noticeValue %></textarea>
+            </div>
+            <div class="field">
+              <label>Yapışan xəbər (ticker)</label>
+              <input type="text" name="ticker" value="<%= tickerValue %>" />
+            </div>
+            <button type="submit" class="btn btn--primary btn--sm">Yadda saxla</button>
+          </form>
+        </div></div>
+
+        <div class="card mb-24"><div class="card__body">
           <h3 style="font-size:1rem">Necə işləyir</h3>
           <p class="sec-note mb-0">
             Sistem gündəlik olaraq rəsmi mənbədən hərəkət cədvəlini, tarifləri və reysləri oxuyur.
@@ -54,3 +71,36 @@
     </div>
   </div>
 </section>
+
+<script>
+(function () {
+  function show(msg, ok) {
+    var n = document.getElementById('noticeNote');
+    if (!n) return;
+    n.classList.remove('hidden');
+    n.className = 'alert ' + (ok ? 'alert--success' : 'alert--error') + ' mb-16';
+    n.textContent = msg;
+  }
+  var noticeForm = document.getElementById('noticeForm');
+  if (noticeForm) {
+    noticeForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var r = await window.api('/api/admin/settings/notice', {
+        notice: noticeForm.querySelector('[name=notice]').value,
+        ticker: noticeForm.querySelector('[name=ticker]').value
+      });
+      show(r.message || (r.ok ? 'Yadda saxlanıldı' : 'Alınmadı'), !!r.ok);
+    });
+  }
+  var syncBtn = document.querySelector('[data-admin-action="sync"]');
+  if (syncBtn) {
+    syncBtn.addEventListener('click', async function () {
+      window.setLoading(syncBtn, true);
+      var r = await window.api('/api/admin/sync/run', {});
+      window.setLoading(syncBtn, false);
+      show(r.message || (r.ok ? 'Tamamlandı' : 'Alınmadı'), !!r.ok);
+      if (r.ok) setTimeout(function () { window.location.reload(); }, 1200);
+    });
+  }
+})();
+</script>
