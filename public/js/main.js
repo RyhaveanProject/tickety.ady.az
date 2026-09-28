@@ -68,19 +68,24 @@
     });
   });
 
-  /* ==================== Abunə forması ==================== */
-  const subForm = document.getElementById('subscribeForm');
-  if (subForm) {
-    subForm.addEventListener('submit', async (e) => {
+  /* ==================== Abunə forması (bütün nüsxələr — footer və ana səhifə) ==================== */
+  document.querySelectorAll('#subscribeForm, form.subscribe').forEach((form) => {
+    if (form.dataset.subBound) return;
+    form.dataset.subBound = '1';
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const input = subForm.querySelector('input[name=email]');
+      const input = form.querySelector('input[name=email]');
       const note = document.getElementById('subscribeNote');
       const r = await window.api('/api/subscribe', { email: input.value });
-      note.textContent = r.ok ? (r.message || 'Abunəliyiniz qeydə alındı') : (r.message || 'Xəta baş verdi');
-      note.style.color = r.ok ? '#7ee2a8' : '#ff9c93';
+      if (note) {
+        note.textContent = r.ok ? (r.message || 'Abunəliyiniz qeydə alındı') : (r.message || 'Xəta baş verdi');
+        note.style.color = r.ok ? '#7ee2a8' : '#ff9c93';
+      } else {
+        window.toast(r.message || (r.ok ? 'Abunəliyiniz qeydə alındı' : 'Xəta baş verdi'), r.ok ? 'success' : 'error');
+      }
       if (r.ok) input.value = '';
     });
-  }
+  });
 
   /* ==================== Stansiya combo (autocomplete) ==================== */
   const stations = window.ADY_STATIONS || [];
@@ -246,6 +251,16 @@
       } else {
         box.innerHTML = '<div class="alert alert--error">' + (r.message || 'Bilet tapılmadı') + '</div>';
       }
+    });
+  }
+
+  /* ==================== Xəbərdarlıq zolağı — × düyməsi ==================== */
+  const noticeClose = document.getElementById('noticeClose');
+  const noticeBar = document.getElementById('noticeBar');
+  if (noticeClose && noticeBar) {
+    noticeClose.addEventListener('click', function () {
+      noticeBar.classList.add('is-closing');
+      setTimeout(function () { noticeBar.remove(); }, 220);
     });
   }
 
