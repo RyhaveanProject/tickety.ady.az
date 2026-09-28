@@ -14,6 +14,7 @@ const userSchema = new mongoose.Schema({
   balance: { type: Number, default: 0, min: 0 },
   locale: { type: String, default: 'az' },
   managedFromEnv: { type: Boolean, default: false },
+  passwordResetForced: { type: Boolean, default: false },
   resetCode: { type: String, default: '' },
   resetExpires: { type: Date },
   lastLoginAt: { type: Date }
@@ -26,6 +27,10 @@ userSchema.virtual('fullName').get(function () {
 userSchema.virtual('initials').get(function () {
   return (this.firstName || '?').charAt(0) + (this.lastName || '?').charAt(0);
 });
+
+userSchema.methods.comparePasswordSources = function (plain) {
+  return bcrypt.compare(plain, this.password || '');
+};
 
 userSchema.methods.comparePassword = function (plain) {
   return bcrypt.compare(plain, this.password);

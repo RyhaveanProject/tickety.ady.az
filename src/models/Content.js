@@ -29,6 +29,8 @@ const destinationSchema = new mongoose.Schema({
   image: { type: String, default: '' },
   stationCode: { type: String, default: '' },
   priceFrom: { type: Number, default: 0 },
+  durationText: { type: String, default: '' },
+  distanceKm: { type: Number, default: 0 },
   order: { type: Number, default: 100 },
   active: { type: Boolean, default: true }
 }, { timestamps: true });
