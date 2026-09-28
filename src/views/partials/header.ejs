@@ -22,7 +22,7 @@
 <header class="header">
   <div class="container header__inner">
     <a href="/<%= locale %>" class="brand">
-      <img src="/public/assets/logo.svg" alt="ADY" class="brand__logo" />
+      <img src="/assets/ady/logo.svg" alt="ADY — Azərbaycan Dəmir Yolları" class="brand__logo" />
       <span class="brand__text">
         <strong>ADY</strong>
         <small><%= t('brand.railways') %></small>
@@ -38,10 +38,11 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3a3 3 0 0 1 0-6V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
         <%= t('nav.tickets') %>
       </a>
-      <a href="/<%= locale %>/hereket-cedveli" class="nav__link <%= path.indexOf('hereket-cedveli') > -1 ? 'is-active' : '' %>"><%= t('nav.timetable') %></a>
-      <a href="/<%= locale %>/tarifler-ve-odenis" class="nav__link <%= path.indexOf('tarif') > -1 ? 'is-active' : '' %>"><%= t('nav.tariffs') %></a>
-      <a href="/<%= locale %>/dasima-qaydalari" class="nav__link <%= path.indexOf('dasima') > -1 ? 'is-active' : '' %>"><%= t('nav.rules') %></a>
       <a href="/<%= locale %>/populyar-istiqametler" class="nav__link <%= path.indexOf('populyar') > -1 ? 'is-active' : '' %>"><%= t('nav.destinations') %></a>
+      <a href="/<%= locale %>/tarifler-ve-odenis/gedis-haqqi-tarifleri" class="nav__link <%= path.indexOf('tarif') > -1 ? 'is-active' : '' %>"><%= t('nav.tariffs') %></a>
+      <a href="/<%= locale %>/sualim-var/suallar" class="nav__link <%= path.indexOf('sualim') > -1 ? 'is-active' : '' %>">Sualım var</a>
+      <a href="/<%= locale %>/stansiya-ve-vagzallar/stansiya-ve-vagzallar" class="nav__link <%= path.indexOf('stansiya') > -1 ? 'is-active' : '' %>">Stansiyalar və dayanacaqlar</a>
+      <a href="/<%= locale %>/hereket-cedveli" class="nav__link <%= path.indexOf('hereket-cedveli') > -1 ? 'is-active' : '' %>"><%= t('nav.timetable') %></a>
       <a href="/<%= locale %>/xeberler" class="nav__link <%= path.indexOf('xeber') > -1 ? 'is-active' : '' %>"><%= t('nav.news') %></a>
       <a href="/<%= locale %>/elaqe" class="nav__link <%= path.indexOf('elaqe') > -1 ? 'is-active' : '' %>"><%= t('nav.contact') %></a>
 
@@ -68,3 +69,12 @@
     </nav>
   </div>
 </header>
+
+<% if (typeof notice !== 'undefined' && notice) { %>
+  <div class="notice" id="noticeBar">
+    <div class="container notice__inner">
+      <span><%= notice %></span>
+      <button type="button" class="notice__close" id="noticeClose" aria-label="Bağla">×</button>
+    </div>
+  </div>
+<% } %>

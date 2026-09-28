@@ -2,12 +2,25 @@
   <div class="container">
     <div class="footer__top">
       <div class="footer__brand">
-        <img src="/public/assets/logo-white.svg" alt="ADY" class="footer__logo" />
+        <img src="/assets/ady/logo-white.svg" alt="ADY — Azərbaycan Dəmir Yolları" class="footer__logo" />
         <p class="footer__desc"><%= t('footer.desc') %></p>
         <div class="footer__contacts">
-          <a href="tel:1822">1822</a>
+          <a href="tel:<%= site.supportPhone %>">Çağrı mərkəzi: <%= site.supportPhone %></a>
           <a href="mailto:<%= site.supportEmail %>"><%= site.supportEmail %></a>
           <span><%= site.address %></span>
+        </div>
+        <% if (socials && socials.length) { %>
+          <div class="footer__socials">
+            <% socials.forEach(function(s){ %>
+              <a href="<%= s.url %>" target="_blank" rel="noopener" title="<%= s.name %>">
+                <img src="/assets/ady/social-<%= s.key %>.svg" alt="<%= s.name %>" />
+              </a>
+            <% }) %>
+          </div>
+        <% } %>
+        <div class="footer__apps">
+          <a href="<%= apps && apps.play || '#' %>" target="_blank" rel="noopener"><img src="/assets/ady/google-play.svg" alt="Google Play" /></a>
+          <a href="<%= apps && apps.apple || '#' %>" target="_blank" rel="noopener"><img src="/assets/ady/app-store.svg" alt="App Store" /></a>
         </div>
       </div>
 
@@ -21,23 +34,25 @@
         </div>
         <div class="footer__col">
           <h4><%= t('nav.tariffs') %></h4>
-          <a href="/<%= locale %>/tarifler-ve-odenis"><%= t('nav.tariffs') %></a>
-          <a href="/<%= locale %>/tarifler-ve-odenis/gedis-haqqinin-qaytarilmasi"><%= t('nav.refund') %></a>
-          <a href="/<%= locale %>/tarifler-ve-odenis/odenis-usullari"><%= t('nav.paymentMethods') %></a>
+          <a href="/<%= locale %>/tarifler-ve-odenis/gedis-haqqi-tarifleri">Gediş haqqı tarifləri</a>
+          <a href="/<%= locale %>/tarifler-ve-odenis/gedis-haqqinin-qaytarilmasi">Gediş haqqının qaytarılması</a>
+          <a href="/<%= locale %>/tarifler-ve-odenis/odenis-usullari">Ödəniş üsulları</a>
           <a href="/<%= locale %>/balans-artirilmasi"><%= t('nav.balance') %></a>
         </div>
         <div class="footer__col">
-          <h4><%= t('nav.rules') %></h4>
+          <h4>Sualım var</h4>
+          <a href="/<%= locale %>/sualim-var/suallar">Suallar</a>
           <a href="/<%= locale %>/dasima-qaydalari/usaqlarla-seyahet"><%= t('nav.children') %></a>
           <a href="/<%= locale %>/dasima-qaydalari/el-yuklerinin-dasinmasi"><%= t('nav.luggage') %></a>
           <a href="/<%= locale %>/dasima-qaydalari/heyvanlarin-dasinmasi"><%= t('nav.pets') %></a>
           <a href="/<%= locale %>/komek"><%= t('nav.help') %></a>
         </div>
         <div class="footer__col">
-          <h4><%= t('nav.contact') %></h4>
-          <a href="/<%= locale %>/elaqe"><%= t('nav.contact') %></a>
+          <h4>Stansiyalar və dayanacaqlar</h4>
+          <a href="/<%= locale %>/stansiya-ve-vagzallar/stansiya-ve-vagzallar">Stansiya və dayanacaqlar</a>
+          <a href="/<%= locale %>/stansiya-ve-vagzallar/marsrutlar">Marşrutlar</a>
           <a href="/<%= locale %>/haqqimizda"><%= t('nav.about') %></a>
-          <a href="/<%= locale %>/xeberler"><%= t('nav.news') %></a>
+          <a href="/<%= locale %>/elaqe"><%= t('nav.contact') %></a>
         </div>
       </div>
 
@@ -55,7 +70,8 @@
     </div>
 
     <div class="footer__bottom">
-      <span>© <%= year %> <%= site.fullName %>. Bütün hüquqlar qorunur.</span>
+      <span>© <%= year %> "Azərbaycan Dəmir Yolları" QSC. Bütün hüquqlar qorunur.</span>
+      <span><a href="tel:1822" style="color:#f2a900">1822</a></span>
     </div>
   </div>
 </footer>
