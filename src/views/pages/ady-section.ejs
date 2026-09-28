@@ -1,0 +1,71 @@
+<section class="section">
+  <div class="container">
+    <div class="page-banner">
+      <img src="/assets/ady/page-banner.svg" alt="<%= page.title %>" />
+    </div>
+
+    <nav class="steps">
+      <% section.items.forEach(function(it){ %>
+        <% var url = it.href ? ('/' + locale + '/' + it.href) : ('/' + locale + '/' + section.root + '/' + it.slug); %>
+        <a class="step <%= (!it.href && it.slug === currentSlug) ? 'is-active' : '' %>" href="<%= url %>"><%= it.title %></a>
+      <% }) %>
+    </nav>
+
+    <div class="layout-aside">
+      <aside class="admin-nav">
+        <% section.items.forEach(function(it){ %>
+          <% var url = it.href ? ('/' + locale + '/' + it.href) : ('/' + locale + '/' + section.root + '/' + it.slug); %>
+          <a href="<%= url %>" class="<%= (!it.href && it.slug === currentSlug) ? 'is-active' : '' %>"><span><%= it.title %></span></a>
+        <% }) %>
+      </aside>
+
+      <div>
+        <div class="card mb-16">
+          <div class="card__body">
+            <div class="eyebrow"><%= section.eyebrow %></div>
+            <h1><%= page.title %></h1>
+            <% if (page.excerpt) { %><p class="sec-note"><%= page.excerpt %></p><% } %>
+          </div>
+        </div>
+
+        <% if (faqs && faqs.length) { %>
+          <% faqs.forEach(function(f){ %>
+            <div class="faq">
+              <div class="faq__q"><%= f.question %></div>
+              <div class="faq__a"><%= f.answer %></div>
+            </div>
+          <% }) %>
+        <% } %>
+
+        <% if (page.content) { %>
+          <div class="card mb-16">
+            <div class="card__body content-body">
+              <%- page.content %>
+            </div>
+          </div>
+        <% } %>
+
+        <% if (stations && stations.length) { %>
+          <div class="card">
+            <div class="card__head"><span>Bütün stansiya və dayanacaqlar</span></div>
+            <div class="card__body">
+              <table class="data">
+                <thead><tr><th>Kod</th><th>Ad</th><th>Region</th><th>Ölkə</th></tr></thead>
+                <tbody>
+                  <% stations.forEach(function(s){ %>
+                    <tr>
+                      <td class="mono"><%= s.code %></td>
+                      <td><%= s.name %></td>
+                      <td><%= s.region %></td>
+                      <td><%= s.country %></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</section>

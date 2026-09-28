@@ -1,18 +1,26 @@
 <section class="section">
   <div class="container">
+    <div class="page-banner">
+      <img src="<%= destination.image %>" alt="<%= destination.title %>" />
+    </div>
+
     <div class="section__head">
       <div>
         <div class="eyebrow"><%= t('nav.destinations') %></div>
-        <h1><%= destination.title %></h1>
-        <p><%= destination.summary %></p>
+        <h1><%= destination.title %> qatar bileti</h1>
+        <div class="feature__meta" style="margin-top:8px">
+          <span><strong><%= destination.priceFrom.toFixed(2) %></strong> AZN-dən</span>
+          <span><%= destination.durationText %></span>
+          <span><%= destination.distanceKm %> km</span>
+        </div>
       </div>
-      <div class="badge badge--gold"><%= t('common.price') %> <%= destination.priceFrom.toFixed(2) %> ₼</div>
+      <a href="/<%= locale %>/bilet-axtar?to=<%= destination.stationCode %>" class="btn btn--primary"><%= t('home.buyTicket') %></a>
     </div>
 
     <div class="grid grid--3">
       <div style="grid-column:span 2">
-        <div class="card mb-16"><div class="card__body">
-          <%- destination.content || '<p>' + destination.summary + '</p>' %>
+        <div class="card mb-16"><div class="card__body content-body">
+          <%- destination.content || ('<p>' + destination.summary + '</p>') %>
         </div></div>
 
         <div class="card">
@@ -41,8 +49,8 @@
       </div>
 
       <div class="summary">
-        <div class="card"><div class="card__body">
-          <h3 style="font-size:1rem"><%= t('search.pageTitle') %></h3>
+        <div class="card mb-16"><div class="card__body">
+          <h3 style="font-size:1rem">Bilet axtarışı</h3>
           <% if (station) { %>
             <dl class="kv mb-16">
               <dt>Stansiya</dt><dd><%= station.name %></dd>
@@ -51,6 +59,17 @@
             </dl>
           <% } %>
           <a href="/<%= locale %>/bilet-axtar?to=<%= destination.stationCode %>" class="btn btn--primary btn--block"><%= t('home.buyTicket') %></a>
+        </div></div>
+
+        <div class="card"><div class="card__body">
+          <h3 style="font-size:1rem">Digər istiqamətlər</h3>
+          <div class="admin-nav">
+            <% others.forEach(function(o){ %>
+              <a href="/<%= locale %>/populyar-istiqametler/<%= o.slug %>">
+                <span><%= o.title %></span><small><%= o.priceFrom.toFixed(2) %> ₼</small>
+              </a>
+            <% }) %>
+          </div>
         </div></div>
       </div>
     </div>
