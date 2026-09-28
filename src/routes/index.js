@@ -32,8 +32,6 @@ router.get('/', async (req, res, next) => {
       faqs,
       timetable,
       homeCards: ady.HOME_CARDS,
-      notice: ady.NOTICE,
-      ticker: ady.NOTICE_TICKER,
       serverDate: today,
       serverDateMax: h.isoAddDays(today, config.rules.salesOpenDaysBefore)
     });

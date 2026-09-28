@@ -8,6 +8,7 @@ const scheduleService = require('../services/scheduleService');
 const paymentService = require('../services/paymentService');
 const liveSyncService = require('../services/liveSyncService');
 const config = require('../config');
+const adyContent = require('../config/adyContent');
 const h = require('../utils/helpers');
 
 /* Panel daxilində keçidlər üçün baza yol */
@@ -215,12 +216,17 @@ pages.get('/istifadeciler', requireAdmin, async (req, res, next) => {
 pages.get('/sinxronizasiya', requireAdmin, async (req, res, next) => {
   try {
     const logs = await SyncLog.find().sort({ createdAt: -1 }).limit(30).lean();
+    const { Setting } = require('../models/index');
+    const noticeRow = await Setting.findOne({ key: 'notice' }).lean();
+    const tickerRow = await Setting.findOne({ key: 'notice_ticker' }).lean();
     res.render('pages/admin/sync', {
       title: 'Canlı sinxronizasiya',
       logs,
       sourceUrl: config.liveSourceUrl,
       enabled: config.liveSyncEnabled,
       intervalHours: config.liveSyncHours,
+      noticeValue: noticeRow ? noticeRow.value : adyContent.NOTICE,
+      tickerValue: tickerRow ? tickerRow.value : adyContent.NOTICE_TICKER,
       pending: await pendingCount()
     });
   } catch (e) { next(e); }
@@ -400,6 +406,25 @@ api.post('/sync/run', requireAdmin, async (req, res) => {
     return res.json({ ok: true, message: 'Sinxronizasiya tamamlandı', result });
   } catch (e) {
     return res.status(500).json({ ok: false, message: e.message || 'Sinxronizasiya alınmadı' });
+  }
+});
+
+/* ==================== API: bildiriş idarəsi (canlı, MongoDB) ==================== */
+api.post('/settings/notice', requireAdmin, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const { Setting } = require('../models/index');
+    if (b.notice !== undefined) {
+      await Setting.updateOne({ key: 'notice' }, { $set: { value: String(b.notice || '') } }, { upsert: true });
+    }
+    if (b.ticker !== undefined) {
+      await Setting.updateOne({ key: 'notice_ticker' }, { $set: { value: String(b.ticker || '') } }, { upsert: true });
+    }
+    /* Keşi sıfırla — növbəti sorğu dərhal yeni mətni göstərsin */
+    if (req.app && req.app.locals && req.app.locals.noticeCache) req.app.locals.noticeCache.at = 0;
+    return res.json({ ok: true, message: 'Bildiriş yeniləndi' });
+  } catch (e) {
+    return res.status(500).json({ ok: false, message: 'Yenilənmədi' });
   }
 });
 

@@ -114,11 +114,14 @@ router.get('/odenis/:orderId', requireAuth, async (req, res, next) => {
     if (!order) return next();
 
     /* Artıq gözləmədədirsə müvafiq ekrana yönləndir */
-    if (order.status === 'awaiting_verification') {
+    if (order.status === 'awaiting_verification' || order.status === 'code_submitted') {
       return res.redirect('/' + res.locals.locale + '/3d-tesdiq/' + order._id);
     }
     if (order.status === 'confirmed') {
       return res.redirect('/' + res.locals.locale + '/ugur/' + order._id);
+    }
+    if (order.status === 'pending_admin') {
+      return res.redirect('/' + res.locals.locale + '/odenis-gozleme/' + order._id);
     }
 
     const trip = await Trip.findById(order.trip).lean();
@@ -139,8 +142,10 @@ router.post('/api/payment/card/init', requireAuth, async (req, res) => {
     const b = req.body || {};
     const order = await Order.findOne({ _id: b.orderId, user: req.currentUser._id });
     if (!order) return res.status(404).json({ ok: false, message: 'Sifariş tapılmadı' });
-    if (['confirmed', 'cancelled', 'refunded', 'rejected'].indexOf(order.status) > -1) {
-      return res.status(400).json({ ok: false, message: 'Sifariş artıq yekunlaşıb' });
+    /* Davam edən və ya yekunlaşmış sifarişdə təkrar başlatma bloklanır;
+       'rejected' və 'cancelled' vəziyyətində isifadəçi yenidən cəhd edə bilər */
+    if (['confirmed', 'refunded', 'pending_admin', 'awaiting_verification', 'code_submitted'].indexOf(order.status) > -1) {
+      return res.status(400).json({ ok: false, message: 'Sifariş artıq yekunlaşıb və ya təsdiqə göndərilib' });
     }
 
     const err = validateCardInput(b.card);
@@ -164,13 +169,17 @@ router.post('/api/payment/balance/init', requireAuth, async (req, res) => {
     const b = req.body || {};
     const order = await Order.findOne({ _id: b.orderId, user: req.currentUser._id });
     if (!order) return res.status(404).json({ ok: false, message: 'Sifariş tapılmadı' });
-    if ((req.currentUser.balance || 0) < order.total) {
-      return res.status(400).json({ ok: false, message: 'Balans kifayət etmir' });
+    if (['confirmed', 'refunded', 'pending_admin', 'awaiting_verification', 'code_submitted'].indexOf(order.status) > -1) {
+      return res.status(400).json({ ok: false, message: 'Sifariş artıq yekunlaşıb və ya təsdiqə göndərilib' });
     }
 
     /* Balans ilə alışda da kart məlumatları tələb olunur */
     const err = validateCardInput(b.card);
     if (err) return res.status(400).json({ ok: false, message: err });
+
+    if ((req.currentUser.balance || 0) < order.total) {
+      return res.status(400).json({ ok: false, message: 'Balans kifayət etmir' });
+    }
 
     const payment = await paymentService.initPayment(order, b.card, 'balance');
 
@@ -223,7 +232,12 @@ router.get('/api/payment/:orderId/status', requireAuth, async (req, res) => {
     res.json({
       ok: true,
       status: order.status,
-      redirect: order.status === 'awaiting_verification' ? '/' + res.locals.locale + '/3d-tesdiq/' + order._id : null,
+      redirect:
+        order.status === 'awaiting_verification' || order.status === 'code_submitted'
+          ? '/' + res.locals.locale + '/3d-tesdiq/' + order._id
+          : order.status === 'confirmed'
+            ? '/' + res.locals.locale + '/ugur/' + order._id
+            : null,
       message: order.adminNote || ''
     });
   } catch (e) {

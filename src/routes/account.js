@@ -122,6 +122,23 @@ router.post('/api/account/toppay', requireAuth, async (req, res) => {
   }
 });
 
+/* Balans artırımının vəziyyəti — gözləmə ekranı canlı sorğulayır */
+router.get('/api/balance/topup-status/:paymentId', requireAuth, async (req, res) => {
+  try {
+    const p = await Payment.findOne({ _id: req.params.paymentId, user: req.currentUser._id }).lean();
+    if (!p) return res.status(404).json({ ok: false, message: 'Əməliyyat tapılmadı' });
+    const user = await User.findById(req.currentUser._id).lean();
+    res.json({
+      ok: true,
+      status: p.status,
+      balance: user ? (user.balance || 0) : 0,
+      redirect: p.status === 'approved' ? '/' + res.locals.locale + '/balans-artirilmasi' : null
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, message: 'Vəziyyət oxunmadı' });
+  }
+});
+
 /* Sərnişin adı ilə bilet axtarışı və s. əlavə funksiyalar üçün sadə məlumat nöqtəsi */
 router.get('/api/account/summary', requireAuth, async (req, res) => {
   try {
