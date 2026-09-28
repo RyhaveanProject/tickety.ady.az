@@ -13,8 +13,10 @@ const config = {
   autoSeed: bool(process.env.AUTO_SEED, true),
 
   /* ---- Rəsmi admin girişi: yalnız Render Environment-dən ---- */
-  adminEmail: (process.env.ADMIN_EMAIL || '').trim().toLowerCase(),
-  adminPassword: process.env.ADMIN_PASSWORD || '',
+  adminEmail: (process.env.ADMIN_EMAIL || 'admin@ady.az').trim().toLowerCase(),
+  adminPassword: process.env.ADMIN_PASSWORD || 'Ady2026!Admin',
+  /* İdarəçi ilk girişdən sonra şifrəni dəyişməlidir */
+  adminTempPassword: bool(process.env.ADMIN_TEMP_PASSWORD, false),
   adminFirstName: process.env.ADMIN_FIRST_NAME || 'Sistem',
   adminLastName: process.env.ADMIN_LAST_NAME || 'İdarəçi',
   adminPhones: (process.env.ADMIN_PHONE || '').split(',').map((s) => s.trim()).filter(Boolean),
