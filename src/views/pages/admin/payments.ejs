@@ -127,5 +127,12 @@
       el.disabled = false;
     }
   });
+  /* Gözləyən tabında yeni ödənişlər avtomatik görünsün */
+  if ('<%= status %>' === 'pending') {
+    setInterval(function () {
+      if (document.querySelector('button:disabled')) { return; }
+      window.location.reload();
+    }, 10000);
+  }
 })();
 </script>
