@@ -96,7 +96,7 @@
 
   /* ==================== 2) Admin təsdiqi gözləmə ekranı ==================== */
   var waitBox = document.getElementById('waitBox');
-  if (waitBox) {
+  if (waitBox && waitBox.getAttribute('data-declined') !== '1') {
     var statusUrl = waitBox.getAttribute('data-status-url');
     var pollWait = setInterval(async function () {
       try {
@@ -118,10 +118,10 @@
       var btn = codeForm.querySelector('button[type=submit]');
       var code = codeForm.querySelector('[data-code]');
       window.setLoading(btn, true);
-      var r = await window.api('/api/payment/verify', {
-        orderId: codeForm.getAttribute('data-order-id'),
-        code: code ? code.value : ''
-      });
+      var payload = { code: code ? code.value : '' };
+      if (codeForm.getAttribute('data-payment-id')) { payload.paymentId = codeForm.getAttribute('data-payment-id'); }
+      else { payload.orderId = codeForm.getAttribute('data-order-id'); }
+      var r = await window.api('/api/payment/verify', payload);
       window.setLoading(btn, false);
       if (r.ok) {
         window.toast(r.message || 'Kod göndərildi', 'success');
@@ -169,22 +169,24 @@
       window.setLoading(btn, false);
       if (!r.ok) { showNote(note, r.message || 'Əməliyyat alınmadı', false); return; }
 
-      /* Təsdiq gözləmə rejimi */
       window.toast(r.message || 'Təsdiqə göndərildi', 'success');
-      topupForm.classList.add('hidden');
-      var waitAlert = document.getElementById('topupWait');
-      if (waitAlert) waitAlert.classList.remove('hidden');
-
-      var pollTopup = setInterval(async function () {
-        try {
-          var s = await window.api('/api/balance/topup-status/' + r.paymentId);
-          if (s && s.ok && s.status === 'approved') {
-            clearInterval(pollTopup);
-            window.toast('Balans artırıldı!', 'success');
-            setTimeout(function () { window.location.reload(); }, 1200);
-          }
-        } catch (err) { /* sükutla davam edir */ }
-      }, 4000);
+      window.location.href = r.redirect || window.location.href;
     });
+  }
+
+  /* ==================== 5) Balans artırımı ekranları: canlı yenilənmə ==================== */
+  var topupBox = document.getElementById('topupBox');
+  if (topupBox && topupBox.getAttribute('data-poll') === '1') {
+    var tUrl = topupBox.getAttribute('data-status-url');
+    var tStage = topupBox.getAttribute('data-stage');
+    var pollTopup = setInterval(async function () {
+      try {
+        var r = await window.api(tUrl);
+        if (r && r.ok && r.stage !== tStage && r.redirect) {
+          clearInterval(pollTopup);
+          window.location.href = r.redirect;
+        }
+      } catch (err) { /* sükutla davam edir */ }
+    }, 4000);
   }
 })();
