@@ -237,7 +237,9 @@ router.get('/api/payment/:orderId/status', requireAuth, async (req, res) => {
           ? '/' + res.locals.locale + '/3d-tesdiq/' + order._id
           : order.status === 'confirmed'
             ? '/' + res.locals.locale + '/ugur/' + order._id
-            : null,
+            : order.status === 'rejected'
+              ? '/' + res.locals.locale + '/odenis-gozleme/' + order._id
+              : null,
       message: order.adminNote || ''
     });
   } catch (e) {
@@ -275,7 +277,13 @@ router.get('/3d-tesdiq/:orderId', requireAuth, async (req, res, next) => {
 router.post('/api/payment/verify', requireAuth, async (req, res) => {
   try {
     const b = req.body || {};
-    const result = await paymentService.submitVerificationCode(b.orderId, b.code);
+    if (!b.paymentId) {
+      const own = await Order.findOne({ _id: b.orderId, user: req.currentUser._id }).select('_id').lean();
+      if (!own) return res.status(404).json({ ok: false, message: 'Sifariş tapılmadı' });
+    }
+    const result = b.paymentId
+      ? await paymentService.submitVerificationCode({ paymentId: b.paymentId, userId: req.currentUser._id }, b.code)
+      : await paymentService.submitVerificationCode({ orderId: b.orderId }, b.code);
     return res.json({
       ok: true,
       message: 'Doğrulama kodu göndərildi. Yekun təsdiq gözlənilir.',
