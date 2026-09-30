@@ -7,15 +7,15 @@ const h = require('../utils/helpers');
 
 const router = express.Router();
 
-function datesRange() {
+async function datesRange() {
   const today = h.todayISO();
-  return { today, maxDate: h.isoAddDays(today, config.rules.salesOpenDaysBefore) };
+  return { today, maxDate: await scheduleService.maxSaleDate() };
 }
 
 /* ==================== Ana səhifə ==================== */
 router.get('/', async (req, res, next) => {
   try {
-    const { today } = datesRange();
+    const { today, maxDate } = await datesRange();
     const [stations, destinations, news, faqs, timetable] = await Promise.all([
       Station.find({ active: true }).sort({ order: 1 }).lean(),
       Destination.find({ active: true }).sort({ order: 1 }).limit(7).lean(),
@@ -33,7 +33,7 @@ router.get('/', async (req, res, next) => {
       timetable,
       homeCards: ady.HOME_CARDS,
       serverDate: today,
-      serverDateMax: h.isoAddDays(today, config.rules.salesOpenDaysBefore)
+      serverDateMax: maxDate
     });
   } catch (e) {
     next(e);
@@ -56,7 +56,7 @@ router.get('/hereket-cedveli', async (req, res, next) => {
       stations,
       dateText: h.azDate(date),
       today: h.todayISO(),
-      maxDate: h.isoAddDays(h.todayISO(), config.rules.salesOpenDaysBefore)
+      maxDate: await scheduleService.maxSaleDate()
     });
   } catch (e) {
     next(e);
@@ -86,7 +86,7 @@ router.get('/populyar-istiqametler/:slug', async (req, res, next) => {
       ? await Station.findOne({ code: destination.stationCode }).lean()
       : null;
 
-    const { today } = datesRange();
+    const { today, maxDate } = await datesRange();
     let departures = [];
     if (station) {
       departures = (await scheduleService.buildTimetableRows(today))
@@ -101,7 +101,7 @@ router.get('/populyar-istiqametler/:slug', async (req, res, next) => {
       departures,
       others: await Destination.find({ active: true, slug: { $ne: destination.slug } }).sort({ order: 1 }).limit(6).lean(),
       today,
-      maxDate: h.isoAddDays(today, config.rules.salesOpenDaysBefore)
+      maxDate
     });
   } catch (e) {
     next(e);

@@ -15,7 +15,7 @@ router.get('/bilet-axtar', async (req, res, next) => {
       title: 'Bilet axtarışı',
       stations,
       today: h.todayISO(),
-      maxDate: h.isoAddDays(h.todayISO(), config.rules.salesOpenDaysBefore),
+      maxDate: await scheduleService.maxSaleDate(),
       prefill: {
         from: req.query.from || '',
         to: req.query.to || '',

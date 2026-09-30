@@ -206,6 +206,33 @@ pages.get('/qatarlar', requireAdmin, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+/* Yeni qatar / bilet (reys) əlavə etmək */
+pages.get('/qatarlar/yeni', requireAdmin, async (req, res, next) => {
+  try {
+    const stations = await Station.find({ active: true }).sort({ country: 1, order: 1 }).lean();
+    res.render('pages/admin/train-form', {
+      title: 'Yeni bilet / reys əlavə et',
+      train: null,
+      stations,
+      pending: await pendingCount()
+    });
+  } catch (e) { next(e); }
+});
+
+pages.get('/qatarlar/:id/redakte', requireAdmin, async (req, res, next) => {
+  try {
+    const train = await Train.findById(req.params.id).lean();
+    if (!train) return next();
+    const stations = await Station.find({ active: true }).sort({ country: 1, order: 1 }).lean();
+    res.render('pages/admin/train-form', {
+      title: 'Reysi redaktə et: ' + train.number,
+      train,
+      stations,
+      pending: await pendingCount()
+    });
+  } catch (e) { next(e); }
+});
+
 pages.get('/istifadeciler', requireAdmin, async (req, res, next) => {
   try {
     const users = await User.find().sort({ createdAt: -1 }).limit(200).lean();
@@ -396,6 +423,183 @@ api.post('/trips/:tripId/config', requireAdmin, async (req, res) => {
     return res.json({ ok: true, message: 'Konfiqurasiya yeniləndi' });
   } catch (e) {
     return res.status(500).json({ ok: false, message: 'Yenilənmədi' });
+  }
+});
+
+/* ==================== API: qatar / bilet (reys) idarəsi ==================== */
+const TRAIN_TYPES = ['express', 'fast', 'passenger', 'suburban', 'international'];
+const LINES = ['absheron', 'domestic', 'georgia', 'international'];
+const TIME_RE = /^([01]?\d|2[0-3]):[0-5]\d$/;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function badRequest(message) {
+  return Object.assign(new Error(message), { status: 400 });
+}
+
+/* Formadan gələn məlumatı yoxlayır və Train sənədinə çevirir */
+async function parseTrainPayload(b) {
+  const number = String(b.number || '').trim();
+  if (!number || number.length > 12) throw badRequest('Qatar nömrəsi düzgün deyil');
+  const title = String(b.title || '').trim();
+  if (!title) throw badRequest('Qatarın adı boşdur');
+
+  const line = LINES.indexOf(b.line) > -1 ? b.line : 'domestic';
+  const type = TRAIN_TYPES.indexOf(b.type) > -1 ? b.type : 'passenger';
+
+  const weekdays = Array.from(new Set((Array.isArray(b.weekdays) ? b.weekdays : []).map(Number)))
+    .filter((d) => d >= 0 && d <= 6).sort();
+  if (!weekdays.length) throw badRequest('Ən azı bir hərəkət günü seçin');
+
+  const rawStops = Array.isArray(b.stops) ? b.stops : [];
+  if (rawStops.length < 2) throw badRequest('Ən azı iki dayanacaq (başlanğıc və son) əlavə edin');
+
+  const codes = rawStops.map((x) => String(x.code || '').trim().toUpperCase());
+  const stationDocs = await Station.find({ code: { $in: codes } }).lean();
+  const nameByCode = {};
+  stationDocs.forEach((st) => { nameByCode[st.code] = st.name; });
+
+  let offset = 0;
+  let prevMin = -1;
+  let prevKm = 0;
+  const stops = rawStops.map((x, i) => {
+    const code = codes[i];
+    if (!nameByCode[code]) throw badRequest((i + 1) + '-ci dayanacaq: stansiya tapılmadı (' + (code || 'boş') + ')');
+    const arrive = String(x.arrive || '').trim();
+    const depart = String(x.depart || '').trim();
+    if (arrive && !TIME_RE.test(arrive)) throw badRequest((i + 1) + '-ci dayanacaq: gəliş vaxtı SS:DD formatında olmalıdır');
+    if (depart && !TIME_RE.test(depart)) throw badRequest((i + 1) + '-ci dayanacaq: yola düşmə vaxtı SS:DD formatında olmalıdır');
+    if (i === 0 && !depart) throw badRequest('İlk dayanacaq üçün yola düşmə vaxtı vacibdir');
+    if (i === rawStops.length - 1 && !arrive) throw badRequest('Son dayanacaq üçün gəliş vaxtı vacibdir');
+
+    let dayOffset = 0;
+    [arrive, depart].filter(Boolean).forEach((t, k) => {
+      const m = h.timeToMinutes(t);
+      if (m < prevMin) offset += 1;
+      prevMin = m;
+      if (k === 0) dayOffset = offset;
+    });
+
+    const distanceKm = i === 0 ? 0 : Math.max(0, Number(x.distanceKm) || 0);
+    if (distanceKm < prevKm) throw badRequest((i + 1) + '-ci dayanacaq: məsafə əvvəlkindən az ola bilməz');
+    prevKm = distanceKm;
+
+    return { code, name: nameByCode[code], arrive: i === 0 ? '' : arrive, depart: i === rawStops.length - 1 ? '' : depart, dayOffset, distanceKm };
+  });
+
+  const rawClasses = Array.isArray(b.classes) ? b.classes : [];
+  if (!rawClasses.length) throw badRequest('Ən azı bir vaqon sinfi və qiymət əlavə edin');
+  const seen = new Set();
+  const classes = rawClasses.map((c, i) => {
+    const code = h.slugify(c.code || c.title || '') || ('class' + (i + 1));
+    if (seen.has(code)) throw badRequest('Sinif kodu təkrarlanır: ' + code);
+    seen.add(code);
+    const cTitle = String(c.title || '').trim();
+    if (!cTitle) throw badRequest((i + 1) + '-ci sinifin adı boşdur');
+    const price = Number(c.price);
+    if (!(price >= 0)) throw badRequest(cTitle + ': qiymət düzgün deyil');
+    return {
+      code,
+      title: cTitle,
+      wagonCount: Math.max(1, Math.min(20, parseInt(c.wagonCount, 10) || 1)),
+      seatsPerWagon: Math.max(4, Math.min(80, parseInt(c.seatsPerWagon, 10) || 36)),
+      price: Math.round(price * 100) / 100,
+      multiplier: 1
+    };
+  });
+
+  const validFrom = String(b.validFrom || '').trim();
+  const validUntil = String(b.validUntil || '').trim();
+  const advanceSaleUntil = String(b.advanceSaleUntil || '').trim();
+  [validFrom, validUntil, advanceSaleUntil].forEach((d) => {
+    if (d && !DATE_RE.test(d)) throw badRequest('Tarix formatı düzgün deyil');
+  });
+  if (validFrom && validUntil && validUntil < validFrom) throw badRequest('Son tarix başlanğıc tarixindən əvvəl ola bilməz');
+
+  return {
+    number, title, type, line, weekdays, stops, classes,
+    from: stops[0].code,
+    to: stops[stops.length - 1].code,
+    basePrice: classes[0].price,
+    pricePerKm: line === 'domestic' ? 0.035 : 0.06,
+    validFrom, validUntil, advanceSaleUntil,
+    active: b.active === undefined ? true : !!b.active
+  };
+}
+
+api.post('/trains', requireAdmin, async (req, res) => {
+  try {
+    const data = await parseTrainPayload(req.body || {});
+    if (await Train.findOne({ number: data.number })) throw badRequest('Bu nömrəli qatar artıq mövcuddur: ' + data.number);
+    const train = await Train.create(Object.assign({}, data, { source: 'admin', lastSyncedAt: new Date() }));
+    await scheduleService.refreshFutureTrips(train.toObject());
+    return res.json({ ok: true, message: 'Reys əlavə edildi: ' + train.number, id: String(train._id) });
+  } catch (e) {
+    return res.status(e.status || 500).json({ ok: false, message: e.message || 'Əlavə edilmədi' });
+  }
+});
+
+api.put('/trains/:id', requireAdmin, async (req, res) => {
+  try {
+    const train = await Train.findById(req.params.id);
+    if (!train) return res.status(404).json({ ok: false, message: 'Qatar tapılmadı' });
+    const data = await parseTrainPayload(Object.assign({}, req.body || {}, { number: train.number }));
+    train.set(Object.assign({}, data, { source: 'admin', lastSyncedAt: new Date() }));
+    await train.save();
+    const r = await scheduleService.refreshFutureTrips(train.toObject());
+    return res.json({ ok: true, message: 'Yadda saxlanıldı (' + r.removed + ' gələcək reys yenidən qurulur, ' + r.repriced + ' reysdə qiymət yeniləndi)' });
+  } catch (e) {
+    return res.status(e.status || 500).json({ ok: false, message: e.message || 'Yadda saxlanmadı' });
+  }
+});
+
+api.post('/trains/:id/toggle', requireAdmin, async (req, res) => {
+  try {
+    const train = await Train.findById(req.params.id);
+    if (!train) return res.status(404).json({ ok: false, message: 'Qatar tapılmadı' });
+    train.active = !train.active;
+    train.source = 'admin';
+    await train.save();
+    await scheduleService.refreshFutureTrips(train.toObject());
+    return res.json({ ok: true, message: train.active ? 'Reys aktivləşdirildi' : 'Reys deaktiv edildi', active: train.active });
+  } catch (e) {
+    return res.status(500).json({ ok: false, message: 'Əməliyyat alınmadı' });
+  }
+});
+
+api.delete('/trains/:id', requireAdmin, async (req, res) => {
+  try {
+    const train = await Train.findById(req.params.id);
+    if (!train) return res.status(404).json({ ok: false, message: 'Qatar tapılmadı' });
+    if (train.source !== 'admin') {
+      return res.status(400).json({ ok: false, message: 'Sistem reysi silinmir; onu deaktiv edin' });
+    }
+    const number = train.number;
+    await train.deleteOne();
+    await scheduleService.refreshFutureTrips({ number, classes: [] });
+    return res.json({ ok: true, message: 'Reys silindi' });
+  } catch (e) {
+    return res.status(500).json({ ok: false, message: 'Silinmədi' });
+  }
+});
+
+/* Yeni stansiya (Gürcüstan daxil) */
+api.post('/stations', requireAdmin, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const code = String(b.code || '').trim().toUpperCase();
+    const name = String(b.name || '').trim();
+    if (!/^[A-Z0-9]{2,6}$/.test(code)) throw badRequest('Stansiya kodu 2-6 latın hərf/rəqəm olmalıdır');
+    if (!name) throw badRequest('Stansiya adı boşdur');
+    if (await Station.findOne({ code })) throw badRequest('Bu kodlu stansiya artıq var: ' + code);
+    const country = ['AZ', 'GE', 'TR', 'RU', 'other'].indexOf(b.country) > -1 ? b.country : 'AZ';
+    const st = await Station.create({
+      code, name, nameEn: String(b.nameEn || name), country,
+      city: String(b.city || name), region: String(b.region || ''),
+      order: country === 'GE' ? 60 : 90, source: 'admin', active: true
+    });
+    return res.json({ ok: true, message: 'Stansiya əlavə edildi', station: { code: st.code, name: st.name, country: st.country } });
+  } catch (e) {
+    return res.status(e.status || 500).json({ ok: false, message: e.message || 'Əlavə edilmədi' });
   }
 });
 
