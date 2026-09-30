@@ -332,11 +332,18 @@ const INTERNATIONAL = [
       ['TBN', 'Tbilisi', '06:10', '', 550]
     ],
     classes: [
-      { code: 'coupe', title: 'Kupe', wagonCount: 4, seatsPerWagon: 36, price: 96.0 },
+      { code: 'coupe', title: 'Kupe', wagonCount: 4, seatsPerWagon: 36, price: 81.0 },
       { code: 'first', title: 'Birinci sinif', wagonCount: 1, seatsPerWagon: 24, price: 210.0 }
     ]
   }
 ];
+
+const BAKU_TBILISI_UNTIL = '2029-12-31';
+
+function isBakuTbilisi(t) {
+  const codes = (t.stops || []).map((s) => s[0]);
+  return codes.indexOf('BAK') > -1 && codes.indexOf('TBN') > -1;
+}
 
 function buildTrains() {
   const list = [];
@@ -371,7 +378,9 @@ function buildTrains() {
       stops: t.stops.map((s) => ({ code: s[0], name: s[1], arrive: s[2], depart: s[3], distanceKm: s[4] })),
       classes: t.classes.map((c) => ({ ...c, multiplier: 1 })),
       basePrice: t.classes[0].price,
-      pricePerKm: 0.06
+      pricePerKm: 0.06,
+      /* Bakı — Tbilisi reysləri 2029-cu ilin sonunadək hərəkət edir və bilet satışı həmin tarixədək açıqdır */
+      ...(isBakuTbilisi(t) ? { validUntil: BAKU_TBILISI_UNTIL, advanceSaleUntil: BAKU_TBILISI_UNTIL } : {})
     });
   });
 
@@ -388,7 +397,9 @@ async function ensureReferenceData() {
   }));
   await Station.bulkWrite(stationOps);
 
-  const trains = buildTrains();
+  /* Admin panelindən yaradılmış/redaktə olunmuş qatarlar yenidən yazılmır */
+  const adminOwned = new Set((await Train.find({ source: 'admin' }).select('number').lean()).map((t) => t.number));
+  const trains = buildTrains().filter((t) => !adminOwned.has(t.number));
   const trainOps = trains.map((t) => ({
     updateOne: {
       filter: { number: t.number },
@@ -404,6 +415,16 @@ async function ensureReferenceData() {
     }
   }));
   await Train.bulkWrite(trainOps);
+
+  /* Bakı — Tbilisi reyslərində əvvəlcədən yaradılmış gələcək reyslərin qiymətini yenilə */
+  try {
+    const scheduleService = require('./scheduleService');
+    for (const t of trains.filter((x) => x.advanceSaleUntil)) {
+      await scheduleService.refreshFutureTrips(t);
+    }
+  } catch (e) {
+    console.warn('[ref] gələcək reyslər yenilənmədi:', e.message);
+  }
 
   return { stations: STATIONS.length, trains: trains.length };
 }

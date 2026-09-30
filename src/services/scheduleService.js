@@ -2,19 +2,70 @@ const dayjs = require('dayjs');
 const { Train, Trip, Station } = require('../models/index');
 const config = require('../config');
 const h = require('../utils/helpers');
+const pricing = require('./pricing');
 
 function isoDate(d) {
   return dayjs(d).format('YYYY-MM-DD');
 }
 
 function trainRunsOn(train, dateISO) {
+  if (train.validFrom && dateISO < train.validFrom) return false;
+  if (train.validUntil && dateISO > train.validUntil) return false;
   const wd = h.dayOfWeek(dateISO);
   return (train.weekdays || []).indexOf(wd) > -1;
+}
+
+/* Reys nömrəsi -> satışın açıq olduğu son tarix (standart 10 günlük pəncərədən uzun olanlar) */
+async function saleWindowMap() {
+  const rows = await Train.find({ active: true, advanceSaleUntil: { $nin: ['', null] } })
+    .select('number advanceSaleUntil').lean();
+  const map = {};
+  rows.forEach((r) => { map[r.number] = r.advanceSaleUntil; });
+  return map;
+}
+
+function isSaleOpen(dateISO, trainNumber, windows) {
+  const standardMax = h.isoAddDays(h.todayISO(), config.rules.salesOpenDaysBefore);
+  if (dateISO <= standardMax) return true;
+  return !!(windows && windows[trainNumber] && dateISO <= windows[trainNumber]);
+}
+
+/* Tarix seçicilər üçün ən son satış tarixi */
+async function maxSaleDate() {
+  const standardMax = h.isoAddDays(h.todayISO(), config.rules.salesOpenDaysBefore);
+  const windows = await saleWindowMap();
+  return Object.keys(windows).reduce((m, k) => (windows[k] > m ? windows[k] : m), standardMax);
+}
+
+/* Qatar şablonu dəyişdikdə gələcək reysləri yeniləyir:
+   satışı və bloku olmayanlar silinir (lazım olduqda yenidən yaradılır), qalanlarda yalnız qiymət yenilənir */
+async function refreshFutureTrips(train) {
+  const today = h.todayISO();
+  const trips = await Trip.find({ trainNumber: train.number, date: { $gte: today } });
+  let removed = 0;
+  let repriced = 0;
+  for (const trip of trips) {
+    if (trip.source === 'manual') continue;
+    const untouched = !(trip.soldSeats || []).length && !(trip.blockedSeats || []).length;
+    if (untouched) {
+      await Trip.deleteOne({ _id: trip._id });
+      removed += 1;
+      continue;
+    }
+    (trip.classes || []).forEach((c) => {
+      const tc = (train.classes || []).find((x) => x.code === c.code);
+      if (tc) c.price = tc.price;
+    });
+    await trip.save();
+    repriced += 1;
+  }
+  return { removed, repriced };
 }
 
 /* Verilmiş tarix üçün qatar şablonlarından Trip sənədləri yaradır */
 async function ensureTripsForDate(dateISO) {
   const trains = await Train.find({ active: true }).lean();
+  const windows = await saleWindowMap();
   const existing = await Trip.find({ date: dateISO }).select('trainNumber').lean();
   const have = new Set(existing.map((t) => t.trainNumber));
 
@@ -22,6 +73,8 @@ async function ensureTripsForDate(dateISO) {
   trains.forEach((train) => {
     if (have.has(train.number)) return;
     if (!trainRunsOn(train, dateISO)) return;
+    /* Standart pəncərədən uzaq tarixlər üçün yalnız satışı uzadılmış reyslər yaradılır */
+    if (dateISO > h.isoAddDays(h.todayISO(), config.rules.salesOpenDaysBefore) && !isSaleOpen(dateISO, train.number, windows)) return;
     toCreate.push({
       trainNumber: train.number,
       trainTitle: train.title,
@@ -61,6 +114,10 @@ async function ensureTripsForDate(dateISO) {
 
 /* Marşrut üzrə reyslərin axtarışı */
 async function searchTrips(from, to, dateISO) {
+  const windows = await saleWindowMap();
+  const standardMax = h.isoAddDays(h.todayISO(), config.rules.salesOpenDaysBefore);
+  const latest = Object.keys(windows).reduce((m, k) => (windows[k] > m ? windows[k] : m), standardMax);
+  if (dateISO > latest) return [];
   await ensureTripsForDate(dateISO);
 
   const trips = await Trip.find({
@@ -72,6 +129,7 @@ async function searchTrips(from, to, dateISO) {
   const results = [];
 
   trips.forEach((trip) => {
+    if (!isSaleOpen(dateISO, trip.trainNumber, windows)) return;
     const fromIdx = trip.stops.findIndex((s) => s.code === from);
     const toIdx = trip.stops.findIndex((s) => s.code === to);
     if (fromIdx === -1 || toIdx === -1 || toIdx <= fromIdx) return;
@@ -87,17 +145,11 @@ async function searchTrips(from, to, dateISO) {
     while (arriveMinutes <= departMinutes) arriveMinutes += 1440;
     const duration = arriveMinutes - departMinutes;
 
-    const classes = (trip.classes || []).map((c) => {
-      const base = c.price || 0;
-      let price = base;
-      if (trip.line !== 'absheron' && distance > 40) {
-        const train = { pricePerKm: trip.line === 'domestic' ? 0.035 : 0.06 };
-        price = Math.max(base * 0.35, distance * train.pricePerKm) * (c.code === 'first' ? 1 : c.code === 'business' ? 0.75 : 1);
-      } else if (trip.line !== 'absheron') {
-        price = base * 0.5;
-      }
-      return { code: c.code, title: c.title, price: Math.round(price * 100) / 100 };
-    }).sort((a, b) => a.price - b.price);
+    const classes = (trip.classes || []).map((c) => ({
+      code: c.code,
+      title: c.title,
+      price: pricing.fare(trip, from, to, c)
+    })).sort((a, b) => a.price - b.price);
 
     const soldCount = (trip.soldSeats || []).length;
 
@@ -228,6 +280,10 @@ async function homeTimetable(dateISO) {
 }
 
 module.exports = {
+  saleWindowMap,
+  isSaleOpen,
+  maxSaleDate,
+  refreshFutureTrips,
   ensureTripsForDate,
   searchTrips,
   buildSeatMap,

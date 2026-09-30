@@ -1,6 +1,8 @@
 const { Trip, Order, Ticket, User } = require('../models/index');
 const config = require('../config');
 const h = require('../utils/helpers');
+const pricing = require('./pricing');
+const scheduleService = require('./scheduleService');
 
 /* Seçilmiş yerlərin mövcudluğunu yoxlayır */
 function validateSeats(trip, selections) {
@@ -20,27 +22,9 @@ function validateSeats(trip, selections) {
 }
 
 function priceFor(trip, fromCode, toCode, classCode) {
-  const fromIdx = trip.stops.findIndex((s) => s.code === fromCode);
-  const toIdx = trip.stops.findIndex((s) => s.code === toCode);
   const cls = (trip.classes || []).find((c) => c.code === classCode) || (trip.classes || [])[0];
   if (!cls) return { price: 0, title: '' };
-
-  const fromStop = trip.stops[fromIdx] || { distanceKm: 0 };
-  const toStop = trip.stops[toIdx] || { distanceKm: 0 };
-  const distance = Math.max(1, (toStop.distanceKm || 0) - (fromStop.distanceKm || 0));
-
-  let price = cls.price || 0;
-  if (trip.line === 'absheron') {
-    price = cls.price;
-  } else if (distance > 40) {
-    const perKm = trip.line === 'domestic' ? 0.035 : 0.06;
-    const factor = cls.code === 'first' ? 1 : cls.code === 'business' ? 0.75 : 1;
-    price = Math.max(price * 0.35, distance * perKm) * factor;
-  } else {
-    price = price * 0.5;
-  }
-
-  return { price: Math.round(price * 100) / 100, title: cls.title };
+  return { price: pricing.fare(trip, fromCode, toCode, cls), title: cls.title };
 }
 
 /* Gözləyən sifariş yaradır (ödənişdən əvvəl) */
@@ -58,7 +42,13 @@ async function createPendingOrder(user, payload) {
   const errors = validateSeats(trip, passengers.map((p) => ({ wagon: Number(p.wagon), seat: Number(p.seat), classCode: p.classCode })));
   if (errors.length) throw Object.assign(new Error(errors[0]), { status: 409 });
 
-  /* Satış pəncərəsi */
+  /* Satış pəncərəsi: standart 10 gün; Bakı — Tbilisi kimi reyslər üçün admin tərəfindən uzadılmış tarixədək */
+  const windows = await scheduleService.saleWindowMap();
+  if (!scheduleService.isSaleOpen(trip.date, trip.trainNumber, windows)) {
+    throw Object.assign(new Error('Bu tarix üçün satış hələ açılmayıb'), { status: 400 });
+  }
+
+  /* Satış bağlanma vaxtı */
   const departAt = new Date(trip.date + 'T' + ((trip.stops[0] && (trip.stops[0].depart || trip.stops[0].arrive)) || '00:00') + ':00');
   const hoursToDepart = (departAt.getTime() - Date.now()) / 3600000;
   if (hoursToDepart < config.rules.salesCloseHoursBefore) {
