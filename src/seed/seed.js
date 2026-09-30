@@ -70,7 +70,7 @@ const PAGES = [
 <tr><td>Bakı — Şəki</td><td>11.40 ₼</td><td>22.80 ₼</td><td>34.20 ₼</td></tr>
 <tr><td>Bakı — Qəbələ</td><td>14.00 ₼</td><td>31.00 ₼</td><td>93.00 ₼</td></tr>
 <tr><td>Bakı — Lənkəran</td><td>8.90 ₼</td><td>17.80 ₼</td><td>—</td></tr>
-<tr><td>Bakı — Tbilisi</td><td>—</td><td>132.00 ₼</td><td>199.00 ₼</td></tr>
+<tr><td>Bakı — Tbilisi (kupe: 81.00 ₼)</td><td>—</td><td>132.00 ₼</td><td>199.00 ₼</td></tr>
 <tr><td>Tbilisi — Batumi</td><td>25.00 ₼</td><td>45.00 ₼</td><td>65.00 ₼</td></tr>
 </tbody>
 </table>`
@@ -250,7 +250,8 @@ async function seedStations() {
 }
 
 async function seedTrains() {
-  const trains = buildTrains();
+  const adminOwned = new Set((await Train.find({ source: 'admin' }).select('number').lean()).map((t) => t.number));
+  const trains = buildTrains().filter((t) => !adminOwned.has(t.number));
   const ops = trains.map((t) => ({
     updateOne: {
       filter: { number: t.number },
