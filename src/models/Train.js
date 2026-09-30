@@ -31,6 +31,11 @@ const trainSchema = new mongoose.Schema({
   basePrice: { type: Number, default: 0 },
   pricePerKm: { type: Number, default: 0.06 },
   active: { type: Boolean, default: true },
+  /* Reysin hərəkət etdiyi tarix aralığı (YYYY-MM-DD; boş = məhdudiyyət yoxdur) */
+  validFrom: { type: String, default: '' },
+  validUntil: { type: String, default: '' },
+  /* Bu tarixədək bilet satışı standart 10 günlük pəncərədən asılı olmadan açıqdır */
+  advanceSaleUntil: { type: String, default: '' },
   source: { type: String, default: 'seed' },
   sourceUrl: { type: String, default: '' },
   lastSyncedAt: { type: Date }
