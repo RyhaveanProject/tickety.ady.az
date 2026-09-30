@@ -1,0 +1,287 @@
+<%
+  var isEdit = !!train;
+  var days = [['1','B.e.'],['2','Ç.a.'],['3','Çər.'],['4','C.a.'],['5','Cümə'],['6','Şən.'],['0','Baz.']];
+  var initial = train ? {
+    number: train.number, title: train.title, line: train.line, type: train.type,
+    weekdays: train.weekdays || [], stops: train.stops || [], classes: train.classes || [],
+    validFrom: train.validFrom || '', validUntil: train.validUntil || '', advanceSaleUntil: train.advanceSaleUntil || '',
+    active: train.active !== false
+  } : null;
+  var stationList = stations.map(function (s) { return { code: s.code, name: s.name, country: s.country }; });
+  function j(o) { return JSON.stringify(o).replace(/</g, '\\u003c'); }
+%>
+<section class="section">
+  <div class="container">
+    <div class="section__head">
+      <div>
+        <div class="eyebrow"><%= t('nav.panel') %></div>
+        <h1><%= isEdit ? 'Reysi redaktə et' : 'Yeni bilet / reys əlavə et' %></h1>
+        <p>Qatar şablonu yaradılır; reyslər və biletlər seçilmiş günlər və tarix aralığı üzrə avtomatik açılır.</p>
+      </div>
+      <a href="/<%= locale %>/admin/qatarlar" class="btn btn--outline">Qatarlara qayıt</a>
+    </div>
+
+    <div class="layout-aside">
+      <%- include('../../partials/admin-nav') %>
+
+      <div>
+        <div id="formNote" class="hidden"></div>
+
+        <% if (!isEdit) { %>
+        <div class="card mb-24"><div class="card__body">
+          <h3 style="font-size:1rem">Sürətli şablon</h3>
+          <p class="sec-note">Formu hazır məlumatla doldurur; sonra nömrə, vaxt və qiyməti dəyişə bilərsiniz.</p>
+          <button type="button" class="btn btn--sm btn--outline" id="presetBT">Bakı — Tbilisi (kupe 81 ₼, 2029-a qədər)</button>
+          <button type="button" class="btn btn--sm btn--outline" id="presetTB">Tbilisi — Bakı (kupe 81 ₼, 2029-a qədər)</button>
+        </div></div>
+        <% } %>
+
+        <form id="trainForm" class="card mb-24"><div class="card__body">
+          <div class="grid grid--3">
+            <div>
+              <label>Qatar nömrəsi</label>
+              <input type="text" name="number" value="<%= isEdit ? train.number : '' %>" <%= isEdit ? 'readonly' : '' %> required maxlength="12" placeholder="məs. 39" />
+            </div>
+            <div>
+              <label>Ad</label>
+              <input type="text" name="title" value="<%= isEdit ? train.title : '' %>" required placeholder="Bakı — Tbilisi beynəlxalq qatarı" />
+            </div>
+            <div>
+              <label>Xətt</label>
+              <select name="line">
+                <option value="domestic">Ölkədaxili</option>
+                <option value="georgia">Gürcüstan</option>
+                <option value="international">Beynəlxalq</option>
+                <option value="absheron">Abşeron</option>
+              </select>
+            </div>
+            <div>
+              <label>Qatar növü</label>
+              <select name="type">
+                <option value="passenger">Sərnişin</option>
+                <option value="express">Ekspres</option>
+                <option value="fast">Sürətli</option>
+                <option value="suburban">Şəhərətrafı</option>
+                <option value="international">Beynəlxalq</option>
+              </select>
+            </div>
+            <div>
+              <label>Hərəkət başlanğıcı (boş = məhdudiyyətsiz)</label>
+              <input type="date" name="validFrom" />
+            </div>
+            <div>
+              <label>Hərəkət sonu (boş = məhdudiyyətsiz)</label>
+              <input type="date" name="validUntil" />
+            </div>
+            <div>
+              <label>Bilet satışı bu tarixədək açıq</label>
+              <input type="date" name="advanceSaleUntil" />
+            </div>
+          </div>
+          <p class="sec-note">Tək günlük reys üçün başlanğıc və son tarixə eyni günü yazın. “Satış açıq” tarixi boşdursa satış standart 10 gün əvvəl açılır.</p>
+
+          <label class="mt-16">Hərəkət günləri</label>
+          <div id="weekdays" class="flex" style="gap:14px;flex-wrap:wrap">
+            <% days.forEach(function (d) { %>
+              <label style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" value="<%= d[0] %>" /> <%= d[1] %></label>
+            <% }) %>
+          </div>
+
+          <h3 style="font-size:1rem" class="mt-24">Dayanacaqlar (yuxarıdan aşağı, başlanğıcdan sona)</h3>
+          <div class="table-wrap"><table class="data">
+            <thead><tr><th>Stansiya</th><th>Gəliş</th><th>Yola düşmə</th><th>Məsafə (km)</th><th></th></tr></thead>
+            <tbody id="stopsBody"></tbody>
+          </table></div>
+          <button type="button" class="btn btn--sm btn--outline mt-16" id="addStop">+ Dayanacaq</button>
+
+          <h3 style="font-size:1rem" class="mt-24">Vaqon sinifləri və qiymət (₼)</h3>
+          <div class="table-wrap"><table class="data">
+            <thead><tr><th>Ad</th><th>Kod</th><th>Vaqon sayı</th><th>Yer/vaqon</th><th>Qiymət ₼</th><th></th></tr></thead>
+            <tbody id="classesBody"></tbody>
+          </table></div>
+          <button type="button" class="btn btn--sm btn--outline mt-16" id="addClass">+ Sinif</button>
+
+          <label class="mt-24" style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" name="active" checked /> Aktiv (satışda göstər)</label>
+
+          <div class="mt-24">
+            <button type="submit" class="btn btn--primary"><%= isEdit ? 'Yadda saxla' : 'Reysi əlavə et' %></button>
+          </div>
+        </div></form>
+
+        <form id="stationForm" class="card"><div class="card__body">
+          <h3 style="font-size:1rem">Yeni stansiya əlavə et (məs. Gürcüstan)</h3>
+          <p class="sec-note">Siyahıda olmayan stansiya varsa əvvəlcə burada yaradın, sonra dayanacaq kimi seçin.</p>
+          <div class="grid grid--4" style="align-items:end">
+            <div><label>Kod (2-6 hərf)</label><input type="text" name="code" maxlength="6" placeholder="SGH" required /></div>
+            <div><label>Ad</label><input type="text" name="name" placeholder="Sagareco" required /></div>
+            <div><label>Ölkə</label>
+              <select name="country"><option value="GE">Gürcüstan</option><option value="AZ">Azərbaycan</option><option value="TR">Türkiyə</option><option value="RU">Rusiya</option><option value="other">Digər</option></select>
+            </div>
+            <div><button type="submit" class="btn btn--outline btn--block">Stansiya əlavə et</button></div>
+          </div>
+        </div></form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  var TRAIN_ID = <%- isEdit ? j(String(train._id)) : 'null' %>;
+  var INITIAL = <%- j(initial) %>;
+  var STATIONS = <%- j(stationList) %>;
+  var CTRY = { AZ: 'Azərbaycan', GE: 'Gürcüstan', TR: 'Türkiyə', RU: 'Rusiya', other: 'Digər' };
+
+  var form = document.getElementById('trainForm');
+  var stopsBody = document.getElementById('stopsBody');
+  var classesBody = document.getElementById('classesBody');
+
+  function note(msg, ok) {
+    var n = document.getElementById('formNote');
+    n.className = 'alert ' + (ok ? 'alert--success' : 'alert--error') + ' mb-16';
+    n.textContent = msg;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function q(v) { return String(v === undefined || v === null ? '' : v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+
+  function stationOptions(selected) {
+    var html = '<option value="">— seçin —</option>';
+    STATIONS.forEach(function (s) {
+      html += '<option value="' + s.code + '"' + (s.code === selected ? ' selected' : '') + '>' +
+        s.name + ' (' + s.code + ') · ' + (CTRY[s.country] || s.country) + '</option>';
+    });
+    return html;
+  }
+
+  function addStop(st) {
+    st = st || {};
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td><select data-f="code">' + stationOptions(st.code) + '</select></td>' +
+      '<td><input type="text" data-f="arrive" placeholder="SS:DD" maxlength="5" value="' + q((st.arrive || '')) + '" style="width:90px" /></td>' +
+      '<td><input type="text" data-f="depart" placeholder="SS:DD" maxlength="5" value="' + q((st.depart || '')) + '" style="width:90px" /></td>' +
+      '<td><input type="number" data-f="distanceKm" min="0" step="1" value="' + (st.distanceKm || 0) + '" style="width:90px" /></td>' +
+      '<td><button type="button" class="btn btn--sm btn--outline" data-del>×</button></td>';
+    tr.querySelector('[data-del]').addEventListener('click', function () { tr.remove(); });
+    stopsBody.appendChild(tr);
+  }
+
+  function addClass(c) {
+    c = c || {};
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td><input type="text" data-f="title" value="' + q(c.title) + '" placeholder="Kupe" style="width:130px" /></td>' +
+      '<td><input type="text" data-f="code" value="' + q(c.code) + '" placeholder="coupe" style="width:90px" /></td>' +
+      '<td><input type="number" data-f="wagonCount" min="1" max="20" value="' + (c.wagonCount || 4) + '" style="width:70px" /></td>' +
+      '<td><input type="number" data-f="seatsPerWagon" min="4" max="80" value="' + (c.seatsPerWagon || 36) + '" style="width:70px" /></td>' +
+      '<td><input type="number" data-f="price" min="0" step="0.01" value="' + (c.price !== undefined ? c.price : '') + '" style="width:90px" /></td>' +
+      '<td><button type="button" class="btn btn--sm btn--outline" data-del>×</button></td>';
+    tr.querySelector('[data-del]').addEventListener('click', function () { tr.remove(); });
+    classesBody.appendChild(tr);
+  }
+
+  function fill(d) {
+    ['number', 'title', 'validFrom', 'validUntil', 'advanceSaleUntil'].forEach(function (k) {
+      if (d[k] !== undefined && !(TRAIN_ID && k === 'number')) form.elements[k].value = d[k];
+    });
+    if (d.line) form.elements.line.value = d.line;
+    if (d.type) form.elements.type.value = d.type;
+    form.elements.active.checked = d.active !== false;
+    var wd = (d.weekdays || []).map(String);
+    document.querySelectorAll('#weekdays input').forEach(function (i) { i.checked = wd.indexOf(i.value) > -1; });
+    stopsBody.innerHTML = ''; classesBody.innerHTML = '';
+    (d.stops || []).forEach(addStop);
+    (d.classes || []).forEach(addClass);
+  }
+
+  function collect() {
+    var stops = Array.prototype.map.call(stopsBody.querySelectorAll('tr'), function (tr) {
+      var o = {};
+      tr.querySelectorAll('[data-f]').forEach(function (el) { o[el.getAttribute('data-f')] = el.value; });
+      return o;
+    });
+    var classes = Array.prototype.map.call(classesBody.querySelectorAll('tr'), function (tr) {
+      var o = {};
+      tr.querySelectorAll('[data-f]').forEach(function (el) { o[el.getAttribute('data-f')] = el.value; });
+      return o;
+    });
+    return {
+      number: form.elements.number.value,
+      title: form.elements.title.value,
+      line: form.elements.line.value,
+      type: form.elements.type.value,
+      validFrom: form.elements.validFrom.value,
+      validUntil: form.elements.validUntil.value,
+      advanceSaleUntil: form.elements.advanceSaleUntil.value,
+      weekdays: Array.prototype.map.call(document.querySelectorAll('#weekdays input:checked'), function (i) { return Number(i.value); }),
+      stops: stops,
+      classes: classes,
+      active: form.elements.active.checked
+    };
+  }
+
+  document.getElementById('addStop').addEventListener('click', function () { addStop(); });
+  document.getElementById('addClass').addEventListener('click', function () { addClass(); });
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var payload = collect();
+    var r = TRAIN_ID
+      ? await window.api('/api/admin/trains/' + TRAIN_ID, payload, 'PUT')
+      : await window.api('/api/admin/trains', payload);
+    note(r.message || (r.ok ? 'Yadda saxlanıldı' : 'Alınmadı'), !!r.ok);
+    if (r.ok && !TRAIN_ID) setTimeout(function () { window.location.href = '/<%= locale %>/admin/qatarlar'; }, 1200);
+  });
+
+  document.getElementById('stationForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var f = e.target;
+    var r = await window.api('/api/admin/stations', {
+      code: f.elements.code.value, name: f.elements.name.value, country: f.elements.country.value
+    });
+    note(r.message || 'Alınmadı', !!r.ok);
+    if (r.ok) {
+      STATIONS.push(r.station);
+      document.querySelectorAll('#stopsBody select[data-f=code]').forEach(function (sel) {
+        var cur = sel.value; sel.innerHTML = stationOptions(cur);
+      });
+      f.reset();
+    }
+  });
+
+  var BT_CLASSES = [
+    { title: 'Kupe', code: 'coupe', wagonCount: 4, seatsPerWagon: 36, price: 81 },
+    { title: 'Biznes', code: 'business', wagonCount: 2, seatsPerWagon: 36, price: 132 },
+    { title: 'Birinci sinif', code: 'first', wagonCount: 1, seatsPerWagon: 24, price: 199 }
+  ];
+  var presetBT = document.getElementById('presetBT');
+  if (presetBT) presetBT.addEventListener('click', function () {
+    fill({
+      title: 'Bakı — Tbilisi beynəlxalq qatarı', line: 'georgia', type: 'international',
+      weekdays: [0, 1, 2, 3, 4, 5, 6], validUntil: '2029-12-31', advanceSaleUntil: '2029-12-31',
+      stops: [
+        { code: 'BAK', depart: '20:40', distanceKm: 0 }, { code: 'GNC', arrive: '23:50', depart: '23:55', distanceKm: 340 },
+        { code: 'AGM', arrive: '01:40', depart: '01:45', distanceKm: 450 }, { code: 'RST', arrive: '05:10', depart: '05:15', distanceKm: 530 },
+        { code: 'TBN', arrive: '06:10', distanceKm: 550 }
+      ],
+      classes: BT_CLASSES
+    });
+  });
+  var presetTB = document.getElementById('presetTB');
+  if (presetTB) presetTB.addEventListener('click', function () {
+    fill({
+      title: 'Tbilisi — Bakı beynəlxalq qatarı', line: 'georgia', type: 'international',
+      weekdays: [0, 1, 2, 3, 4, 5, 6], validUntil: '2029-12-31', advanceSaleUntil: '2029-12-31',
+      stops: [
+        { code: 'TBN', depart: '20:35', distanceKm: 0 }, { code: 'RST', arrive: '21:20', depart: '21:22', distanceKm: 20 },
+        { code: 'AGM', arrive: '00:35', depart: '00:40', distanceKm: 100 }, { code: 'GNC', arrive: '02:40', depart: '02:45', distanceKm: 210 },
+        { code: 'BAK', arrive: '06:00', distanceKm: 550 }
+      ],
+      classes: BT_CLASSES
+    });
+  });
+
+  if (INITIAL) fill(INITIAL); else { addStop(); addStop(); addClass(); }
+})();
+</script>

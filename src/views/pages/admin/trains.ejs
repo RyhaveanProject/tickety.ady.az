@@ -3,6 +3,7 @@
     <div class="section__head">
       <div><div class="eyebrow"><%= t('nav.panel') %></div><h1><%= t('admin.trains') %></h1><p><%= total %> qatar şablonu</p></div>
       <div class="flex">
+        <a href="/<%= locale %>/admin/qatarlar/yeni" class="btn btn--sm btn--primary">+ Yeni bilet / reys</a>
         <a href="?line=all" class="btn btn--sm <%= line === 'all' ? 'btn--primary' : 'btn--outline' %>">Hamısı</a>
         <a href="?line=absheron" class="btn btn--sm <%= line === 'absheron' ? 'btn--primary' : 'btn--outline' %>">Abşeron</a>
         <a href="?line=domestic" class="btn btn--sm <%= line === 'domestic' ? 'btn--primary' : 'btn--outline' %>">Ölkədaxili</a>
@@ -18,7 +19,7 @@
         <div class="table-wrap">
           <table class="data">
             <thead>
-              <tr><th>Nömrə</th><th>Ad</th><th>Xətt</th><th>Marşrut</th><th>Siniflər</th><th>Günlər</th></tr>
+              <tr><th>Nömrə</th><th>Ad</th><th>Xətt</th><th>Marşrut</th><th>Siniflər</th><th>Günlər / tarix</th><th>Status</th><th></th></tr>
             </thead>
             <tbody>
               <% trains.forEach(function(tr){ %>
@@ -32,7 +33,17 @@
                       <span class="chip"><%= c.title %> · <%= c.price.toFixed(2) %> ₼</span>
                     <% }) %>
                   </td>
-                  <td class="sec-note"><%= (tr.weekdays || []).join(',') %></td>
+                  <td class="sec-note">
+                    <%= (tr.weekdays || []).join(',') %><br />
+                    <%= tr.validFrom || '…' %> → <%= tr.validUntil || '…' %>
+                    <% if (tr.advanceSaleUntil) { %><br />Satış: <%= tr.advanceSaleUntil %>-dək<% } %>
+                  </td>
+                  <td><span class="badge <%= tr.active ? 'badge--blue' : 'badge--red' %>"><%= tr.active ? 'Aktiv' : 'Deaktiv' %></span></td>
+                  <td>
+                    <a href="/<%= locale %>/admin/qatarlar/<%= tr._id %>/redakte" class="btn btn--sm btn--outline">Redaktə</a>
+                    <button type="button" class="btn btn--sm btn--outline" data-train-toggle="<%= tr._id %>"><%= tr.active ? 'Deaktiv et' : 'Aktiv et' %></button>
+                    <% if (tr.source === 'admin') { %><button type="button" class="btn btn--sm btn--outline" data-train-delete="<%= tr._id %>">Sil</button><% } %>
+                  </td>
                 </tr>
               <% }) %>
             </tbody>
@@ -42,3 +53,23 @@
     </div>
   </div>
 </section>
+
+<script>
+(function () {
+  document.querySelectorAll('[data-train-toggle]').forEach(function (b) {
+    b.addEventListener('click', async function () {
+      var r = await window.api('/api/admin/trains/' + b.getAttribute('data-train-toggle') + '/toggle', {});
+      if (window.toast) window.toast(r.message || (r.ok ? 'Tamamlandı' : 'Alınmadı'), r.ok ? 'success' : 'error');
+      if (r.ok) setTimeout(function () { window.location.reload(); }, 600);
+    });
+  });
+  document.querySelectorAll('[data-train-delete]').forEach(function (b) {
+    b.addEventListener('click', async function () {
+      if (!window.confirm('Bu reys silinsin?')) return;
+      var r = await window.api('/api/admin/trains/' + b.getAttribute('data-train-delete'), {}, 'DELETE');
+      if (window.toast) window.toast(r.message || (r.ok ? 'Silindi' : 'Alınmadı'), r.ok ? 'success' : 'error');
+      if (r.ok) setTimeout(function () { window.location.reload(); }, 600);
+    });
+  });
+})();
+</script>
