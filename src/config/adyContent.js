@@ -9,7 +9,7 @@ const DESTINATIONS = [
     slug: 'baki-tbilisi-baki-qatari',
     title: 'Bakı-Tbilisi',
     stationCode: 'TBN',
-    priceFrom: 66,
+    priceFrom: 81,
     durationText: '9 saat 31 dəqiqə',
     distanceKm: 550,
     order: 1,
@@ -283,7 +283,7 @@ const FAQS = [
 
 /* ---------------- Tarif səhifələri -------------------------------------- */
 const FARE_ROWS = [
-  { route: 'Bakı — Tbilisi', price: '66.00 ₼-dən', note: 'Yataq tipli beynəlxalq qatar' },
+  { route: 'Bakı — Tbilisi', price: '81.00 ₼-dən', note: 'Yataq tipli beynəlxalq qatar' },
   { route: 'Bakı — Ağstafa', price: '14.50 ₼-dən', note: 'Oturacaq tipli ekspres qatar' },
   { route: 'Bakı — Qazax', price: '14.50 ₼-dən', note: 'Oturacaq tipli birmərtəbəli qatar' },
   { route: 'Bakı — Tovuz', price: '13.70 ₼-dən', note: 'Oturacaq tipli qatar' },

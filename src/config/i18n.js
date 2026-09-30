@@ -83,7 +83,7 @@ const az = {
   'search.how4': 'Ödənişi tamamlayın və bilet QR kodunu əldə edin',
   'search.rulesTitle': 'Satış qaydaları',
   'search.rule1': 'Bir sifarişdə maksimum {0} bilet',
-  'search.rule2': 'Satış yola düşmədən {0} gün əvvəl açılır',
+  'search.rule2': 'Satış yola düşmədən {0} gün əvvəl açılır (Bakı — Tbilisi reysləri üçün 2029-cu ilin sonunadək)',
   'search.rule3': 'Satış yola düşmədən {0} saat əvvəl bağlanır',
   'search.payTitle': 'Ödəniş',
   'search.payText': 'Bank kartı və ya şəxsi balans hesabı ilə ödəniş. Kart ödənişləri 3-D Secure doğrulaması ilə qorunur.',
