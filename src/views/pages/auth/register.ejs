@@ -3,9 +3,9 @@
     <div style="max-width:620px;margin:0 auto">
       <div class="card">
         <div class="card__body">
-          <div class="eyebrow">Qeydiyyat</div>
-          <h1 style="font-size:1.5rem">Qeydiyyat</h1>
-          <p class="sec-note mb-24">Hesabınıza həm e-mail həm də mobil nömrə vasitəsi ilə daxil ola bilərsiniz.</p>
+          <div class="eyebrow"><%= t('nav.register') %></div>
+          <h1 style="font-size:1.5rem"><%= t('nav.register') %></h1>
+          <p class="sec-note mb-24"><%= t('auth.registerHint') %></p>
 
           <div id="formNote" class="hidden mb-16"></div>
 
@@ -15,38 +15,38 @@
               <input type="text" id="firstName" name="firstName" required />
             </div>
             <div class="field">
-              <label for="lastName">Soyad</label>
+              <label for="lastName"><%= t('checkout.lastName') %></label>
               <input type="text" id="lastName" name="lastName" required />
             </div>
             <div class="field">
-              <label for="email">Elektron poçt</label>
+              <label for="email"><%= t('auth.emailFieldLabel') %></label>
               <input type="email" id="email" name="email" required autocomplete="email" />
             </div>
             <div class="field">
-              <label for="password">Şifrə</label>
+              <label for="password"><%= t('auth.passwordFieldLabel') %></label>
               <input type="password" id="password" name="password" required autocomplete="new-password" minlength="6" />
             </div>
             <div class="field">
-              <label for="passwordRepeat">Şifrəni təkrarlayın</label>
+              <label for="passwordRepeat"><%= t('auth.passwordRepeatLabel') %></label>
               <input type="password" id="passwordRepeat" name="passwordRepeat" required minlength="6" />
             </div>
             <div class="field">
-              <label for="phone">Telefon</label>
+              <label for="phone"><%= t('checkout.phone') %></label>
               <input type="tel" id="phone" name="phone" placeholder="+994" />
             </div>
 
             <div class="field">
               <label class="checkbox">
                 <input type="checkbox" name="agree" required />
-                <span>Qeydiyyatdan keçərək siz istifadəçi <a href="/<%= locale %>/mexfilik-siyaseti" target="_blank" rel="noopener">şərtləri ilə</a> razısız</span>
+                <span><%- t('auth.agreeTpl', '/' + locale + '/mexfilik-siyaseti') %></span>
               </label>
             </div>
 
-            <button type="submit" class="btn btn--primary btn--block btn--lg">Qeydiyyatdan keç</button>
+            <button type="submit" class="btn btn--primary btn--block btn--lg"><%= t('auth.submitRegisterBtn') %></button>
           </form>
 
           <p class="text-sm text-center mt-24 mb-0">
-            <a href="/<%= locale %>/login">Daxil ol</a>
+            <a href="/<%= locale %>/login"><%= t('nav.login') %></a>
           </p>
         </div>
       </div>
