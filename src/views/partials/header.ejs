@@ -21,22 +21,7 @@
         <% ['az','en','ru'].forEach(function(l){ %>
           <a href="/<%= l %><%= cleanPath %><%= qs %>" class="lang__item <%= locale === l ? 'is-active' : '' %>" data-lang="<%= l %>"><%= localeNames[l] %></a>
         <% }) %>
-        <script>
-          /* Linkə click olanda dərhal yeni dil üçün cookie yazılır ki, brauzerin GET sorğusu
-             hələ locale middleware-ə çatmamış sayt artıq doğru dildə açılsın və
-             tam reloaddan sonra da dil dəyişmiş olsun. */
-          document.querySelectorAll('.lang__item').forEach(function(a){
-            a.addEventListener('click', function(){
-              try {
-                var l = a.getAttribute('data-lang');
-                if (l) {
-                  document.cookie = 'locale=' + l + ';path=/;max-age=' + (365*24*60*60) + ';samesite=lax';
-                  try { localStorage.setItem('ady_locale', l); } catch (e) {}
-                }
-              } catch (e) {}
-            });
-          });
-        </script>
+        <script src="/public/js/lang-switch.js" defer></script>
       </div>
     </div>
   </div>
@@ -63,8 +48,8 @@
       </a>
       <a href="/<%= locale %>/populyar-istiqametler" class="nav__link <%= path.indexOf('populyar') > -1 ? 'is-active' : '' %>"><%= t('nav.destinations') %></a>
       <a href="/<%= locale %>/tarifler-ve-odenis/gedis-haqqi-tarifleri" class="nav__link <%= path.indexOf('tarif') > -1 ? 'is-active' : '' %>"><%= t('nav.tariffs') %></a>
-      <a href="/<%= locale %>/sualim-var/suallar" class="nav__link <%= path.indexOf('sualim') > -1 ? 'is-active' : '' %>">Sualım var</a>
-      <a href="/<%= locale %>/stansiya-ve-vagzallar/stansiya-ve-vagzallar" class="nav__link <%= path.indexOf('stansiya') > -1 ? 'is-active' : '' %>">Stansiyalar və dayanacaqlar</a>
+      <a href="/<%= locale %>/sualim-var/suallar" class="nav__link <%= path.indexOf('sualim') > -1 ? 'is-active' : '' %>"><%= t('nav.myQuestion') %></a>
+      <a href="/<%= locale %>/stansiya-ve-vagzallar/stansiya-ve-vagzallar" class="nav__link <%= path.indexOf('stansiya') > -1 ? 'is-active' : '' %>"><%= t('nav.stations') %></a>
       <a href="/<%= locale %>/hereket-cedveli" class="nav__link <%= path.indexOf('hereket-cedveli') > -1 ? 'is-active' : '' %>"><%= t('nav.timetable') %></a>
       <a href="/<%= locale %>/xeberler" class="nav__link <%= path.indexOf('xeber') > -1 ? 'is-active' : '' %>"><%= t('nav.news') %></a>
       <a href="/<%= locale %>/elaqe" class="nav__link <%= path.indexOf('elaqe') > -1 ? 'is-active' : '' %>"><%= t('nav.contact') %></a>
