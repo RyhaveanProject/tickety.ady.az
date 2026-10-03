@@ -1,0 +1,44 @@
+<section class="section section--ticket-view">
+  <div class="container">
+    <div style="max-width:760px;margin:0 auto">
+      <div class="card mb-16">
+        <div class="card__body text-center" style="background:linear-gradient(180deg,#00539b 0%, #003f78 100%);color:#fff">
+          <div style="font-size:.85rem;letter-spacing:.08em">Azərbaycan Dəmir Yolları QSC</div>
+          <h1 style="font-size:1.4rem;margin:6px 0">Elektron bilet</h1>
+          <div style="opacity:.85;font-size:.85rem">QR ilə açılmış bilet · PNR <span class="mono"><%= ticket.pnr %></span></div>
+        </div>
+      </div>
+
+      <div class="card mb-16"><div class="card__body">
+        <div class="flex-between">
+          <div>
+            <div class="eyebrow"><%= ticket.trainNumber || '' %> · <%= ticket.date || '' %></div>
+            <h2 style="font-size:1.1rem;margin:4px 0"><%= ticket.fromName %> — <%= ticket.toName %></h2>
+            <div class="sec-note"><%= t('seats.wagon') %> <%= ticket.wagon || '—' %> · <%= t('seats.selected') %> <%= ticket.seat || '—' %> · <%= ticket.className %></div>
+          </div>
+          <span class="badge badge--green"><%= t('status.confirmed') %></span>
+        </div>
+      </div></div>
+
+      <div class="card mb-16"><div class="card__body">
+        <dl class="kv">
+          <dt><%= t('account.pnr') %></dt><dd class="mono"><%= ticket.pnr %></dd>
+          <dt><%= t('checkout.passenger') %></dt><dd><%= ticket.passengerName %></dd>
+          <dt><%= t('checkout.docNumber') %></dt><dd><%= ticket.passengerDoc || '—' %></dd>
+          <dt><%= t('table.depart') %></dt><dd><%= ticket.date %> · <%= ticket.departTime %></dd>
+          <dt><%= t('table.arrive') %></dt><dd><%= ticket.date %> · <%= ticket.arriveTime %></dd>
+          <dt><%= t('seats.wagon') %> / <%= t('seats.selected') %></dt><dd><%= ticket.wagon %> / <%= ticket.seat %></dd>
+          <dt><%= t('checkout.docType') %></dt><dd><%= ticket.className %></dd>
+          <dt><%= t('common.price') %></dt><dd class="mono"><%= Number(ticket.price || 0).toFixed(2) %> ₼</dd>
+        </dl>
+      </div></div>
+
+      <div class="flex-end no-print">
+        <a href="/<%= locale %>/bilet/<%= ticket._id %>/pdf" class="btn btn--primary"><%= t('success.download') %></a>
+        <button type="button" class="btn btn--outline" onclick="window.print()"><%= t('common.print') || 'Çap et' %></button>
+      </div>
+
+      <p class="sec-note mt-16">QR ünvanı: <span class="mono"><%= qrUrl %></span></p>
+    </div>
+  </div>
+</section>
