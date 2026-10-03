@@ -11,7 +11,7 @@
   <%- typeof style !== 'undefined' ? style : '' %>
 </head>
 <body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>">
-  <a href="#main" class="skip-link">Əsas məzmuna keç</a>
+  <a href="#main" class="skip-link"><%= t('common.skipToContent') %></a>
 
   <%- include('../partials/header') %>
 
@@ -26,9 +26,11 @@
   <script>
     window.ADY = {
       locale: '<%= locale %>',
+      dateLocale: '<%= dateLocale %>',
       siteUrl: '<%= site.siteUrl || "" %>',
       isAuth: <%- currentUser ? 'true' : 'false' %>,
-      socials: <%- JSON.stringify(socials || []) %>
+      socials: <%- JSON.stringify(socials || []) %>,
+      dict: <%- JSON.stringify(dict || {}) %>
     };
   </script>
   <script src="/public/js/main.js" defer></script>
