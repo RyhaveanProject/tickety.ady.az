@@ -46,7 +46,7 @@
               <p class="sec-note mb-0"><%= t('account.noOrders') %></p>
             <% } else { %>
               <div class="table-wrap"><table class="data">
-                <thead><tr><th>Sifariş</th><th><%= t('table.route') %></th><th><%= t('common.price') %></th><th><%= t('account.status') %></th></tr></thead>
+                <thead><tr><th><%= t('common.order') %></th><th><%= t('table.route') %></th><th><%= t('common.price') %></th><th><%= t('account.status') %></th></tr></thead>
                 <tbody>
                   <% orders.forEach(function(o){ %>
                     <tr>

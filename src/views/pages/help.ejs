@@ -17,9 +17,9 @@
         <div class="card mb-16"><div class="card__body">
           <h3 style="font-size:1rem"><%= t('nav.contact') %></h3>
           <dl class="kv">
-            <dt>Çağrı mərkəzi</dt><dd><%= site.supportPhone %></dd>
-            <dt>Telefon</dt><dd><%= site.supportPhoneLandline %></dd>
-            <dt>E-poçt</dt><dd><%= site.supportEmail %></dd>
+            <dt><%= t('footer.callCenter') %></dt><dd><%= site.supportPhone %></dd>
+            <dt><%= t('checkout.phone') %></dt><dd><%= site.supportPhoneLandline %></dd>
+            <dt><%= t('common.email') %></dt><dd><%= site.supportEmail %></dd>
           </dl>
           <a href="/<%= locale %>/elaqe" class="btn btn--primary btn--block mt-16"><%= t('nav.contact') %></a>
         </div></div>

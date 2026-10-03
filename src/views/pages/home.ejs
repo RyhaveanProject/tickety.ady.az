@@ -1,5 +1,5 @@
 <section class="hero">
-  <img class="hero__banner" src="/assets/ady/banner-1.svg" alt="ADY sərnişin qatarı" />
+  <img class="hero__banner" src="/assets/ady/banner-1.svg" alt="<%= t('home.heroBannerAlt') %>" />
   <div class="hero__inner">
     <div class="eyebrow"><%= t('brand.railways') %></div>
     <h1><%= t('home.heroTitle') %></h1>
@@ -32,11 +32,11 @@
         </a>
       <% }) %>
       <a href="/<%= locale %>/hereket-cedveli" class="card">
-        <img src="/assets/ady/card-popular.svg" alt="Hərəkət cədvəli" style="width:100%;height:130px;object-fit:cover" />
+        <img src="/assets/ady/card-popular.svg" alt="<%= t('home.timetableCardTitle') %>" style="width:100%;height:130px;object-fit:cover" />
         <div class="card__body">
-          <h3 style="font-size:1rem">Hərəkət cədvəli</h3>
-          <p style="color:var(--ink-2);font-size:.875rem;margin:0 0 10px">Bütün reyslər, dayanacaqlar və gediş vaxtları.</p>
-          <span class="feature__link">Ətraflı oxu</span>
+          <h3 style="font-size:1rem"><%= t('home.timetableCardTitle') %></h3>
+          <p style="color:var(--ink-2);font-size:.875rem;margin:0 0 10px"><%= t('home.timetableCardText') %></p>
+          <span class="feature__link"><%= t('common.readMore') %></span>
         </div>
       </a>
     </div>
@@ -50,12 +50,12 @@
       <div>
         <div class="eyebrow"><%= t('home.travel') %></div>
         <h2><%= t('home.popular') %></h2>
-        <p>ADY ilə Azərbaycanı kəşf et</p>
+        <p><%= t('home.discover') %></p>
       </div>
       <div class="rail-nav">
         <a href="/<%= locale %>/populyar-istiqametler" class="btn btn--outline"><%= t('home.seeAll') %></a>
-        <button type="button" class="rail-arrow" id="railPrev" aria-label="Əvvəlki">‹</button>
-        <button type="button" class="rail-arrow" id="railNext" aria-label="Növbəti">›</button>
+        <button type="button" class="rail-arrow" id="railPrev" aria-label="<%= t('common.prev') %>">‹</button>
+        <button type="button" class="rail-arrow" id="railNext" aria-label="<%= t('common.next') %>">›</button>
       </div>
     </div>
 
@@ -66,7 +66,7 @@
           <div class="feature__body">
             <h3><%= d.title %></h3>
             <div class="feature__meta">
-              <span><strong><%= d.priceFrom.toFixed(2) %></strong> AZN-dən</span>
+              <span><strong><%= d.priceFrom.toFixed(2) %></strong> <%= t('home.aznFrom') %></span>
               <span><%= d.durationText %></span>
               <span><%= d.distanceKm %> km</span>
             </div>
@@ -95,7 +95,7 @@
         <thead>
           <tr>
             <th><%= t('table.train') %></th>
-            <th>Bakı</th><th>Biləcəri</th><th>Xırdalan</th><th>Sumqayıt</th>
+            <th><%= t('stn.BAK') %></th><th><%= t('stn.BIL') %></th><th><%= t('stn.XRD') %></th><th><%= t('stn.SUM') %></th>
             <th><%= t('table.price') %></th><th></th>
           </tr>
         </thead>
@@ -161,7 +161,7 @@
       <% news.forEach(function(n){ %>
         <a href="/<%= locale %>/xeberler/<%= n.slug %>" class="feature">
           <div class="feature__body">
-            <div class="news-card__meta"><span><%= new Date(n.publishedAt).toLocaleDateString('az-AZ') %></span></div>
+            <div class="news-card__meta"><span><%= new Date(n.publishedAt).toLocaleDateString(dateLocale) %></span></div>
             <h3><%= n.title %></h3>
             <p><%= n.excerpt %></p>
             <span class="feature__link"><%= t('home.readMore') %></span>
@@ -176,8 +176,8 @@
 <section class="section section--tight" style="background:#fff;border-top:1px solid var(--line)">
   <div class="container">
     <div class="section__head">
-      <div><div class="eyebrow">Sualım var</div><h2><%= t('home.faq') %></h2></div>
-      <a href="/<%= locale %>/sualim-var/suallar" class="btn btn--outline">Bütün suallar</a>
+      <div><div class="eyebrow"><%= t('home.questionEyebrow') %></div><h2><%= t('home.faq') %></h2></div>
+      <a href="/<%= locale %>/sualim-var/suallar" class="btn btn--outline"><%= t('home.allFaq') %></a>
     </div>
     <div class="grid grid--2">
       <% faqs.forEach(function(f){ %>

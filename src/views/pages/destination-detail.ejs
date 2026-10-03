@@ -7,9 +7,9 @@
     <div class="section__head">
       <div>
         <div class="eyebrow"><%= t('nav.destinations') %></div>
-        <h1><%= destination.title %> qatar bileti</h1>
+        <h1><%= destination.title %> <%= t('dest.trainTicket') %></h1>
         <div class="feature__meta" style="margin-top:8px">
-          <span><strong><%= destination.priceFrom.toFixed(2) %></strong> AZN-dən</span>
+          <span><strong><%= destination.priceFrom.toFixed(2) %></strong> <%= t('home.aznFrom') %></span>
           <span><%= destination.durationText %></span>
           <span><%= destination.distanceKm %> km</span>
         </div>
@@ -50,19 +50,19 @@
 
       <div class="summary">
         <div class="card mb-16"><div class="card__body">
-          <h3 style="font-size:1rem">Bilet axtarışı</h3>
+          <h3 style="font-size:1rem"><%= t('dest.panelTitle') %></h3>
           <% if (station) { %>
             <dl class="kv mb-16">
-              <dt>Stansiya</dt><dd><%= station.name %></dd>
-              <dt>Kod</dt><dd class="mono"><%= station.code %></dd>
-              <dt>Region</dt><dd><%= station.region %></dd>
+              <dt><%= t('home.statStations') %></dt><dd><%= station.name %></dd>
+              <dt><%= t('common.code') %></dt><dd class="mono"><%= station.code %></dd>
+              <dt><%= t('common.region') %></dt><dd><%= station.region %></dd>
             </dl>
           <% } %>
           <a href="/<%= locale %>/bilet-axtar?to=<%= destination.stationCode %>" class="btn btn--primary btn--block"><%= t('home.buyTicket') %></a>
         </div></div>
 
         <div class="card"><div class="card__body">
-          <h3 style="font-size:1rem">Digər istiqamətlər</h3>
+          <h3 style="font-size:1rem"><%= t('dest.other') %></h3>
           <div class="admin-nav">
             <% others.forEach(function(o){ %>
               <a href="/<%= locale %>/populyar-istiqametler/<%= o.slug %>">

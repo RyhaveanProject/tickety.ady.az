@@ -1,7 +1,7 @@
 <section class="section">
   <div class="container">
     <div class="page-banner">
-      <img src="/assets/ady/banner-2.svg" alt="Populyar istiqamətlər" />
+      <img src="/assets/ady/banner-2.svg" alt="<%= t('nav.destinations') %>" />
     </div>
 
     <div class="section__head">
@@ -19,7 +19,7 @@
           <div class="feature__body">
             <h3><%= d.title %></h3>
             <div class="feature__meta">
-              <span><strong><%= d.priceFrom.toFixed(2) %></strong> AZN-dən</span>
+              <span><strong><%= d.priceFrom.toFixed(2) %></strong> <%= t('home.aznFrom') %></span>
               <span><%= d.durationText %></span>
               <span><%= d.distanceKm %> km</span>
             </div>

@@ -11,15 +11,15 @@
             <div class="alert alert--error"><%= order.adminNote || t('status.rejected') %></div>
             <a href="/<%= locale %>/odenis/<%= order._id %>" class="btn btn--primary"><%= t('payment.title') %></a>
           <% } else { %>
-            <p class="sec-note"><%= t('payment.saved') %> Təsdiqdən sonra 3-D Secure doğrulama ekranı açılacaq.</p>
+            <p class="sec-note"><%= t('payment.saved') %> <%= t('payment.afterApproval') %></p>
 
             <dl class="kv" style="text-align:left;margin-top:20px">
-              <dt>Sifariş</dt><dd><%= order.orderNo %></dd>
+              <dt><%= t('payment.orderLabel') %></dt><dd><%= order.orderNo %></dd>
               <dt><%= t('payment.methodCard') %></dt><dd class="mono"><%= cardMasked || '—' %></dd>
               <dt><%= t('checkout.total') %></dt><dd class="mono"><%= order.total.toFixed(2) %> ₼</dd>
             </dl>
 
-            <p class="sec-note mt-24">Bu ekran avtomatik yenilənir.</p>
+            <p class="sec-note mt-24"><%= t('payment.autoRefresh') %></p>
           <% } %>
         </div>
       </div>

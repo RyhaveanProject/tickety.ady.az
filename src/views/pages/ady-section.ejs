@@ -47,10 +47,10 @@
 
         <% if (stations && stations.length) { %>
           <div class="card">
-            <div class="card__head"><span>Bütün stansiya və dayanacaqlar</span></div>
+            <div class="card__head"><span><%= t('common.allStations') %></span></div>
             <div class="card__body">
               <table class="data">
-                <thead><tr><th>Kod</th><th>Ad</th><th>Region</th><th>Ölkə</th></tr></thead>
+                <thead><tr><th><%= t('common.code') %></th><th><%= t('common.name') %></th><th><%= t('common.region') %></th><th><%= t('common.country') %></th></tr></thead>
                 <tbody>
                   <% stations.forEach(function(s){ %>
                     <tr>

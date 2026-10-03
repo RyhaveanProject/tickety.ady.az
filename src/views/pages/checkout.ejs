@@ -111,7 +111,7 @@
       var ln = document.querySelector('[data-p-lastname="' + i + '"]');
       if (!fn.value || !ln.value) {
         note.className = 'alert alert--error';
-        note.textContent = 'Sərnişin ' + (i + 1) + ': ad və soyad vacibdir';
+        note.textContent = 'Sərnişin ' + (i + 1) + ': ' + window.T('checkout.needNameExtra') + '';
         return;
       }
       passengers.push({

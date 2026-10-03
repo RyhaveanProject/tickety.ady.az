@@ -4,50 +4,50 @@
 
     <div class="grid grid--3">
       <div class="card"><div class="card__body">
-        <h3 style="font-size:1rem">Müraciət göndər</h3>
+        <h3 style="font-size:1rem"><%= t('contact.sendTitle') %></h3>
           <form id="contactForm">
             <div class="field">
-              <label>Ad, soyad</label>
+              <label><%= t('contact.nameLabel') %></label>
               <input type="text" name="name" required />
             </div>
             <div class="field">
-              <label>E-poçt</label>
+              <label><%= t('contact.emailLabel') %></label>
               <input type="email" name="email" required />
             </div>
             <div class="field">
-              <label>Telefon</label>
+              <label><%= t('checkout.phone') %></label>
               <input type="tel" name="phone" />
             </div>
             <div class="field">
-              <label>Mövzu</label>
+              <label><%= t('contact.subject') %></label>
               <input type="text" name="subject" />
             </div>
             <div class="field">
-              <label>Müraciət</label>
+              <label><%= t('contact.message') %></label>
               <textarea name="message" required></textarea>
             </div>
-            <button type="submit" class="btn btn--primary btn--block">Göndər</button>
+            <button type="submit" class="btn btn--primary btn--block"><%= t('common.send') %></button>
           </form>
       </div></div>
 
       <div class="card"><div class="card__body">
-        <h3 style="font-size:1rem">Əlaqə məlumatları</h3>
+        <h3 style="font-size:1rem"><%= t('contact.infoTitle') %></h3>
         <dl class="kv">
-          <dt>Ünvan</dt><dd><%= site.address %></dd>
-          <dt>Çağrı mərkəzi</dt><dd><%= site.supportPhone %></dd>
-          <dt>Telefon</dt><dd><%= site.supportPhoneLandline %></dd>
-          <dt>E-poçt</dt><dd><%= site.supportEmail %></dd>
+          <dt><%= t('common.address') %></dt><dd><%= site.address %></dd>
+          <dt><%= t('footer.callCenter') %></dt><dd><%= site.supportPhone %></dd>
+          <dt><%= t('checkout.phone') %></dt><dd><%= site.supportPhoneLandline %></dd>
+          <dt><%= t('common.email') %></dt><dd><%= site.supportEmail %></dd>
         </dl>
       </div></div>
 
       <div class="card"><div class="card__body">
-        <h3 style="font-size:1rem">İş rejimi</h3>
+        <h3 style="font-size:1rem"><%= t('contact.hoursTitle') %></h3>
         <dl class="kv">
-          <dt>Bazar ertəsi — Cümə</dt><dd>09:00 — 18:00</dd>
-          <dt>Şənbə</dt><dd>10:00 — 16:00</dd>
-          <dt>Bazar</dt><dd>Bağlı</dd>
+          <dt><%= t('contact.monFri') %></dt><dd>09:00 — 18:00</dd>
+          <dt><%= t('contact.saturday') %></dt><dd>10:00 — 16:00</dd>
+          <dt><%= t('contact.sunday') %></dt><dd><%= t('contact.closed') %></dd>
         </dl>
-        <div class="alert alert--info mt-16 mb-0 text-sm">Çağrı mərkəzi günün bütün saatlarında fəaliyyət göstərir.</div>
+        <div class="alert alert--info mt-16 mb-0 text-sm"><%= t('contact.callCenter24') %></div>
       </div></div>
     </div>
   </div>

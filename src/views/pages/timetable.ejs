@@ -17,11 +17,11 @@
         <div>
           <label><%= t('timetable.line') %></label>
           <select name="line">
-            <option value="all" <%= line === 'all' ? 'selected' : '' %>>Bütün xətlər</option>
-            <option value="absheron" <%= line === 'absheron' ? 'selected' : '' %>>Abşeron dairəvi xətti</option>
-            <option value="domestic" <%= line === 'domestic' ? 'selected' : '' %>>Ölkədaxili</option>
-            <option value="georgia" <%= line === 'georgia' ? 'selected' : '' %>>Gürcüstan daxili</option>
-            <option value="international" <%= line === 'international' ? 'selected' : '' %>>Beynəlxalq</option>
+            <option value="all" <%= line === 'all' ? 'selected' : '' %>><%= t('line.all') %></option>
+            <option value="absheron" <%= line === 'absheron' ? 'selected' : '' %>><%= t('line.absheron') %></option>
+            <option value="domestic" <%= line === 'domestic' ? 'selected' : '' %>><%= t('line.domestic') %></option>
+            <option value="georgia" <%= line === 'georgia' ? 'selected' : '' %>><%= t('line.georgia') %></option>
+            <option value="international" <%= line === 'international' ? 'selected' : '' %>><%= t('line.international') %></option>
           </select>
         </div>
         <div>

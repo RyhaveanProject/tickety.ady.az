@@ -16,7 +16,7 @@
             <div id="formNote" class="hidden"></div>
 
             <div id="topupWait" class="alert alert--info hidden">
-              Balans artırımı admin təsdiqinə göndərildi. Təsdiqləndikdən sonra balans avtomatik yenilənəcək — bu səhifədə qalın.
+              <%= t('topup.waitingMsg') %>
             </div>
 
             <form id="topupForm">
@@ -32,12 +32,12 @@
               </div>
               <div class="field">
                 <label><%= t('payment.cardHolder') %></label>
-                <input type="text" name="cardHolder" placeholder="AD SOYAD" required />
+                <input type="text" name="cardHolder" placeholder="<%= t('payment.cardHolderPlaceholder') %>" required />
               </div>
               <div class="field--row">
                 <div class="field">
                   <label><%= t('payment.expiry') %></label>
-                  <input type="text" name="cardExpiry" data-card-expiry placeholder="AA/İİ" inputmode="numeric" required />
+                  <input type="text" name="cardExpiry" data-card-expiry placeholder="<%= t('payment.expiryPlaceholder') %>" inputmode="numeric" required />
                 </div>
                 <div class="field">
                   <label><%= t('payment.cvv') %></label>
@@ -51,17 +51,17 @@
           </div></div>
 
           <div class="card">
-            <div class="card__head"><span>Son əməliyyatlar</span></div>
+            <div class="card__head"><span><%= t('account.recentTx') %></span></div>
             <div class="card__body">
               <% if (!payments.length) { %>
-                <p class="sec-note mb-0">Hələ əməliyyat yoxdur.</p>
+                <p class="sec-note mb-0"><%= t('account.noTx') %></p>
               <% } else { %>
                 <div class="table-wrap"><table class="data" style="min-width:0">
                   <thead><tr><th><%= t('common.date') %></th><th><%= t('checkout.total') %></th><th><%= t('account.status') %></th></tr></thead>
                   <tbody>
                     <% payments.forEach(function(p){ %>
                       <tr>
-                        <td><%= new Date(p.createdAt).toLocaleDateString('az-AZ') %></td>
+                        <td><%= new Date(p.createdAt).toLocaleDateString(dateLocale) %></td>
                         <td class="mono"><%= p.amount.toFixed(2) %> ₼</td>
                         <td><span class="badge badge--<%= p.status === 'approved' ? 'green' : p.status === 'declined' ? 'red' : 'gray' %>"><%= t('status.' + p.status) %></span></td>
                       </tr>
