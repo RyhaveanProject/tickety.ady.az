@@ -2,6 +2,7 @@ const config = require('../config');
 const { translate, dicts } = require('../config/i18n');
 
 const localeNames = config.localeNames;
+const localeRe = new RegExp('^/(' + config.locales.join('|') + ')(?=/|$)');
 
 function localeMiddleware(req, res, next) {
   let locale = req.query.lang || req.cookies.locale || (req.session && req.session.locale) || config.defaultLocale;
@@ -18,7 +19,12 @@ function localeMiddleware(req, res, next) {
   res.locals.t = function () {
     return translate.apply(null, [locale].concat(Array.prototype.slice.call(arguments)));
   };
+  /* Tarix/ədəd formatı üçün BCP-47 kodu — bütün dillərdə düzgün göstərilir */
+  res.locals.dateLocale = ({ az: 'az-AZ', en: 'en-GB', ru: 'ru-RU' })[locale] || 'az-AZ';
   res.locals.path = req.path;
+  /* Dil prefiksi çıxarılmış yol — dil dəyişdiricinin düzgün link qurması üçün */
+  var bare = req.path.replace(localeRe, '');
+  res.locals.pathNoLocale = bare || '/';
   res.locals.query = req.query;
   res.locals.site = config.site;
   res.locals.rules = config.rules;
