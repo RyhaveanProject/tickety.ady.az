@@ -1,6 +1,7 @@
 const express = require('express');
-const { Station, Destination, News, Faq, Page } = require('../models/index');
+const { Station, Destination, News, Faq, Page, Trip, Order } = require('../models/index');
 const scheduleService = require('../services/scheduleService');
+const { ticketQrUrl } = require('../services/ticketPdfService');
 const config = require('../config');
 const ady = require('../config/adyContent');
 const h = require('../utils/helpers');
@@ -190,6 +191,30 @@ router.get('/xeberler/:slug', async (req, res, next) => {
 /* ==================== Bilet yoxlama ==================== */
 router.get('/bilet-yoxlama', (req, res) => {
   res.render('pages/ticket-verify', { title: res.locals.t('nav.verify') });
+});
+
+/* ==================== QR ilə açılan bilet görüntüsü ====================
+   Bu URL tam ictimai açıqdır — beləliklə QR kodu skan olunduqda brauzer,
+   istifadəçi daxil olmamış, bileti bütün detallarla göstərir (PNR-a görə). */
+router.get('/bilet-goruntule/:pnr', async (req, res, next) => {
+  try {
+    const pnr = String(req.params.pnr || '').trim().toUpperCase();
+    if (!pnr) return next();
+    const { Ticket } = require('../models/index');
+    const ticket = await Ticket.findOne({ pnr }).lean();
+    if (!ticket) return next();
+    const order = await Order.findById(ticket.order).lean();
+    const trip = await Trip.findById(ticket.trip).lean();
+    res.render('pages/ticket-view', {
+      title: 'Bilet — ' + ticket.pnr,
+      ticket,
+      order: order || null,
+      trip: trip || null,
+      qrUrl: ticketQrUrl(ticket, res.locals.locale)
+    });
+  } catch (e) {
+    next(e);
+  }
 });
 
 module.exports = router;

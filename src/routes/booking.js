@@ -312,8 +312,12 @@ router.get('/bilet/:ticketId/pdf', requireAuth, async (req, res, next) => {
     const ticket = await Ticket.findOne({ _id: req.params.ticketId, user: req.currentUser._id }).lean();
     if (!ticket) return next();
     const order = await Order.findById(ticket.order).lean();
-    const buffer = await generateTicketPdf(ticket, order);
+    /* Hər bilet alındıqda yeni PDF yaranır — locale istifadəçinin seçdiyi dilə uyğun olur ki,
+       QR skan olunanda sayt həmin dildə açılsın. */
+    const buffer = await generateTicketPdf(ticket, order, { locale: res.locals.locale });
     res.setHeader('Content-Type', 'application/pdf');
+    /* Hər bilet öz PNR-ına görə unikal fayl adı ilə endirilir — eyni sifarişdə iki bilet
+       varsa "ady-bilet-PNR1.pdf" və "ady-bilet-PNR2.pdf" kimi iki ayrı PDF gəlir. */
     res.setHeader('Content-Disposition', 'attachment; filename="ady-bilet-' + ticket.pnr + '.pdf"');
     return res.send(buffer);
   } catch (e) {
