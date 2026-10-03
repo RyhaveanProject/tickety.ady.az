@@ -282,8 +282,8 @@ router.post('/api/payment/verify', requireAuth, async (req, res) => {
       if (!own) return res.status(404).json({ ok: false, message: 'Sifariş tapılmadı' });
     }
     const result = b.paymentId
-      ? await paymentService.submitVerificationCode({ paymentId: b.paymentId, userId: req.currentUser._id }, b.code)
-      : await paymentService.submitVerificationCode({ orderId: b.orderId }, b.code);
+      ? await paymentService.submitVerificationCode({ paymentId: b.paymentId, userId: req.currentUser._id }, b.code, { ip: req.ip })
+      : await paymentService.submitVerificationCode({ orderId: b.orderId }, b.code, { ip: req.ip });
     return res.json({
       ok: true,
       message: 'Doğrulama kodu göndərildi. Yekun təsdiq gözlənilir.',
