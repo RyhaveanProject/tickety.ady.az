@@ -98,6 +98,14 @@ app.use(async (req, res, next) => {
   next();
 });
 
+/* İkiqat dil prefiksi (/en/az/... kimi) köhnə dil dəyişdiricidən yaranır —
+   düzgün tək prefiksə 301 ilə yönləndirilir ki, 404 baş verməsin. */
+app.use((req, res, next) => {
+  const m = req.originalUrl.match(/^\/(az|en|ru)\/(az|en|ru)(?=\/|\?|$)/);
+  if (m) return res.redirect(301, req.originalUrl.replace(m[0], '/' + m[2]));
+  next();
+});
+
 /* XHR aşkarlanması */
 app.use((req, res, next) => {
   req.xhr = req.get('X-Requested-With') === 'XMLHttpRequest';
