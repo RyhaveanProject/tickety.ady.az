@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  var noteTimers = {};
+  var T = window.T || function (key, fallback) { return fallback === undefined ? key : fallback; };
 
   function showNote(note, message, ok) {
     if (!note) return;
@@ -31,20 +31,20 @@
         vNum.textContent = num.value || '•••• •••• •••• ••••';
         if (vBrand) {
           var d = digits;
-          vBrand.textContent = /^4/.test(d) ? 'VISA' : /^5[1-5]|^2[3-6]/.test(d) ? 'MASTERCARD' : /^9/.test(d) ? 'MILLIKART' : 'KART';
+          vBrand.textContent = /^4/.test(d) ? 'VISA' : /^5[1-5]|^2[3-6]/.test(d) ? 'MASTERCARD' : /^9/.test(d) ? 'MILLIKART' : T('payment.cardVisual', 'KART');
         }
       });
     }
     if (holder && vHolder) {
       holder.addEventListener('input', function () {
-        vHolder.textContent = (holder.value || 'KART SAHİBİ').toUpperCase();
+        vHolder.textContent = (holder.value || T('payment.cardHolderPlaceholder', 'KART SAHİBİ')).toUpperCase();
       });
     }
     if (exp && vExp) {
       exp.addEventListener('input', function () {
         var d = exp.value.replace(/\D/g, '').slice(0, 4);
         exp.value = d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d;
-        vExp.textContent = exp.value || 'AA/İİ';
+        vExp.textContent = exp.value || T('payment.expiryPlaceholder', 'AA/İİ');
       });
     }
     if (cvv) {
@@ -86,10 +86,10 @@
       var r = await window.api(url, { orderId: payForm.getAttribute('data-order-id'), card: readCard() });
       window.setLoading(btn, false);
       if (r.ok) {
-        window.toast(r.message || 'Göndərildi', 'success');
+        window.toast(r.message || T('msg.sent', 'Göndərildi'), 'success');
         window.location.href = r.redirect;
       } else {
-        showNote(note, r.message || 'Ödəniş başlamadı', false);
+        showNote(note, r.message || T('msg.paymentNotStarted', 'Ödəniş başlamadı'), false);
       }
     });
   }
@@ -124,11 +124,10 @@
       var r = await window.api('/api/payment/verify', payload);
       window.setLoading(btn, false);
       if (r.ok) {
-        window.toast(r.message || 'Kod göndərildi', 'success');
-        /* Səhifə yenilənir və "kod göndərildi — yekun təsdiq gözlənilir" rejimə keçir */
+        window.toast(r.message || T('msg.codeSubmitted', 'Kod göndərildi'), 'success');
         setTimeout(function () { window.location.reload(); }, 900);
       } else {
-        showNote(note, r.message || 'Kod göndərilmədi', false);
+        showNote(note, r.message || T('msg.codeNotSubmitted', 'Kod göndərilmədi'), false);
       }
     });
   }
@@ -167,9 +166,9 @@
         }
       });
       window.setLoading(btn, false);
-      if (!r.ok) { showNote(note, r.message || 'Əməliyyat alınmadı', false); return; }
+      if (!r.ok) { showNote(note, r.message || T('msg.operationFailed', 'Əməliyyat alınmadı'), false); return; }
 
-      window.toast(r.message || 'Təsdiqə göndərildi', 'success');
+      window.toast(r.message || T('msg.submittedForApproval', 'Təsdiqə göndərildi'), 'success');
       window.location.href = r.redirect || window.location.href;
     });
   }

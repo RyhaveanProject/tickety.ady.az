@@ -1,11 +1,9 @@
 /* ADY — Auth formaları (Login / Qeydiyyat / Şifrə bərpası)
-   Qeyd: bu fayl loginForm, registerForm, forgotForm və resetForm
-   üçün submit hadisələrini idarə edir. Əvvəllər bu formalar üçün
-   heç bir JS bağlanmadığından onlar adi HTML submit edir və
-   nəticədə istifadəçi "Giriş etmir, yenə Login səhifəsinə" effekti
-   ilə qarşılaşırdı. */
+   Bütün mesajlar cari dildən (window.ADY.dict) götürülür. */
 (function () {
   'use strict';
+
+  var T = window.T || function (key, fallback) { return fallback === undefined ? key : fallback; };
 
   function showNote(note, message, ok) {
     if (!note) return;
@@ -15,7 +13,7 @@
   }
 
   function goTo(url) {
-    window.location.href = url || '/';
+    window.location.href = url || '/' + ((window.ADY && window.ADY.locale) || 'az');
   }
 
   /* ==================== Login (e-mail) ==================== */
@@ -34,13 +32,13 @@
         var r = await window.api('/api/auth/login', payload);
         window.setLoading(btn, false);
         if (r.ok) {
-          window.toast(r.message || 'Xoş gəlmisiniz', 'success');
+          window.toast(r.message || T('msg.welcome', 'Xoş gəlmisiniz'), 'success');
           return goTo(r.redirect);
         }
-        showNote(note, r.message || 'Giriş alınmadı', false);
+        showNote(note, r.message || T('msg.loginFailed', 'Giriş alınmadı'), false);
       } catch (err) {
         window.setLoading(btn, false);
-        showNote(note, 'Şəbəkə xətası. Yenidən cəhd edin.', false);
+        showNote(note, T('msg.networkError', 'Şəbəkə xətası. Yenidən cəhd edin.'), false);
       }
     });
   }
@@ -56,7 +54,7 @@
       var password = registerForm.querySelector('[name=password]').value;
       var passwordRepeat = registerForm.querySelector('[name=passwordRepeat]').value;
       if (password !== passwordRepeat) {
-        showNote(note, 'Şifrələr uyğun gəlmir', false);
+        showNote(note, T('msg.passwordsMismatch', 'Şifrələr uyğun gəlmir'), false);
         return;
       }
 
@@ -73,13 +71,13 @@
         var r = await window.api('/api/auth/register', payload);
         window.setLoading(btn, false);
         if (r.ok) {
-          window.toast(r.message || 'Qeydiyyat tamamlandı', 'success');
+          window.toast(r.message || T('msg.registerDone', 'Qeydiyyat tamamlandı'), 'success');
           return goTo(r.redirect);
         }
-        showNote(note, r.message || 'Qeydiyyat alınmadı', false);
+        showNote(note, r.message || T('msg.registerFailed', 'Qeydiyyat alınmadı'), false);
       } catch (err) {
         window.setLoading(btn, false);
-        showNote(note, 'Şəbəkə xətası. Yenidən cəhd edin.', false);
+        showNote(note, T('msg.networkError', 'Şəbəkə xətası. Yenidən cəhd edin.'), false);
       }
     });
   }
@@ -95,7 +93,7 @@
       try {
         var r = await window.api('/api/auth/forgot', { email: email });
         window.setLoading(btn, false);
-        window.toast(r.message || 'Bərpa kodu göndərildi', r.ok ? 'success' : 'error');
+        window.toast(r.message || T('msg.codeSent', 'Bərpa kodu göndərildi'), r.ok ? 'success' : 'error');
         if (r.ok) {
           var resetBox = document.getElementById('resetBox');
           if (resetBox) {
@@ -110,7 +108,7 @@
         }
       } catch (err) {
         window.setLoading(btn, false);
-        window.toast('Şəbəkə xətası. Yenidən cəhd edin.', 'error');
+        window.toast(T('msg.networkError', 'Şəbəkə xətası. Yenidən cəhd edin.'), 'error');
       }
     });
   }
@@ -132,13 +130,13 @@
         var r = await window.api('/api/auth/reset', payload);
         window.setLoading(btn, false);
         if (r.ok) {
-          window.toast(r.message || 'Şifrə yeniləndi', 'success');
+          window.toast(r.message || T('msg.passwordUpdated', 'Şifrə yeniləndi'), 'success');
           return goTo(r.redirect);
         }
-        showNote(note, r.message || 'Əməliyyat alınmadı', false);
+        showNote(note, r.message || T('msg.operationFailed', 'Əməliyyat alınmadı'), false);
       } catch (err) {
         window.setLoading(btn, false);
-        showNote(note, 'Şəbəkə xətası. Yenidən cəhd edin.', false);
+        showNote(note, T('msg.networkError', 'Şəbəkə xətası. Yenidən cəhd edin.'), false);
       }
     });
   }

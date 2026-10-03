@@ -2,6 +2,17 @@
 (function () {
   'use strict';
 
+  /* ==================== Tərcümə köməkçisi ====================
+     Lüğət serverdən window.ADY.dict kimi ötürülür (layout/main.ejs).
+     Açar tapılmasa, ehtiyat mətn göstərilir. */
+  function T(key, fallback) {
+    var d = (window.ADY && window.ADY.dict) || {};
+    var v = d[key];
+    if (v === undefined || v === null || v === '') v = fallback;
+    return v === undefined ? key : v;
+  }
+  window.T = T;
+
   /* ==================== Toast ==================== */
   const toastEl = document.getElementById('toast');
   let toastTimer = null;
@@ -23,7 +34,7 @@
     if (data) opts.body = JSON.stringify(data);
     const res = await fetch(url, opts);
     let json = {};
-    try { json = await res.json(); } catch (e) { json = { ok: false, message: 'Server cavabı oxunmadı.' }; }
+    try { json = await res.json(); } catch (e) { json = { ok: false, message: T('msg.serverResponse', 'Server cavabı oxunmadı.') }; }
     return json;
   };
 
@@ -64,7 +75,7 @@
   document.querySelectorAll('[data-logout]').forEach((el) => {
     el.addEventListener('click', async () => {
       const r = await window.api('/api/auth/logout', {});
-      if (r.ok) window.location.href = r.redirect || '/';
+      if (r.ok) window.location.href = r.redirect || '/' + ((window.ADY && window.ADY.locale) || 'az');
     });
   });
 
@@ -77,11 +88,13 @@
       const input = form.querySelector('input[name=email]');
       const note = document.getElementById('subscribeNote');
       const r = await window.api('/api/subscribe', { email: input.value });
+      const okMsg = r.message || T('msg.subscribed', 'Abunəliyiniz qeydə alındı');
+      const errMsg = r.message || T('msg.error', 'Xəta baş verdi');
       if (note) {
-        note.textContent = r.ok ? (r.message || 'Abunəliyiniz qeydə alındı') : (r.message || 'Xəta baş verdi');
+        note.textContent = r.ok ? okMsg : errMsg;
         note.style.color = r.ok ? '#7ee2a8' : '#ff9c93';
       } else {
-        window.toast(r.message || (r.ok ? 'Abunəliyiniz qeydə alındı' : 'Xəta baş verdi'), r.ok ? 'success' : 'error');
+        window.toast(r.ok ? okMsg : errMsg, r.ok ? 'success' : 'error');
       }
       if (r.ok) input.value = '';
     });
@@ -102,8 +115,8 @@
 
     function render(items) {
       list.innerHTML = '';
-      if (!items.length) { list.innerHTML = '<div class="combo__item">Nəticə tapılmadı</div>'; return; }
-      items.forEach((s, i) => {
+      if (!items.length) { list.innerHTML = '<div class="combo__item">' + T('msg.resultNotFound', 'Nəticə tapılmadı') + '</div>'; return; }
+      items.forEach((s) => {
         const div = document.createElement('div');
         div.className = 'combo__item';
         div.innerHTML = '<span>' + s.name + '</span><small>' + s.code + (s.region ? ' · ' + s.region : '') + '</small>';
@@ -172,7 +185,7 @@
     searchForm.addEventListener('submit', (e) => {
       const from = document.getElementById('fromInput');
       const to = document.getElementById('toInput');
-      if (!from.value || !to.value) { e.preventDefault(); window.toast('Stansiyaları seçin', 'error'); return; }
+      if (!from.value || !to.value) { e.preventDefault(); window.toast(T('msg.stationsSelected', 'Stansiyaları seçin'), 'error'); return; }
       const byName = (v) => {
         const f = stations.find((s) => s.name === v || s.code === v);
         return f ? f.code : v;
@@ -181,7 +194,7 @@
       to.value = byName(to.value);
       if (from.value === to.value) {
         e.preventDefault();
-        window.toast('Gediş və təyinat stansiyaları fərqli olmalıdır', 'error');
+        window.toast(T('msg.sameStations', 'Gediş və təyinat stansiyaları fərqli olmalıdır'), 'error');
       }
     });
   }
@@ -207,18 +220,18 @@
   /* ==================== Sifariş ləğvi / bilet qaytarma ==================== */
   document.querySelectorAll('[data-refund]').forEach((btn) => {
     btn.addEventListener('click', async () => {
-      if (!confirm('Bileti qaytarmaq istədiyinizə əminsiniz? Xidmət haqqı tutulacaq.')) return;
+      if (!confirm(T('msg.refundConfirm', 'Bileti qaytarmaq istədiyinizə əminsiniz? Xidmət haqqı tutulacaq.'))) return;
       window.setLoading(btn, true);
       const r = await window.api('/api/booking/refund', { ticketId: btn.getAttribute('data-refund') });
       window.setLoading(btn, false);
-      window.toast(r.message || (r.ok ? 'Bilet qaytarıldı' : 'Xəta'), r.ok ? 'success' : 'error');
+      window.toast(r.message || (r.ok ? T('msg.refunded', 'Bilet qaytarıldı') : T('msg.error', 'Xəta')), r.ok ? 'success' : 'error');
       if (r.ok) setTimeout(() => window.location.reload(), 1300);
     });
   });
 
   document.querySelectorAll('[data-cancel-order]').forEach((btn) => {
     btn.addEventListener('click', async () => {
-      if (!confirm('Sifarişi ləğv etmək istəyirsiniz?')) return;
+      if (!confirm(T('msg.cancelConfirm', 'Sifarişi ləğv etmək istəyirsiniz?'))) return;
       const r = await window.api('/api/booking/cancel', { orderId: btn.getAttribute('data-cancel-order') });
       window.toast(r.message, r.ok ? 'success' : 'error');
       if (r.ok) setTimeout(() => window.location.href = r.redirect || '/', 1100);
@@ -239,17 +252,17 @@
       if (r.ok) {
         const t = r.ticket;
         box.innerHTML =
-          '<div class="alert alert--success"><strong>Bilet tapıldı</strong> — status: ' + t.status + '</div>' +
+          '<div class="alert alert--success"><strong>' + T('msg.ticketFound', 'Bilet tapıldı') + '</strong> — ' + T('verify.status', 'Status') + ': ' + t.status + '</div>' +
           '<dl class="kv">' +
           '<dt>PNR</dt><dd>' + t.pnr + '</dd>' +
-          '<dt>Sərnişin</dt><dd>' + t.passengerName + '</dd>' +
-          '<dt>Qatar</dt><dd>' + t.trainNumber + '</dd>' +
-          '<dt>Marşrut</dt><dd>' + t.fromName + ' → ' + t.toName + '</dd>' +
-          '<dt>Tarix</dt><dd>' + t.date + ' ' + t.departTime + '</dd>' +
-          '<dt>Vaqon / Yer</dt><dd>' + t.wagon + ' / ' + t.seat + ' (' + t.className + ')</dd>' +
+          '<dt>' + T('verify.passenger', 'Sərnişin') + '</dt><dd>' + t.passengerName + '</dd>' +
+          '<dt>' + T('verify.train', 'Qatar') + '</dt><dd>' + t.trainNumber + '</dd>' +
+          '<dt>' + T('verify.route', 'Marşrut') + '</dt><dd>' + t.fromName + ' → ' + t.toName + '</dd>' +
+          '<dt>' + T('verify.date', 'Tarix') + '</dt><dd>' + t.date + ' ' + t.departTime + '</dd>' +
+          '<dt>' + T('verify.seat', 'Vaqon / Yer') + '</dt><dd>' + t.wagon + ' / ' + t.seat + ' (' + t.className + ')</dd>' +
           '</dl>';
       } else {
-        box.innerHTML = '<div class="alert alert--error">' + (r.message || 'Bilet tapılmadı') + '</div>';
+        box.innerHTML = '<div class="alert alert--error">' + (r.message || T('msg.ticketNotFound', 'Bilet tapılmadı')) + '</div>';
       }
     });
   }
