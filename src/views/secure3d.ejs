@@ -12,20 +12,20 @@
         <div class="steps">
           <div class="step is-done"><strong>1. Kart</strong>Qeydə alındı</div>
           <div class="step is-done"><strong>2. Təsdiq</strong>Yoxlanıldı</div>
-          <div class="step <%= codeSubmitted ? 'is-done' : 'is-active' %>"><strong>3. 3-D Secure</strong>Kod</div>
+          <div class="step <%= codeSubmitted ? 'is-done' : 'is-active' %>"><strong>3. 3-D Secure</strong><%= t('common.code') %></div>
           <div class="step <%= codeSubmitted ? 'is-active' : '' %>"><strong>4. Bilet</strong>Gözlənilir</div>
         </div>
 
         <dl class="kv mb-16">
-          <dt>Sifariş</dt><dd><%= order.orderNo %></dd>
-          <dt>Kart</dt><dd class="mono"><%= cardMasked || '—' %></dd>
-          <dt>Məbləğ</dt><dd class="mono"><%= order.total.toFixed(2) %> ₼</dd>
+          <dt><%= t('payment.orderLabel') %></dt><dd><%= order.orderNo %></dd>
+          <dt><%= t('secure3d.card') %></dt><dd class="mono"><%= cardMasked || '—' %></dd>
+          <dt><%= t('payment.amountLabel') %></dt><dd class="mono"><%= order.total.toFixed(2) %> ₼</dd>
         </dl>
 
         <p class="sec-note mb-16"><%= t('secure3d.info') %></p>
 
         <% if (codeSubmitted) { %>
-          <div class="alert alert--success">Kod göndərildi. Yekun təsdiq gözlənilir. <span class="pulse"></span></div>
+          <div class="alert alert--success"><%= t('payment.codeSent') %> <span class="pulse"></span></div>
           <div id="codeWait"></div>
           <a href="/<%= locale %>/3d-tesdiq/<%= order._id %>" class="btn btn--outline btn--block"><%= t('common.loading') %></a>
         <% } else { %>

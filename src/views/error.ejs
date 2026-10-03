@@ -5,7 +5,7 @@
       <h1><%= typeof title !== 'undefined' ? title : 'Xəta' %></h1>
       <p class="sec-note"><%= typeof message !== 'undefined' ? message : 'Gözlənilməz xəta baş verdi.' %></p>
       <div class="flex-end" style="justify-content:center">
-        <a href="/<%= typeof locale !== 'undefined' && locale ? locale : 'az' %>" class="btn btn--primary">Ana səhifə</a>
+        <a href="/<%= typeof locale !== 'undefined' && locale ? locale : 'az' %>" class="btn btn--primary"><%= t('common.home') %></a>
         <a href="/<%= typeof locale !== 'undefined' && locale ? locale : 'az' %>/bilet-axtar" class="btn btn--outline">
           <%= typeof t === 'function' ? t('nav.tickets') : 'Bilet axtarışı' %>
         </a>

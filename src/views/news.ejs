@@ -17,9 +17,9 @@
 
     <% if (pages > 1) { %>
       <div class="flex-end mt-24">
-        <% if (page > 1) { %><a href="?page=<%= page - 1 %>" class="btn btn--outline btn--sm">Əvvəlki</a><% } %>
+        <% if (page > 1) { %><a href="?page=<%= page - 1 %>" class="btn btn--outline btn--sm"><%= t('common.prev') %></a><% } %>
         <span class="sec-note" style="align-self:center"><%= page %> / <%= pages %></span>
-        <% if (page < pages) { %><a href="?page=<%= page + 1 %>" class="btn btn--outline btn--sm">Növbəti</a><% } %>
+        <% if (page < pages) { %><a href="?page=<%= page + 1 %>" class="btn btn--outline btn--sm"><%= t('common.next') %></a><% } %>
       </div>
     <% } %>
   </div>

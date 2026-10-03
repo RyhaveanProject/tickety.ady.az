@@ -45,9 +45,9 @@
           <h3 style="font-size:1rem"><%= t('search.pageTitle') %></h3>
           <% if (station) { %>
             <dl class="kv mb-16">
-              <dt>Stansiya</dt><dd><%= station.name %></dd>
-              <dt>Kod</dt><dd class="mono"><%= station.code %></dd>
-              <dt>Region</dt><dd><%= station.region %></dd>
+              <dt><%= t('home.statStations') %></dt><dd><%= station.name %></dd>
+              <dt><%= t('common.code') %></dt><dd class="mono"><%= station.code %></dd>
+              <dt><%= t('common.region') %></dt><dd><%= station.region %></dd>
             </dl>
           <% } %>
           <a href="/<%= locale %>/bilet-axtar?to=<%= destination.stationCode %>" class="btn btn--primary btn--block"><%= t('home.buyTicket') %></a>
