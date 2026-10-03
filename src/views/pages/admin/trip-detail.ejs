@@ -19,7 +19,7 @@
           <div id="formNote" class="hidden"></div>
           <form id="blockForm" data-trip-id="<%= trip._id %>" class="grid grid--4" style="align-items:end">
             <div>
-              <label>Sinif</label>
+              <label><%= t('common.class') %></label>
               <select name="classCode">
                 <% trip.classes.forEach(function(c){ %>
                   <option value="<%= c.code %>"><%= c.title %> (<%= c.price.toFixed(2) %> ₼)</option>
@@ -31,7 +31,7 @@
               <input type="number" name="wagon" min="1" value="1" required />
             </div>
             <div>
-              <label>Yer(lər)</label>
+              <label><%= t('admin.seatsLabel') %></label>
               <input type="text" name="seat" placeholder="1-10" required />
             </div>
             <div>
@@ -39,7 +39,7 @@
             </div>
           </form>
           <div class="flex-end mt-16">
-            <button class="btn btn--outline btn--sm" id="unblockAll" data-trip="<%= trip._id %>">Bütün yerləri aç</button>
+            <button class="btn btn--outline btn--sm" id="unblockAll" data-trip="<%= trip._id %>"><%= t('admin.unblockAll') %></button>
           </div>
         </div></div>
 
@@ -72,7 +72,7 @@
                 <div class="wagon__grid">
                   <% w.seats.forEach(function(s){ %>
                     <% if (s.blocked) { %>
-                      <button type="button" class="seat is-taken" data-unblock="<%= map.code %>:<%= w.wagon %>:<%= s.seat %>" data-trip="<%= trip._id %>" title="Aç"><%= s.seat %></button>
+                      <button type="button" class="seat is-taken" data-unblock="<%= map.code %>:<%= w.wagon %>:<%= s.seat %>" data-trip="<%= trip._id %>" title="<%= t('admin.unblock') %>"><%= s.seat %></button>
                     <% } else { %>
                       <button type="button" class="seat <%= s.taken ? 'is-taken' : '' %>" disabled><%= s.seat %></button>
                     <% } %>
@@ -84,13 +84,13 @@
         <% }) %>
 
         <div class="card">
-          <div class="card__head"><span>Bağlı yerlər</span></div>
+          <div class="card__head"><span><%= t('admin.blockedSeatsTitle') %></span></div>
           <div class="card__body">
             <% if (!blocks.length) { %>
-              <p class="sec-note mb-0">Bağlı yer yoxdur.</p>
+              <p class="sec-note mb-0"><%= t('admin.noBlocked') %></p>
             <% } else { %>
               <div class="table-wrap"><table class="data">
-                <thead><tr><th>Sinif</th><th><%= t('seats.wagon') %></th><th><%= t('seats.selected') %></th><th>Səbəb</th><th></th></tr></thead>
+                <thead><tr><th><%= t('common.class') %></th><th><%= t('seats.wagon') %></th><th><%= t('seats.selected') %></th><th><%= t('admin.reasonLabel') %></th><th></th></tr></thead>
                 <tbody>
                   <% blocks.forEach(function(b){ %>
                     <tr>

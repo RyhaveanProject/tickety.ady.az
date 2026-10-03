@@ -16,9 +16,9 @@
       <div>
         <div class="eyebrow"><%= t('nav.panel') %></div>
         <h1><%= isEdit ? 'Reysi redaktə et' : 'Yeni bilet / reys əlavə et' %></h1>
-        <p>Qatar şablonu yaradılır; reyslər və biletlər seçilmiş günlər və tarix aralığı üzrə avtomatik açılır.</p>
+        <p><%= t('admin.trainFormHint') %></p>
       </div>
-      <a href="/<%= locale %>/admin/qatarlar" class="btn btn--outline">Qatarlara qayıt</a>
+      <a href="/<%= locale %>/admin/qatarlar" class="btn btn--outline"><%= t('admin.backToTrains') %></a>
     </div>
 
     <div class="layout-aside">
@@ -29,79 +29,79 @@
 
         <% if (!isEdit) { %>
         <div class="card mb-24"><div class="card__body">
-          <h3 style="font-size:1rem">Sürətli şablon</h3>
-          <p class="sec-note">Formu hazır məlumatla doldurur; sonra nömrə, vaxt və qiyməti dəyişə bilərsiniz.</p>
-          <button type="button" class="btn btn--sm btn--outline" id="presetBT">Bakı — Tbilisi (kupe 81 ₼, 2029-a qədər)</button>
-          <button type="button" class="btn btn--sm btn--outline" id="presetTB">Tbilisi — Bakı (kupe 81 ₼, 2029-a qədər)</button>
+          <h3 style="font-size:1rem"><%= t('admin.quickTemplate') %></h3>
+          <p class="sec-note"><%= t('admin.quickTemplateHint') %></p>
+          <button type="button" class="btn btn--sm btn--outline" id="presetBT"><%= t('admin.presetBT') %></button>
+          <button type="button" class="btn btn--sm btn--outline" id="presetTB"><%= t('admin.presetTB') %></button>
         </div></div>
         <% } %>
 
         <form id="trainForm" class="card mb-24"><div class="card__body">
           <div class="grid grid--3">
             <div>
-              <label>Qatar nömrəsi</label>
-              <input type="text" name="number" value="<%= isEdit ? train.number : '' %>" <%= isEdit ? 'readonly' : '' %> required maxlength="12" placeholder="məs. 39" />
+              <label><%= t('admin.trainNumberLabel') %></label>
+              <input type="text" name="number" value="<%= isEdit ? train.number : '' %>" <%= isEdit ? 'readonly' : '' %> required maxlength="12" placeholder="<%= t('admin.trainNumberPlaceholder') %>" />
             </div>
             <div>
-              <label>Ad</label>
-              <input type="text" name="title" value="<%= isEdit ? train.title : '' %>" required placeholder="Bakı — Tbilisi beynəlxalq qatarı" />
+              <label><%= t('common.name') %></label>
+              <input type="text" name="title" value="<%= isEdit ? train.title : '' %>" required placeholder="<%= t('admin.trainTitlePlaceholder') %>" />
             </div>
             <div>
-              <label>Xətt</label>
+              <label><%= t('timetable.line') %></label>
               <select name="line">
-                <option value="domestic">Ölkədaxili</option>
-                <option value="georgia">Gürcüstan</option>
-                <option value="international">Beynəlxalq</option>
-                <option value="absheron">Abşeron</option>
+                <option value="domestic"><%= t('home.domestic') %></option>
+                <option value="georgia"><%= t('line.georgiaShort') %></option>
+                <option value="international"><%= t('home.international') %></option>
+                <option value="absheron"><%= t('line.absheronShort') %></option>
               </select>
             </div>
             <div>
-              <label>Qatar növü</label>
+              <label><%= t('admin.trainTypeLabel') %></label>
               <select name="type">
-                <option value="passenger">Sərnişin</option>
-                <option value="express">Ekspres</option>
-                <option value="fast">Sürətli</option>
-                <option value="suburban">Şəhərətrafı</option>
-                <option value="international">Beynəlxalq</option>
+                <option value="passenger"><%= t('search.passengers') %></option>
+                <option value="express"><%= t('admin.trainTypeExpress') %></option>
+                <option value="fast"><%= t('admin.trainTypeFast') %></option>
+                <option value="suburban"><%= t('admin.trainTypeSuburban') %></option>
+                <option value="international"><%= t('home.international') %></option>
               </select>
             </div>
             <div>
-              <label>Hərəkət başlanğıcı (boş = məhdudiyyətsiz)</label>
+              <label><%= t('admin.validFrom') %></label>
               <input type="date" name="validFrom" />
             </div>
             <div>
-              <label>Hərəkət sonu (boş = məhdudiyyətsiz)</label>
+              <label><%= t('admin.validUntil') %></label>
               <input type="date" name="validUntil" />
             </div>
             <div>
-              <label>Bilet satışı bu tarixədək açıq</label>
+              <label><%= t('admin.advanceSaleUntil') %></label>
               <input type="date" name="advanceSaleUntil" />
             </div>
           </div>
           <p class="sec-note">Tək günlük reys üçün başlanğıc və son tarixə eyni günü yazın. “Satış açıq” tarixi boşdursa satış standart 10 gün əvvəl açılır.</p>
 
-          <label class="mt-16">Hərəkət günləri</label>
+          <label class="mt-16"><%= t('admin.weekdaysLabel') %></label>
           <div id="weekdays" class="flex" style="gap:14px;flex-wrap:wrap">
             <% days.forEach(function (d) { %>
               <label style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" value="<%= d[0] %>" /> <%= d[1] %></label>
             <% }) %>
           </div>
 
-          <h3 style="font-size:1rem" class="mt-24">Dayanacaqlar (yuxarıdan aşağı, başlanğıcdan sona)</h3>
+          <h3 style="font-size:1rem" class="mt-24"><%= t('admin.stopsTitle') %></h3>
           <div class="table-wrap"><table class="data">
-            <thead><tr><th>Stansiya</th><th>Gəliş</th><th>Yola düşmə</th><th>Məsafə (km)</th><th></th></tr></thead>
+            <thead><tr><th><%= t('home.statStations') %></th><th><%= t('admin.colArrive') %></th><th><%= t('table.depart') %></th><th><%= t('admin.colDistance') %></th><th></th></tr></thead>
             <tbody id="stopsBody"></tbody>
           </table></div>
-          <button type="button" class="btn btn--sm btn--outline mt-16" id="addStop">+ Dayanacaq</button>
+          <button type="button" class="btn btn--sm btn--outline mt-16" id="addStop"><%= t('admin.addStop') %></button>
 
-          <h3 style="font-size:1rem" class="mt-24">Vaqon sinifləri və qiymət (₼)</h3>
+          <h3 style="font-size:1rem" class="mt-24"><%= t('admin.classesTitle') %></h3>
           <div class="table-wrap"><table class="data">
-            <thead><tr><th>Ad</th><th>Kod</th><th>Vaqon sayı</th><th>Yer/vaqon</th><th>Qiymət ₼</th><th></th></tr></thead>
+            <thead><tr><th><%= t('common.name') %></th><th><%= t('common.code') %></th><th><%= t('admin.colWagonCount') %></th><th><%= t('admin.colSeatsPerWagon') %></th><th><%= t('admin.colPrice') %></th><th></th></tr></thead>
             <tbody id="classesBody"></tbody>
           </table></div>
-          <button type="button" class="btn btn--sm btn--outline mt-16" id="addClass">+ Sinif</button>
+          <button type="button" class="btn btn--sm btn--outline mt-16" id="addClass"><%= t('admin.addClass') %></button>
 
-          <label class="mt-24" style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" name="active" checked /> Aktiv (satışda göstər)</label>
+          <label class="mt-24" style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" name="active" checked /> <%= t('admin.activeField') %></label>
 
           <div class="mt-24">
             <button type="submit" class="btn btn--primary"><%= isEdit ? 'Yadda saxla' : 'Reysi əlavə et' %></button>
@@ -109,15 +109,15 @@
         </div></form>
 
         <form id="stationForm" class="card"><div class="card__body">
-          <h3 style="font-size:1rem">Yeni stansiya əlavə et (məs. Gürcüstan)</h3>
-          <p class="sec-note">Siyahıda olmayan stansiya varsa əvvəlcə burada yaradın, sonra dayanacaq kimi seçin.</p>
+          <h3 style="font-size:1rem"><%= t('admin.newStationTitle') %></h3>
+          <p class="sec-note"><%= t('admin.newStationHint') %></p>
           <div class="grid grid--4" style="align-items:end">
-            <div><label>Kod (2-6 hərf)</label><input type="text" name="code" maxlength="6" placeholder="SGH" required /></div>
-            <div><label>Ad</label><input type="text" name="name" placeholder="Sagareco" required /></div>
-            <div><label>Ölkə</label>
-              <select name="country"><option value="GE">Gürcüstan</option><option value="AZ">Azərbaycan</option><option value="TR">Türkiyə</option><option value="RU">Rusiya</option><option value="other">Digər</option></select>
+            <div><label><%= t('admin.stationCodeLabel') %></label><input type="text" name="code" maxlength="6" placeholder="SGH" required /></div>
+            <div><label><%= t('common.name') %></label><input type="text" name="name" placeholder="Sagareco" required /></div>
+            <div><label><%= t('admin.countryLabel') %></label>
+              <select name="country"><option value="GE"><%= t('line.georgiaShort') %></option><option value="AZ"><%= t('admin.ctryAZ') %></option><option value="TR"><%= t('admin.ctryTR') %></option><option value="RU"><%= t('admin.ctryRU') %></option><option value="other"><%= t('admin.ctryOther') %></option></select>
             </div>
-            <div><button type="submit" class="btn btn--outline btn--block">Stansiya əlavə et</button></div>
+            <div><button type="submit" class="btn btn--outline btn--block"><%= t('admin.addStationBtn') %></button></div>
           </div>
         </div></form>
       </div>
@@ -130,7 +130,7 @@
   var TRAIN_ID = <%- isEdit ? j(String(train._id)) : 'null' %>;
   var INITIAL = <%- j(initial) %>;
   var STATIONS = <%- j(stationList) %>;
-  var CTRY = { AZ: 'Azərbaycan', GE: 'Gürcüstan', TR: 'Türkiyə', RU: 'Rusiya', other: 'Digər' };
+  var CTRY = { AZ: <%= JSON.stringify(t('admin.ctryAZ')) %>, GE: <%= JSON.stringify(t('admin.ctryGE')) %>, TR: <%= JSON.stringify(t('admin.ctryTR')) %>, RU: <%= JSON.stringify(t('admin.ctryRU')) %>, other: <%= JSON.stringify(t('admin.ctryOther')) %> };
 
   var form = document.getElementById('trainForm');
   var stopsBody = document.getElementById('stopsBody');
@@ -146,7 +146,7 @@
   function q(v) { return String(v === undefined || v === null ? '' : v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
 
   function stationOptions(selected) {
-    var html = '<option value="">— seçin —</option>';
+    var html = '<option value="">' + <%= JSON.stringify(t('admin.stationSelectPlaceholder')) %> + '</option>';
     STATIONS.forEach(function (s) {
       html += '<option value="' + s.code + '"' + (s.code === selected ? ' selected' : '') + '>' +
         s.name + ' (' + s.code + ') · ' + (CTRY[s.country] || s.country) + '</option>';
@@ -230,7 +230,7 @@
     var r = TRAIN_ID
       ? await window.api('/api/admin/trains/' + TRAIN_ID, payload, 'PUT')
       : await window.api('/api/admin/trains', payload);
-    note(r.message || (r.ok ? 'Yadda saxlanıldı' : 'Alınmadı'), !!r.ok);
+    note(r.message || (r.ok ? <%= JSON.stringify(t('admin.saved')) %> : <%= JSON.stringify(t('msg.operationFailed')) %>), !!r.ok);
     if (r.ok && !TRAIN_ID) setTimeout(function () { window.location.href = '/<%= locale %>/admin/qatarlar'; }, 1200);
   });
 
@@ -240,7 +240,7 @@
     var r = await window.api('/api/admin/stations', {
       code: f.elements.code.value, name: f.elements.name.value, country: f.elements.country.value
     });
-    note(r.message || 'Alınmadı', !!r.ok);
+    note(r.message || <%= JSON.stringify(t('msg.operationFailed')) %>, !!r.ok);
     if (r.ok) {
       STATIONS.push(r.station);
       document.querySelectorAll('#stopsBody select[data-f=code]').forEach(function (sel) {

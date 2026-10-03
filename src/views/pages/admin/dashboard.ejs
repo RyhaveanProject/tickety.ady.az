@@ -15,23 +15,23 @@
           <div class="stat"><div class="stat__label"><%= t('admin.users') %></div><div class="stat__value"><%= stats.users %></div></div>
           <div class="stat"><div class="stat__label"><%= t('admin.orders') %></div><div class="stat__value"><%= stats.orders %></div></div>
           <div class="stat"><div class="stat__label"><%= t('nav.myTickets') %></div><div class="stat__value"><%= stats.tickets %></div></div>
-          <div class="stat"><div class="stat__label">Gəlir</div><div class="stat__value"><%= stats.revenue.toFixed(2) %></div></div>
+          <div class="stat"><div class="stat__label"><%= t('admin.revenue') %></div><div class="stat__value"><%= stats.revenue.toFixed(2) %></div></div>
         </div>
 
         <div class="grid grid--3 mb-24">
-          <div class="stat"><div class="stat__label">Təsdiq gözləyən ödəniş</div><div class="stat__value"><%= stats.pending %></div></div>
-          <div class="stat"><div class="stat__label">Bugünkü reys</div><div class="stat__value"><%= stats.todayTrips %></div></div>
-          <div class="stat"><div class="stat__label">Aktiv reys şablonu</div><div class="stat__value"><%= stats.trains %></div></div>
+          <div class="stat"><div class="stat__label"><%= t('admin.pendingPayment') %></div><div class="stat__value"><%= stats.pending %></div></div>
+          <div class="stat"><div class="stat__label"><%= t('admin.todayTrips') %></div><div class="stat__value"><%= stats.todayTrips %></div></div>
+          <div class="stat"><div class="stat__label"><%= t('admin.activeTemplates') %></div><div class="stat__value"><%= stats.trains %></div></div>
         </div>
 
         <div class="card mb-24">
-          <div class="card__head"><span>Təsdiq gözləyən ödənişlər</span><a href="/<%= locale %>/admin/odenisler" class="btn btn--sm btn--outline"><%= t('home.seeAll') %></a></div>
+          <div class="card__head"><span><%= t('admin.pendingPaymentsTitle') %></span><a href="/<%= locale %>/admin/odenisler" class="btn btn--sm btn--outline"><%= t('home.seeAll') %></a></div>
           <div class="card__body">
             <% if (!pendingPayments.length) { %>
-              <p class="sec-note mb-0">Təsdiq gözləyən ödəniş yoxdur.</p>
+              <p class="sec-note mb-0"><%= t('admin.noPending') %></p>
             <% } else { %>
               <div class="table-wrap"><table class="data">
-                <thead><tr><th>Tranzaksiya</th><th>Kart</th><th><%= t('checkout.total') %></th><th><%= t('account.status') %></th><th></th></tr></thead>
+                <thead><tr><th><%= t('common.tx') %></th><th><%= t('secure3d.card') %></th><th><%= t('checkout.total') %></th><th><%= t('account.status') %></th><th></th></tr></thead>
                 <tbody>
                   <% pendingPayments.forEach(function(p){ %>
                     <tr>
@@ -49,10 +49,10 @@
         </div>
 
         <div class="card mb-24">
-          <div class="card__head"><span>Son sifarişlər</span><a href="/<%= locale %>/admin/sifarisler" class="btn btn--sm btn--outline"><%= t('home.seeAll') %></a></div>
+          <div class="card__head"><span><%= t('admin.recentOrders') %></span><a href="/<%= locale %>/admin/sifarisler" class="btn btn--sm btn--outline"><%= t('home.seeAll') %></a></div>
           <div class="card__body">
             <div class="table-wrap"><table class="data">
-              <thead><tr><th>Sifariş</th><th><%= t('table.route') %></th><th><%= t('common.date') %></th><th><%= t('checkout.total') %></th><th><%= t('account.status') %></th></tr></thead>
+              <thead><tr><th><%= t('payment.orderLabel') %></th><th><%= t('table.route') %></th><th><%= t('common.date') %></th><th><%= t('checkout.total') %></th><th><%= t('account.status') %></th></tr></thead>
               <tbody>
                 <% recentOrders.forEach(function(o){ %>
                   <tr>
@@ -72,14 +72,14 @@
           <div class="card__head"><span><%= t('admin.sync') %></span><a href="/<%= locale %>/admin/sinxronizasiya" class="btn btn--sm btn--outline"><%= t('home.seeAll') %></a></div>
           <div class="card__body">
             <% if (!lastSync) { %>
-              <p class="sec-note mb-0">Sinxronizasiya hələ işlədilməyib.</p>
+              <p class="sec-note mb-0"><%= t('admin.syncNever') %></p>
             <% } else { %>
               <dl class="kv">
-                <dt>Vəziyyət</dt><dd><span class="badge badge--<%= lastSync.status === 'success' ? 'green' : lastSync.status === 'blocked' ? 'gold' : 'gray' %>"><%= lastSync.status %></span></dd>
-                <dt>Vaxt</dt><dd><%= new Date(lastSync.createdAt).toLocaleString('az-AZ') %></dd>
-                <dt>Stansiya</dt><dd><%= lastSync.stationsUpserted %></dd>
-                <dt>Qatar</dt><dd><%= lastSync.trainsUpserted %></dd>
-                <dt>Qeyd</dt><dd><%= lastSync.message || '—' %></dd>
+                <dt><%= t('admin.statusCol') %></dt><dd><span class="badge badge--<%= lastSync.status === 'success' ? 'green' : lastSync.status === 'blocked' ? 'gold' : 'gray' %>"><%= lastSync.status %></span></dd>
+                <dt><%= t('common.time') %></dt><dd><%= new Date(lastSync.createdAt).toLocaleString('az-AZ') %></dd>
+                <dt><%= t('home.statStations') %></dt><dd><%= lastSync.stationsUpserted %></dd>
+                <dt><%= t('table.train') %></dt><dd><%= lastSync.trainsUpserted %></dd>
+                <dt><%= t('common.note') %></dt><dd><%= lastSync.message || '—' %></dd>
               </dl>
             <% } %>
           </div>

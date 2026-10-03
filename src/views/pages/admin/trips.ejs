@@ -17,11 +17,11 @@
             <div>
               <label><%= t('timetable.line') %></label>
               <select name="line">
-                <option value="all" <%= line === 'all' ? 'selected' : '' %>>Bütün xətlər</option>
-                <option value="absheron" <%= line === 'absheron' ? 'selected' : '' %>>Abşeron</option>
-                <option value="domestic" <%= line === 'domestic' ? 'selected' : '' %>>Ölkədaxili</option>
-                <option value="georgia" <%= line === 'georgia' ? 'selected' : '' %>>Gürcüstan</option>
-                <option value="international" <%= line === 'international' ? 'selected' : '' %>>Beynəlxalq</option>
+                <option value="all" <%= line === 'all' ? 'selected' : '' %>><%= t('line.all') %></option>
+                <option value="absheron" <%= line === 'absheron' ? 'selected' : '' %>><%= t('line.absheronShort') %></option>
+                <option value="domestic" <%= line === 'domestic' ? 'selected' : '' %>><%= t('home.domestic') %></option>
+                <option value="georgia" <%= line === 'georgia' ? 'selected' : '' %>><%= t('line.georgiaShort') %></option>
+                <option value="international" <%= line === 'international' ? 'selected' : '' %>><%= t('home.international') %></option>
               </select>
             </div>
             <div><button type="submit" class="btn btn--primary btn--block"><%= t('timetable.show') %></button></div>
@@ -55,8 +55,8 @@
         </div>
 
         <div class="card mt-24"><div class="card__body">
-          <h3 style="font-size:1rem">Reys üzrə yer idarəetməsi</h3>
-          <p class="sec-note">Yer bağlamaq və boş yer açmaq üçün aşağıdaki reysi seçin. Bağlı yerlər satışda göstərilmir.</p>
+          <h3 style="font-size:1rem"><%= t('admin.manageSeatsTitle') %></h3>
+          <p class="sec-note"><%= t('admin.manageSeatsHint') %></p>
           <div class="admin-nav">
             <% rows.forEach(function(r){ %>
               <% if (r.tripId) { %>

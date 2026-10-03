@@ -11,7 +11,7 @@
         <div class="table-wrap">
           <table class="data">
             <thead>
-              <tr><th>Ad, soyad</th><th>E-poçt</th><th>Telefon</th><th>Rol</th><th><%= t('account.balance') %></th><th>Qeydiyyat</th></tr>
+              <tr><th><%= t('contact.nameLabel') %></th><th><%= t('checkout.email') %></th><th><%= t('checkout.phone') %></th><th><%= t('account.role') %></th><th><%= t('account.balance') %></th><th><%= t('nav.register') %></th></tr>
             </thead>
             <tbody>
               <% users.forEach(function(u){ %>
@@ -19,9 +19,9 @@
                   <td><%= [u.lastName, u.firstName, u.middleName].filter(Boolean).join(' ') %></td>
                   <td><%= u.email %></td>
                   <td><%= u.phone || '—' %></td>
-                  <td><span class="badge badge--<%= u.role === 'admin' ? 'gold' : 'gray' %>"><%= u.role === 'admin' ? 'İdarəçi' : 'İstifadəçi' %></span></td>
+                  <td><span class="badge badge--<%= u.role === 'admin' ? 'gold' : 'gray' %>"><%= u.role === 'admin' ? t('account.roleAdmin') : t('account.roleUser') %></span></td>
                   <td class="mono"><%= (u.balance || 0).toFixed(2) %> ₼</td>
-                  <td class="sec-note"><%= new Date(u.createdAt).toLocaleDateString('az-AZ') %></td>
+                  <td class="sec-note"><%= new Date(u.createdAt).toLocaleDateString(dateLocale) %></td>
                 </tr>
               <% }) %>
             </tbody>

@@ -4,9 +4,9 @@
       <div>
         <div class="eyebrow"><%= t('nav.panel') %></div>
         <h1><%= t('admin.sync') %></h1>
-        <p>Mənbə: <a href="<%= sourceUrl %>" target="_blank" rel="noopener"><%= sourceUrl %></a></p>
+        <p><%= t('news.source') %> <a href="<%= sourceUrl %>" target="_blank" rel="noopener"><%= sourceUrl %></a></p>
       </div>
-      <button class="btn btn--primary" data-admin-action="sync">Sinxronizasiyanı işlət</button>
+      <button class="btn btn--primary" data-admin-action="sync"><%= t('admin.runSyncBtn') %></button>
     </div>
 
     <div class="layout-aside">
@@ -14,45 +14,40 @@
 
       <div>
         <div class="grid grid--3 mb-24">
-          <div class="stat"><div class="stat__label">Avtomatik sinxronizasiya</div><div class="stat__value" style="font-size:1.1rem"><%= enabled ? 'Aktiv' : 'Söndürülüb' %></div></div>
-          <div class="stat"><div class="stat__label">İnterval</div><div class="stat__value" style="font-size:1.1rem"><%= intervalHours %> saat</div></div>
-          <div class="stat"><div class="stat__label">Son sinxronizasiya</div><div class="stat__value" style="font-size:1rem"><%= logs.length ? new Date(logs[0].createdAt).toLocaleString('az-AZ') : '—' %></div></div>
+          <div class="stat"><div class="stat__label"><%= t('admin.autoSyncLabel') %></div><div class="stat__value" style="font-size:1.1rem"><%= enabled ? t('common.active') : t('admin.disabled') %></div></div>
+          <div class="stat"><div class="stat__label"><%= t('admin.intervalLabel') %></div><div class="stat__value" style="font-size:1.1rem"><%= intervalHours %> <%= t('admin.hourSuffix') %></div></div>
+          <div class="stat"><div class="stat__label"><%= t('admin.lastSyncLabel') %></div><div class="stat__value" style="font-size:1rem"><%= logs.length ? new Date(logs[0].createdAt).toLocaleString('az-AZ') : '—' %></div></div>
         </div>
 
         <div class="card mb-24"><div class="card__body">
-          <h3 style="font-size:1rem">Baş səhifədəki xəbərdarlıq mesajı</h3>
-          <p class="sec-note">Mesaj MongoDB-də saxlanılır və bütün səhifələrdə canlı göstərilir. Boş saxlasanız, zolaq göstərilmir.</p>
+          <h3 style="font-size:1rem"><%= t('admin.noticeTitle') %></h3>
+          <p class="sec-note"><%= t('admin.noticeText') %></p>
           <div id="noticeNote" class="hidden"></div>
           <form id="noticeForm" class="mt-16">
             <div class="field">
-              <label>Xəbərdarlıq mesajı</label>
+              <label><%= t('admin.noticeLabel') %></label>
               <textarea name="notice" rows="3"><%= noticeValue %></textarea>
             </div>
             <div class="field">
-              <label>Yapışan xəbər (ticker)</label>
+              <label><%= t('admin.tickerLabel') %></label>
               <input type="text" name="ticker" value="<%= tickerValue %>" />
             </div>
-            <button type="submit" class="btn btn--primary btn--sm">Yadda saxla</button>
+            <button type="submit" class="btn btn--primary btn--sm"><%= t('account.save') %></button>
           </form>
         </div></div>
 
         <div class="card mb-24"><div class="card__body">
-          <h3 style="font-size:1rem">Necə işləyir</h3>
-          <p class="sec-note mb-0">
-            Sistem gündəlik olaraq rəsmi mənbədən hərəkət cədvəlini, tarifləri və reysləri oxuyur.
-            Oxunan tarif dəyərləri məlumat bazasındakı reys qiymətlərinə tətbiq olunur və bütün reyslər
-            (Abşeron xətti, ölkədaxili, Gürcüstan daxili və beynəlxalq) canlı olaraq saytda göstərilir.
-            Mənbə təhlükəsizlik qatı ilə qorunduğu hallarda oxuma qeydə alınır və rəsmi cədvəl bazası göstərilir.
-          </p>
+          <h3 style="font-size:1rem"><%= t('admin.howTitle') %></h3>
+          <p class="sec-note mb-0"><%= t('admin.howText') %></p>
         </div></div>
 
         <div class="table-wrap">
           <table class="data">
             <thead>
-              <tr><th>Vaxt</th><th>Vəziyyət</th><th>HTTP</th><th>Stansiya</th><th>Qatar</th><th>Tarif</th><th>Qeyd</th></tr>
+              <tr><th><%= t('common.time') %></th><th><%= t('admin.statusCol') %></th><th><%= t('admin.http') %></th><th><%= t('home.statStations') %></th><th><%= t('table.train') %></th><th><%= t('admin.faresU') %></th><th><%= t('common.note') %></th></tr>
             </thead>
             <tbody>
-              <% if (!logs.length) { %><tr><td colspan="7">Sinxronizasiya qeydi yoxdur.</td></tr><% } %>
+              <% if (!logs.length) { %><tr><td colspan="7"><%= t('admin.noSyncLogs') %></td></tr><% } %>
               <% logs.forEach(function(l){ %>
                 <tr>
                   <td class="sec-note"><%= new Date(l.createdAt).toLocaleString('az-AZ') %></td>
@@ -89,7 +84,7 @@
         notice: noticeForm.querySelector('[name=notice]').value,
         ticker: noticeForm.querySelector('[name=ticker]').value
       });
-      show(r.message || (r.ok ? 'Yadda saxlanıldı' : 'Alınmadı'), !!r.ok);
+      show(r.message || (r.ok ? window.T('admin.saved') : window.T('msg.operationFailed')), !!r.ok);
     });
   }
   var syncBtn = document.querySelector('[data-admin-action="sync"]');
@@ -98,7 +93,7 @@
       window.setLoading(syncBtn, true);
       var r = await window.api('/api/admin/sync/run', {});
       window.setLoading(syncBtn, false);
-      show(r.message || (r.ok ? 'Tamamlandı' : 'Alınmadı'), !!r.ok);
+      show(r.message || (r.ok ? window.T('admin.completed') : window.T('msg.operationFailed')), !!r.ok);
       if (r.ok) setTimeout(function () { window.location.reload(); }, 1200);
     });
   }
