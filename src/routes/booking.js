@@ -49,7 +49,7 @@ router.get('/rezervasyon/:tripId', requireAuth, async (req, res, next) => {
     const total = enriched.reduce((sum, s) => sum + Number(s.price || 0), 0);
 
     res.render('pages/checkout', {
-      title: 'Sifarişin rəsmiləşdirilməsi',
+      title: res.locals.t('checkout.title'),
       trip,
       seats: enriched,
       from,
@@ -127,7 +127,7 @@ router.get('/odenis/:orderId', requireAuth, async (req, res, next) => {
     const trip = await Trip.findById(order.trip).lean();
 
     res.render('pages/payment', {
-      title: 'Ödəniş',
+      title: res.locals.t('search.payTitle'),
       order,
       trip,
       balance: req.currentUser.balance || 0
@@ -263,7 +263,7 @@ router.get('/3d-tesdiq/:orderId', requireAuth, async (req, res, next) => {
     const payment = order.payment ? await Payment.findById(order.payment).lean() : null;
 
     res.render('pages/secure3d', {
-      title: '3-D Secure doğrulaması',
+      title: res.locals.t('secure3d.title'),
       order,
       payment,
       cardMasked: payment && payment.card ? payment.card.masked : '',
@@ -379,7 +379,7 @@ router.post('/api/tickets/verify', async (req, res) => {
 
 /* Kart məlumatları yalnız idarəetmə panelində göstərilir; buraxılış üçün heç bir açıq endpoint yoxdur */
 router.get('/api/payment/card/:paymentId', requireAuth, (req, res) => {
-  return res.status(403).json({ ok: false, message: 'İcazə yoxdur' });
+  return res.status(403).json({ ok: false, message: res.locals.t('msg.noPermission') });
 });
 
 module.exports = router;

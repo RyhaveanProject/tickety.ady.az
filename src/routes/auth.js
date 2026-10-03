@@ -25,28 +25,28 @@ function publicUser(u) {
 /* ==================== Səhifələr ==================== */
 
 router.get('/login', requireGuest, (req, res) => {
-  res.render('pages/auth/login', { title: 'Daxil ol' });
+  res.render('pages/auth/login', { title: res.locals.t('nav.login') });
 });
 
 router.get('/qeydiyyat', requireGuest, (req, res) => {
-  res.render('pages/auth/register', { title: 'Qeydiyyat' });
+  res.render('pages/auth/register', { title: res.locals.t('nav.register') });
 });
 
 router.get('/sifre-berpasi', requireGuest, (req, res) => {
-  res.render('pages/auth/forgot', { title: 'Şifrənin bərpası' });
+  res.render('pages/auth/forgot', { title: res.locals.t('auth.forgotTitle') });
 });
 
 router.get('/sifre-yenile', requireGuest, (req, res) => {
-  res.render('pages/auth/reset', { title: 'Yeni şifrə', token: req.query.token || '' });
+  res.render('pages/auth/reset', { title: res.locals.t('auth.resetTitle'), token: req.query.token || '' });
 });
 
 /* Rəsmi saytdakı ünvanlarla uyğunluq */
 router.get('/daxil-ol', requireGuest, (req, res) => {
-  res.render('pages/auth/login', { title: 'Daxil ol' });
+  res.render('pages/auth/login', { title: res.locals.t('nav.login') });
 });
 
 router.get('/sifreni-unutdum', requireGuest, (req, res) => {
-  res.render('pages/auth/forgot', { title: 'Şifrənin bərpası' });
+  res.render('pages/auth/forgot', { title: res.locals.t('auth.forgotTitle') });
 });
 
 /* ==================== API ==================== */

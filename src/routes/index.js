@@ -49,7 +49,7 @@ router.get('/hereket-cedveli', async (req, res, next) => {
     const stations = await Station.find({ active: true }).sort({ order: 1 }).lean();
 
     res.render('pages/timetable', {
-      title: 'Hərəkət cədvəli',
+      title: res.locals.t('nav.timetable'),
       rows,
       date,
       line,
@@ -68,7 +68,7 @@ router.get('/populyar-istiqametler', async (req, res, next) => {
   try {
     const destinations = await Destination.find({ active: true }).sort({ order: 1 }).lean();
     res.render('pages/destinations', {
-      title: 'Populyar istiqamətlər',
+      title: res.locals.t('nav.destinations'),
       subtitle: 'ADY-nin Ən Populyar İstiqamətləri',
       destinations
     });
@@ -165,7 +165,7 @@ router.get('/xeberler', async (req, res, next) => {
     ]);
 
     res.render('pages/news', {
-      title: 'Xəbərlər',
+      title: res.locals.t('nav.news'),
       items,
       page,
       pages: Math.max(1, Math.ceil(total / perPage)),
@@ -189,7 +189,7 @@ router.get('/xeberler/:slug', async (req, res, next) => {
 
 /* ==================== Bilet yoxlama ==================== */
 router.get('/bilet-yoxlama', (req, res) => {
-  res.render('pages/ticket-verify', { title: 'Bilet yoxlama' });
+  res.render('pages/ticket-verify', { title: res.locals.t('nav.verify') });
 });
 
 module.exports = router;

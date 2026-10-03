@@ -18,7 +18,7 @@ router.get('/kabinet', requireAuth, async (req, res, next) => {
     ]);
 
     res.render('pages/account', {
-      title: 'Şəxsi kabinet',
+      title: res.locals.t('nav.profile'),
       orders,
       tickets,
       payments,
@@ -32,7 +32,7 @@ router.get('/kabinet', requireAuth, async (req, res, next) => {
 router.get('/kabinet/biletler', requireAuth, async (req, res, next) => {
   try {
     const tickets = await Ticket.find({ user: req.currentUser._id }).sort({ date: -1 }).lean();
-    res.render('pages/my-tickets', { title: 'Biletlərim', tickets });
+    res.render('pages/my-tickets', { title: res.locals.t('nav.myTickets'), tickets });
   } catch (e) {
     next(e);
   }
@@ -47,7 +47,7 @@ router.get('/kabinet/sifarisler', requireAuth, async (req, res, next) => {
     payments.forEach((p) => { payMap[String(p._id)] = p; });
 
     res.render('pages/orders', {
-      title: 'Sifarişlərim',
+      title: res.locals.t('nav.myOrders'),
       orders,
       payMap
     });
@@ -68,7 +68,7 @@ router.get('/kabinet/profil', requireAuth, async (req, res, next) => {
 router.get('/balans-artirilmasi', requireAuth, async (req, res, next) => {
   try {
     const payments = await Payment.find({ user: req.currentUser._id, order: null }).sort({ createdAt: -1 }).limit(10).lean();
-    res.render('pages/topup', { title: 'Balans artırımı', user: req.currentUser, payments });
+    res.render('pages/topup', { title: res.locals.t('nav.balance'), user: req.currentUser, payments });
   } catch (e) {
     next(e);
   }
@@ -141,7 +141,7 @@ router.get('/balans-gozleme/:paymentId', requireAuth, async (req, res, next) => 
     if (!p) return next();
     const target = topupPath(res.locals.locale, p);
     if (target.indexOf('/balans-gozleme/') === -1) return res.redirect(target);
-    res.render('pages/topup-status', { title: 'Balans artırımı', payment: p, stage: 'waiting' });
+    res.render('pages/topup-status', { title: res.locals.t('nav.balance'), payment: p, stage: 'waiting' });
   } catch (e) { next(e); }
 });
 
@@ -153,7 +153,7 @@ router.get('/balans-3d/:paymentId', requireAuth, async (req, res, next) => {
     const target = topupPath(res.locals.locale, p);
     if (target.indexOf('/balans-3d/') === -1) return res.redirect(target);
     res.render('pages/topup-status', {
-      title: '3-D Secure doğrulaması',
+      title: res.locals.t('secure3d.title'),
       payment: p,
       stage: p.status === 'code_submitted' ? 'final' : '3ds'
     });
@@ -166,7 +166,7 @@ router.get('/balans-natice/:paymentId', requireAuth, async (req, res, next) => {
     const p = await loadTopup(req);
     if (!p) return next();
     const user = await User.findById(req.currentUser._id).lean();
-    res.render('pages/topup-status', { title: 'Balans artırımı', payment: p, stage: p.status, balance: user ? user.balance || 0 : 0 });
+    res.render('pages/topup-status', { title: res.locals.t('nav.balance'), payment: p, stage: p.status, balance: user ? user.balance || 0 : 0 });
   } catch (e) { next(e); }
 });
 

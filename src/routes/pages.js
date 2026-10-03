@@ -23,7 +23,7 @@ router.get('/sehife/:slug', async (req, res, next) => {
 router.get('/tarifler-ve-odenis', async (req, res, next) => {
   try {
     const pages = await Page.find({ group: 'tariffs', active: true }).sort({ order: 1 }).lean();
-    res.render('pages/tariff', { title: 'Tariflər və ödəniş', pages });
+    res.render('pages/tariff', { title: res.locals.t('nav.tariffs'), pages });
   } catch (e) {
     next(e);
   }
@@ -44,7 +44,7 @@ router.get('/tarifler-ve-odenis/:slug', async (req, res, next) => {
 router.get('/dasima-qaydalari', async (req, res, next) => {
   try {
     const pages = await Page.find({ group: 'rules', active: true }).sort({ order: 1 }).lean();
-    res.render('pages/rules', { title: 'Daşıma qaydaları', pages });
+    res.render('pages/rules', { title: res.locals.t('nav.rules'), pages });
   } catch (e) {
     next(e);
   }
@@ -66,7 +66,7 @@ router.get('/komek', async (req, res, next) => {
   try {
     const faqs = await Faq.find({ active: true }).sort({ order: 1 }).lean();
     const pages = await Page.find({ group: 'rules', active: true }).sort({ order: 1 }).lean();
-    res.render('pages/help', { title: 'Kömək', faqs, pages });
+    res.render('pages/help', { title: res.locals.t('nav.help'), faqs, pages });
   } catch (e) {
     next(e);
   }
@@ -76,7 +76,7 @@ router.get('/komek', async (req, res, next) => {
 router.get('/elaqe', async (req, res, next) => {
   try {
     res.render('pages/contact', {
-      title: 'Əlaqə',
+      title: res.locals.t('nav.contact'),
       sent: req.query.sent === '1'
     });
   } catch (e) {
@@ -126,7 +126,7 @@ router.get('/haqqimizda', async (req, res, next) => {
     }
     if (!page) {
       page = {
-        title: 'Haqqımızda',
+        title: res.locals.t('nav.about'),
         excerpt: 'Azərbaycan Dəmir Yolları QSC',
         content: '<p>Azərbaycan Dəmir Yolları QSC ölkənin əsas dəmir yolu daşıyıcısıdır.</p>'
       };

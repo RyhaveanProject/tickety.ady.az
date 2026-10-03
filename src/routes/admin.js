@@ -61,7 +61,7 @@ async function ensureEnvAdmin() {
 function adminEntry(req, res, next) {
   if (req.currentUser && req.currentUser.role === 'admin') return next();
   const wantsJson = req.xhr || (req.headers.accept || '').includes('application/json');
-  if (wantsJson) return res.status(403).json({ ok: false, message: 'İcazə yoxdur' });
+  if (wantsJson) return res.status(403).json({ ok: false, message: res.locals.t('msg.noPermission') });
   return res.redirect('/' + config.defaultLocale + '/login?next=' + encodeURIComponent(req.originalUrl));
 }
 
@@ -129,7 +129,7 @@ pages.get('/odenisler', requireAdmin, async (req, res, next) => {
     users.forEach((u) => { userMap[String(u._id)] = u; });
 
     res.render('pages/admin/payments', {
-      title: 'Ödəniş təsdiqləri',
+      title: res.locals.t('admin.payments'),
       payments,
       orderMap,
       userMap,
@@ -149,7 +149,7 @@ pages.get('/sifarisler', requireAdmin, async (req, res, next) => {
     const userMap = {};
     users.forEach((u) => { userMap[String(u._id)] = u; });
 
-    res.render('pages/admin/orders', { title: 'Sifarişlər', orders, userMap, status, pending: await pendingCount() });
+    res.render('pages/admin/orders', { title: res.locals.t('admin.orders'), orders, userMap, status, pending: await pendingCount() });
   } catch (e) { next(e); }
 });
 
@@ -169,7 +169,7 @@ pages.get('/reysler', requireAdmin, async (req, res, next) => {
     rows.forEach((r) => { r.tripId = tripMap[r.number] || ''; });
 
     res.render('pages/admin/trips', {
-      title: 'Reyslər və yerlər',
+      title: res.locals.t('admin.trips'),
       rows, date, line, stations,
       dateText: h.azDate(date),
       today: h.todayISO(),
@@ -202,7 +202,7 @@ pages.get('/qatarlar', requireAdmin, async (req, res, next) => {
     const line = req.query.line || 'all';
     const filter = line === 'all' ? {} : { line };
     const trains = await Train.find(filter).sort({ number: 1 }).limit(300).lean();
-    res.render('pages/admin/trains', { title: 'Qatarlar', trains, line, total: trains.length, pending: await pendingCount() });
+    res.render('pages/admin/trains', { title: res.locals.t('admin.trains'), trains, line, total: trains.length, pending: await pendingCount() });
   } catch (e) { next(e); }
 });
 
@@ -211,7 +211,7 @@ pages.get('/qatarlar/yeni', requireAdmin, async (req, res, next) => {
   try {
     const stations = await Station.find({ active: true }).sort({ country: 1, order: 1 }).lean();
     res.render('pages/admin/train-form', {
-      title: 'Yeni bilet / reys əlavə et',
+      title: res.locals.t('admin.newTitle'),
       train: null,
       stations,
       pending: await pendingCount()
@@ -236,7 +236,7 @@ pages.get('/qatarlar/:id/redakte', requireAdmin, async (req, res, next) => {
 pages.get('/istifadeciler', requireAdmin, async (req, res, next) => {
   try {
     const users = await User.find().sort({ createdAt: -1 }).limit(200).lean();
-    res.render('pages/admin/users', { title: 'İstifadəçilər', users, pending: await pendingCount() });
+    res.render('pages/admin/users', { title: res.locals.t('admin.users'), users, pending: await pendingCount() });
   } catch (e) { next(e); }
 });
 
@@ -247,7 +247,7 @@ pages.get('/sinxronizasiya', requireAdmin, async (req, res, next) => {
     const noticeRow = await Setting.findOne({ key: 'notice' }).lean();
     const tickerRow = await Setting.findOne({ key: 'notice_ticker' }).lean();
     res.render('pages/admin/sync', {
-      title: 'Canlı sinxronizasiya',
+      title: res.locals.t('admin.sync'),
       logs,
       sourceUrl: config.liveSourceUrl,
       enabled: config.liveSyncEnabled,

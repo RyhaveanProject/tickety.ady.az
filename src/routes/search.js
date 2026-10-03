@@ -12,7 +12,7 @@ router.get('/bilet-axtar', async (req, res, next) => {
   try {
     const stations = await Station.find({ active: true }).sort({ order: 1 }).lean();
     res.render('pages/ticket-search', {
-      title: 'Bilet axtarışı',
+      title: res.locals.t('search.pageTitle'),
       stations,
       today: h.todayISO(),
       maxDate: await scheduleService.maxSaleDate(),
@@ -49,7 +49,7 @@ router.get('/reysler', async (req, res, next) => {
     const results = await scheduleService.searchTrips(from, to, date);
 
     res.render('pages/results', {
-      title: 'Reyslər',
+      title: res.locals.t('results.title'),
       results,
       from,
       to,
@@ -79,7 +79,7 @@ router.get('/yer-secimi/:tripId', async (req, res, next) => {
     const toStop = trip.stops.find((s) => s.code === to) || trip.stops[trip.stops.length - 1];
 
     res.render('pages/seats', {
-      title: 'Yer seçimi',
+      title: res.locals.t('seats.title'),
       trip,
       classMaps,
       from,
