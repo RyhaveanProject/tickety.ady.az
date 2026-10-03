@@ -113,6 +113,8 @@ app.use((req, res, next) => {
 });
 
 /* ==================== Sağlamlıq ==================== */
+/* UptimeRobot üçün yüngül ping (GET və HEAD) — bazaya toxunmur */
+app.all('/ping', (req, res) => { res.set('Cache-Control', 'no-store'); res.status(200).send('pong'); });
 app.get('/healthz', (req, res) => {
   res.json({ ok: true, db: isConnected() ? 'connected' : 'disconnected', uptime: Math.round(process.uptime()) });
 });
@@ -162,7 +164,11 @@ app.use('/:lang(' + localesPattern + ')', (req, res, next) => {
       const { translate } = require('./src/config/i18n');
       return translate.apply(null, [lang].concat(Array.prototype.slice.call(arguments)));
     };
+    res.locals.dateLocale = ({ az: 'az-AZ', en: 'en-GB', ru: 'ru-RU' })[lang] || 'az-AZ';
     if (req.session) req.session.locale = lang;
+    /* HTML keşlənməsin — əks halda brauzer köhnə dildəki səhifəni göstərirdi */
+    res.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+    res.set('Vary', 'Cookie');
   }
   next();
 });
@@ -256,6 +262,7 @@ async function start() {
   scheduleSync();
 
   const port = process.env.PORT || config.port;
+  try { require('./src/services/keepAlive').start(); } catch (e) { console.warn('[keepalive]', e.message); }
   app.listen(port, () => {
     console.log('ADY bilet portalı işə düşdü — port ' + port);
     console.log('Mühit: ' + config.nodeEnv + ' | Canlı mənbə: ' + config.liveSourceUrl);
