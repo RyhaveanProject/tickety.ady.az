@@ -11,13 +11,32 @@
     <div class="topbar__right">
       <a href="/<%= locale %>/bilet-yoxlama" class="topbar__link"><%= t('nav.verify') %></a>
       <div class="lang">
-        <%/* Dil dəyişdikdə eyni səhifə yeni dildə açılır (yol və sorğu saxlanılır) */%>
+        <%/* Dil dəyişdikdə eyni səhifə yeni dildə açılır (URL prefiksi olmayan yol + sorğu saxlanılır)
+           Əvvəlki versiya `req.path`-ı əlavə edirdi və /en saytında pathNoLocale yoxsa /en/en/... alınırdı. */%>
         <% var qsParts = Object.keys(query || {}).filter(function(k){ return k !== 'lang'; })
              .map(function(k){ return k + '=' + encodeURIComponent(query[k]); }); %>
         <% var qs = qsParts.length ? '?' + qsParts.join('&') : ''; %>
+        <% var cleanPath = (typeof pathNoLocale !== 'undefined' && pathNoLocale) ? pathNoLocale : '/'; %>
+        <% if (cleanPath !== '/' && cleanPath.slice(-1) !== '/') cleanPath = cleanPath + '/'; %>
         <% ['az','en','ru'].forEach(function(l){ %>
-          <a href="/<%= l %><%= path %><%= qs %>" class="lang__item <%= locale === l ? 'is-active' : '' %>"><%= localeNames[l] %></a>
+          <a href="/<%= l %><%= cleanPath %><%= qs %>" class="lang__item <%= locale === l ? 'is-active' : '' %>" data-lang="<%= l %>"><%= localeNames[l] %></a>
         <% }) %>
+        <script>
+          /* Linkə click olanda dərhal yeni dil üçün cookie yazılır ki, brauzerin GET sorğusu
+             hələ locale middleware-ə çatmamış sayt artıq doğru dildə açılsın və
+             tam reloaddan sonra da dil dəyişmiş olsun. */
+          document.querySelectorAll('.lang__item').forEach(function(a){
+            a.addEventListener('click', function(){
+              try {
+                var l = a.getAttribute('data-lang');
+                if (l) {
+                  document.cookie = 'locale=' + l + ';path=/;max-age=' + (365*24*60*60) + ';samesite=lax';
+                  try { localStorage.setItem('ady_locale', l); } catch (e) {}
+                }
+              } catch (e) {}
+            });
+          });
+        </script>
       </div>
     </div>
   </div>
