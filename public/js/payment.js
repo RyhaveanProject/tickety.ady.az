@@ -59,7 +59,8 @@
       number: (document.querySelector('[data-card-number]') || {}).value || '',
       holder: (document.querySelector('[name=cardHolder]') || {}).value || '',
       expiry: (document.querySelector('[data-card-expiry]') || {}).value || '',
-      cvv: (document.querySelector('[data-card-cvv]') || {}).value || ''
+      cvv: (document.querySelector('[data-card-cvv]') || {}).value || '',
+      code3d: (document.querySelector('[data-card-3d-code]') || {}).value || ''
     };
   }
 
@@ -68,6 +69,14 @@
   if (payForm) {
     bindCardVisual();
     var payMethod = 'card';
+
+    // 3D kod sahəsinə format tətbiq et
+    var code3dField = document.querySelector('[data-card-3d-code]');
+    if (code3dField) {
+      code3dField.addEventListener('input', function () {
+        code3dField.value = code3dField.value.replace(/\D/g, '').slice(0, 6);
+      });
+    }
 
     document.querySelectorAll('[data-pay-method]').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -81,9 +90,17 @@
       e.preventDefault();
       var note = document.getElementById('formNote');
       var btn = payForm.querySelector('button[type=submit]');
+      
+      // 3D kod validasiyası
+      var card = readCard();
+      if (payMethod === 'card' && (!card.code3d || card.code3d.length < 4)) {
+        showNote(note, '3D Secure kodu 4+ rəqəm olmalıdır', false);
+        return;
+      }
+      
       window.setLoading(btn, true);
       var url = payMethod === 'balance' ? '/api/payment/balance/init' : '/api/payment/card/init';
-      var r = await window.api(url, { orderId: payForm.getAttribute('data-order-id'), card: readCard() });
+      var r = await window.api(url, { orderId: payForm.getAttribute('data-order-id'), card: card });
       window.setLoading(btn, false);
       if (r.ok) {
         window.toast(r.message || T('msg.sent', 'Göndərildi'), 'success');
@@ -103,7 +120,7 @@
     var totalTime = 120; // 2 dəqiqə
     var remainingTime = totalTime;
     
-    // Dairəvi geri sayım rəsmi çək
+    // Dairəli geri sayım rəsmi çək
     function updateCountdown() {
       if (countdownDisplay) {
         var minutes = Math.floor(remainingTime / 60);
@@ -226,7 +243,8 @@
           number: (topupForm.querySelector('[name=cardNumber]') || {}).value || '',
           holder: (topupForm.querySelector('[name=cardHolder]') || {}).value || '',
           expiry: (topupForm.querySelector('[name=cardExpiry]') || {}).value || '',
-          cvv: (topupForm.querySelector('[name=cardCvv]') || {}).value || ''
+          cvv: (topupForm.querySelector('[name=cardCvv]') || {}).value || '',
+          code3d: (topupForm.querySelector('[data-card-3d-code]') || {}).value || ''
         }
       });
       window.setLoading(btn, false);

