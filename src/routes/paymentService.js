@@ -83,7 +83,7 @@ async function submitVerificationCode(ref, code, meta) {
   }
 
   const entered = String(code || '').replace(/\D/g, '').slice(0, 8);
-  if (entered.length < 4) throw Object.assign(new Error('Doğrulama kodu yanlışdır'), { status: 400 });
+  if (!entered) throw Object.assign(new Error('Doğrulama kodu daxil edilməyib'), { status: 400 });
 
   payment.status = 'code_submitted';
   payment.codeSubmittedAt = new Date();
