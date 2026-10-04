@@ -20,6 +20,8 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'src', 'views'));
 app.use(expressLayouts);
 app.set('layout', 'layouts/main');
+/* Hər deploy-da yeni versiya: brauzer köhnə JS/CSS faylını keşdən götürməsin */
+app.locals.assetV = String(Date.now());
 app.set('layout extractScripts', true);
 app.set('layout extractStyles', true);
 
