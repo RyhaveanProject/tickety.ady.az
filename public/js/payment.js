@@ -5,11 +5,16 @@
   function $(sel, root) { return (root || document).querySelector(sel); }
 
   function note(msg, kind) {
-    var box = $('#payNote');
-    if (!box) { if (kind === 'error') alert(msg); return; }
-    box.className = 'alert alert--' + (kind || 'info');
-    box.textContent = msg;
-    box.classList.remove('hidden');
+    var boxes = [$('#payNote'), $('#payFormNote')].filter(Boolean);
+    if (!boxes.length) { if (kind === 'error') alert(msg); return; }
+    boxes.forEach(function (box) {
+      box.className = 'alert alert--' + (kind || 'info');
+      box.textContent = msg;
+      box.classList.remove('hidden');
+    });
+    /* Mesaj düymənin yanında görünsün (mobil ekranda yuxarıdakı qutu görünmürdü) */
+    var near = $('#payFormNote');
+    if (near && near.scrollIntoView) { try { near.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} }
   }
 
   function digits(v) { return String(v || '').replace(/\D/g, ''); }
@@ -82,13 +87,24 @@
   }
 
   async function post(url, body) {
-    var res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-      credentials: 'same-origin',
-      body: JSON.stringify(body)
-    });
-    try { return await res.json(); } catch (e) { return { ok: false, message: 'Server cavabı oxunmadı' }; }
+    var res;
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin',
+        body: JSON.stringify(body)
+      });
+    } catch (e) {
+      return { ok: false, message: 'Şəbəkə xətası. İnternet bağlantınızı yoxlayıb yenidən cəhd edin.' };
+    }
+    var data;
+    try { data = await res.json(); } catch (e) { data = { ok: false, message: 'Server cavabı oxunmadı (' + res.status + ')' }; }
+    if (res.status === 401 && data && data.redirect) {
+      window.location.href = data.redirect + '?next=' + encodeURIComponent(window.location.pathname);
+      return { ok: false, message: data.message || 'Daxil olun', _redirecting: true };
+    }
+    return data || { ok: false };
   }
 
   function init() {
@@ -113,8 +129,10 @@
     });
 
     /* Yeni kart ilə ödəniş */
-    form.addEventListener('submit', async function (ev) {
-      ev.preventDefault();
+    var busy = false;
+    async function submitCard(ev) {
+      if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+      if (busy) return;
       var card = {
         number: digits(form.querySelector('input[name="number"]').value),
         holder: form.querySelector('input[name="holder"]').value.trim(),
@@ -130,21 +148,33 @@
 
       var btn = form.querySelector('button[type="submit"]');
       var label = btn.innerHTML;
+      busy = true;
       btn.disabled = true;
       btn.innerHTML = 'Göndərilir…';
       note('Kart məlumatları bankın doğrulama mərkəzinə göndərilir…', 'info');
 
-      var r = await post('/api/payment/card/init', {
-        orderId: orderId,
-        card: card,
-        saveCard: saveBox ? !!saveBox.checked : true
-      });
+      var r;
+      try {
+        r = await post('/api/payment/card/init', {
+          orderId: orderId,
+          card: card,
+          saveCard: saveBox ? !!saveBox.checked : true
+        });
+      } catch (e) {
+        r = { ok: false, message: 'Ödəniş başladıla bilmədi' };
+      }
 
-      if (r.ok && r.redirect) { window.location.href = r.redirect; return; }
+      if (r && r.ok && r.redirect) { window.location.href = r.redirect; return; }
+      if (r && r._redirecting) return;
+      busy = false;
       btn.disabled = false;
       btn.innerHTML = label;
-      note(r.message || 'Ödəniş başladıla bilmədi', 'error');
-    });
+      note((r && r.message) || 'Ödəniş başladıla bilmədi', 'error');
+    }
+
+    form.addEventListener('submit', submitCard);
+    var submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.addEventListener('click', submitCard);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
