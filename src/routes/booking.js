@@ -56,7 +56,7 @@ function validateCode(code) {
 }
 
 // ==================== ÖDƏNIŞ YARATMA (CHECKOUT) ====================
-router.get('/yer-secimi/:tripId', requireAuth, async (req, res, next) => {
+router.get('/rezervasyon/:tripId', requireAuth, async (req, res, next) => {
   try {
     const trip = await Trip.findById(req.params.tripId).lean();
     if (!trip) return next();
@@ -68,7 +68,8 @@ router.get('/yer-secimi/:tripId', requireAuth, async (req, res, next) => {
       seats = [];
     }
     if (!Array.isArray(seats) || !seats.length) {
-      return res.redirect('/' + res.locals.locale + '/yer-secimi/' + req.params.tripId);
+      const back = new URLSearchParams({ from: String(req.query.from || ''), to: String(req.query.to || '') });
+      return res.redirect('/' + res.locals.locale + '/yer-secimi/' + req.params.tripId + '?' + back.toString());
     }
 
     const from = String(req.query.from || (trip.stops[0] || {}).code || '');
