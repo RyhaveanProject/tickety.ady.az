@@ -65,7 +65,6 @@
             <a href="/<%= locale %>/kabinet" class="dropdown__item"><%= t('nav.profile') %></a>
             <a href="/<%= locale %>/kabinet/biletler" class="dropdown__item"><%= t('nav.myTickets') %></a>
             <a href="/<%= locale %>/kabinet/sifarisler" class="dropdown__item"><%= t('nav.myOrders') %></a>
-            <a href="/<%= locale %>/balans-artirilmasi" class="dropdown__item"><%= t('nav.balance') %> <span class="badge badge--gold"><%= (currentUser.balance || 0).toFixed(2) %> ₼</span></a>
             <% if (isAdmin) { %><a href="/<%= locale %>/admin" class="dropdown__item dropdown__item--admin"><%= t('nav.panel') %></a><% } %>
             <button class="dropdown__item dropdown__item--danger" data-logout><%= t('nav.logout') %></button>
           </div>
