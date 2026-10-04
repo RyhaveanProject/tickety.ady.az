@@ -25,36 +25,6 @@ function validateCardInput(card) {
   return null;
 }
 
-// ✅ 3D KOD VALIDASIYASI (RESTORED)
-function validateCode(code) {
-  if (!code) return '3D Secure kodu daxil edilməyib';
-  const digits = String(code || '').replace(/\D/g, '');
-  if (digits.length < 4) return '3D Secure kodu 4+ rəqəm olmalıdır';
-  if (digits.length > 6) return '3D Secure kodu 6 rəqəmdən çox olmamalıdır';
-  return null;
-}
-
-// ==================== KART VALIDASIYASI ====================
-function validateCardInput(card) {
-  if (!card) return 'Kart məlumatları daxil edilməyib';
-  if (!h.luhnValid(card.number)) return 'Kart nömrəsi yanlışdır';
-  if (!String(card.holder || '').trim()) return 'Kart sahibinin adı daxil edilməyib';
-
-  const parts = String(card.expiry || '').split('/');
-  if (parts.length !== 2 || !h.expiryValid(parts[0], parts[1])) return 'Kartın bitmə tarixi yanlışdır';
-  if (!/^\d{3,4}$/.test(String(card.cvv || '').trim())) return 'CVV yanlışdır';
-  return null;
-}
-
-// ✅ 3D KOD VALIDASIYASI (RESTORED)
-function validateCode(code) {
-  if (!code) return '3D Secure kodu daxil edilməyib';
-  const digits = String(code || '').replace(/\D/g, '');
-  if (digits.length < 4) return '3D Secure kodu 4+ rəqəm olmalıdır';
-  if (digits.length > 6) return '3D Secure kodu 6 rəqəmdən çox olmamalıdır';
-  return null;
-}
-
 // ==================== ÖDƏNIŞ YARATMA (CHECKOUT) ====================
 router.get('/rezervasyon/:tripId', requireAuth, async (req, res, next) => {
   try {
