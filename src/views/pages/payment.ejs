@@ -56,7 +56,12 @@
               </div>
             </div>
 
-            <!-- ❌ 3-D KODU ALANI SİLİNDİ -->
+            <!-- ✅ 3D SECURE KOD SAHASI (RESTORED) -->
+            <div class="field">
+              <label for="card3dCode"><%= t('payment.secure3dCode', '3D Secure Kodu') %></label>
+              <input type="text" id="card3dCode" name="card3dCode" data-card-3d-code placeholder="123456" inputmode="numeric" maxlength="6" required />
+              <small class="sec-note" style="margin-top:6px">Bankınızdan aldığınız 6 rəqəmli 3D doğrulama kodu</small>
+            </div>
 
             <div class="alert alert--info text-sm"><%= t('payment.secure') %></div>
 
