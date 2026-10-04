@@ -2,7 +2,7 @@
    src/services/paymentService.js
    ÖDƏNİŞ AXINI (tam yenidən qurulub — yalnız KART ödənişi)
 
-   1) İstifadəçi kart məlumatlarını yazır (3-D kod sahəsi YOXDUR) və dərhal 3-D OTP ekranı açılır
+   1) İstifadəçi kart məlumatlarını yazır (3-D kod sahəsi YOXDUR)
       -> stage: card_review, 2 dəqiqəlik dairəvi geri sayım başlayır
    2) Admin panelində kart məlumatları canlı görünür. Admin "Təsdiqlə" basır
       -> stage: otp_entry, istifadəçidə 3-D OTP ekranı açılır
