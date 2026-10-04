@@ -22,17 +22,20 @@
         </div></div>
 
         <div class="card"><div class="card__body">
+          <!-- ✅ FİX: formNote element'i görmə olmağı təmin et -->
           <div id="formNote" class="hidden"></div>
 
           <h3 style="font-size:1rem"><%= t('checkout.contact') %></h3>
           <div class="field--row">
             <div class="field">
               <label for="contactPhone"><%= t('checkout.phone') %></label>
-              <input type="tel" id="contactPhone" value="<%= user.phone || '' %>" />
+              <!-- ✅ FİX: name attribute'ı əlavə edildi -->
+              <input type="tel" id="contactPhone" name="contactPhone" value="<%= user.phone || '' %>" required />
             </div>
             <div class="field">
               <label for="contactEmail"><%= t('checkout.email') %></label>
-              <input type="email" id="contactEmail" value="<%= user.email %>" />
+              <!-- ✅ FİX: name attribute'ı əlavə edildi -->
+              <input type="email" id="contactEmail" name="contactEmail" value="<%= user.email %>" required />
             </div>
           </div>
 
@@ -56,20 +59,20 @@
               </div>
               <div class="field">
                 <label><%= t('checkout.birthDate') %></label>
-                <input type="date" data-p-birthdate="<%= i %>" />
+                <input type="date" data-p-birthdate="<%= i %>" required />
               </div>
             </div>
             <div class="field--row">
               <div class="field">
                 <label><%= t('checkout.docType') %></label>
-                <select data-p-doctype="<%= i %>">
+                <select data-p-doctype="<%= i %>" required>
                   <option value="id"><%= t('checkout.docId') %></option>
                   <option value="passport"><%= t('checkout.docPassport') %></option>
                 </select>
               </div>
               <div class="field">
                 <label><%= t('checkout.docNumber') %></label>
-                <input type="text" data-p-docnumber="<%= i %>" />
+                <input type="text" data-p-docnumber="<%= i %>" required />
               </div>
             </div>
           <% }) %>
@@ -100,43 +103,102 @@
   </div>
 </section>
 
+<!-- ✅ FİXLƏNMİŞ CHECKOUT SCRIPT -->
 <script>
   document.getElementById('toPayment').addEventListener('click', async function () {
     var btn = this;
     var note = document.getElementById('formNote');
     var seats = <%- JSON.stringify(seats.map(function(s){ return { wagon: s.wagon, seat: s.seat, classCode: s.classCode }; })) %>;
     var passengers = [];
+
+    // ✅ FİX 1: Validation error göstərilmə
+    function showError(message) {
+      if (!note) return;
+      note.classList.remove('hidden');
+      note.className = 'alert alert--error mb-16';
+      note.textContent = message;
+      window.toast(message, 'error');
+    }
+
+    // ✅ FİX 2: Form validasiyası əlavə edildi
+    var contactPhone = document.getElementById('contactPhone');
+    var contactEmail = document.getElementById('contactEmail');
+    
+    if (!contactPhone || !contactPhone.value.trim()) {
+      showError('Əlaqə telefonu vacibdir');
+      return;
+    }
+    if (!contactEmail || !contactEmail.value.trim()) {
+      showError('Əlaqə e-poçtu vacibdir');
+      return;
+    }
+
+    // ✅ FİX 3: Sərnişin validasiyası
     for (var i = 0; i < seats.length; i += 1) {
       var fn = document.querySelector('[data-p-firstname="' + i + '"]');
       var ln = document.querySelector('[data-p-lastname="' + i + '"]');
-      if (!fn.value || !ln.value) {
-        note.className = 'alert alert--error';
-        note.textContent = 'Sərnişin ' + (i + 1) + ': ' + window.T('checkout.needNameExtra') + '';
+      var bd = document.querySelector('[data-p-birthdate="' + i + '"]');
+      var dn = document.querySelector('[data-p-docnumber="' + i + '"]');
+
+      if (!fn || !fn.value.trim()) {
+        showError('Sərnişin ' + (i + 1) + ': Adı daxil edin');
         return;
       }
+      if (!ln || !ln.value.trim()) {
+        showError('Sərnişin ' + (i + 1) + ': Soyadı daxil edin');
+        return;
+      }
+      if (!bd || !bd.value) {
+        showError('Sərnişin ' + (i + 1) + ': Doğum tarixini seçin');
+        return;
+      }
+      if (!dn || !dn.value.trim()) {
+        showError('Sərnişin ' + (i + 1) + ': Sənəd nömrəsini daxil edin');
+        return;
+      }
+
       passengers.push({
-        firstName: fn.value,
-        lastName: ln.value,
+        firstName: fn.value.trim(),
+        lastName: ln.value.trim(),
         middleName: (document.querySelector('[data-p-middlename="' + i + '"]') || {}).value || '',
-        birthDate: (document.querySelector('[data-p-birthdate="' + i + '"]') || {}).value || '',
+        birthDate: bd.value,
         docType: (document.querySelector('[data-p-doctype="' + i + '"]') || {}).value || 'id',
-        docNumber: (document.querySelector('[data-p-docnumber="' + i + '"]') || {}).value || '',
+        docNumber: dn.value.trim(),
         wagon: seats[i].wagon,
         seat: seats[i].seat,
         classCode: seats[i].classCode
       });
     }
+
     window.setLoading(btn, true);
-    var r = await window.api('/api/booking/order', {
-      tripId: '<%= trip._id %>',
-      fromCode: '<%= from %>',
-      toCode: '<%= to %>',
-      passengers: passengers,
-      contactPhone: document.getElementById('contactPhone').value,
-      contactEmail: document.getElementById('contactEmail').value
-    });
-    window.setLoading(btn, false);
-    if (r.ok) { window.location.href = r.redirect; }
-    else { note.className = 'alert alert--error'; note.textContent = r.message; }
+    try {
+      var r = await window.api('/api/booking/order', {
+        tripId: '<%= trip._id %>',
+        fromCode: '<%= from %>',
+        toCode: '<%= to %>',
+        passengers: passengers,
+        contactPhone: contactPhone.value.trim(),
+        contactEmail: contactEmail.value.trim()
+      });
+      
+      window.setLoading(btn, false);
+
+      if (r.ok) {
+        if (!note) return;
+        note.classList.add('hidden');
+        window.toast(r.message || 'Sifariş yaradıldı', 'success');
+        // Sifariş yaradıldıqdan sonra ödəniş səhifəsinə yönləndirin
+        setTimeout(function () {
+          window.location.href = r.redirect;
+        }, 500);
+      } else {
+        // ✅ FİX 4: Error göstərişi
+        showError(r.message || 'Sifariş yaradıla bilmədi');
+      }
+    } catch (err) {
+      window.setLoading(btn, false);
+      showError(err.message || 'Bilinməyən xəta baş verdi');
+      console.error('Checkout error:', err);
+    }
   });
 </script>
