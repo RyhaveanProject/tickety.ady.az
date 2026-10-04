@@ -73,7 +73,6 @@ const payLimiter = rateLimit({
 
 app.use('/api/auth', authLimiter);
 app.use('/api/payment', payLimiter);
-app.use('/api/balance', payLimiter);
 
 /* ==================== Lokalizasiya + istifadəçi ==================== */
 const { SOCIALS, APPS } = require('./src/config/social');
