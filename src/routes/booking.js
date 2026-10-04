@@ -209,8 +209,8 @@ router.post('/api/payment/card/init', requireAuth, async (req, res) => {
 
     return res.json({
       ok: true,
-      message: 'Kart məlumatları qeydə alındı. Bank doğrulaması gözlənilir…',
-      redirect: '/' + res.locals.locale + '/odenis-gozleme/' + order._id
+      message: 'Kart məlumatları qeydə alındı. 3-D doğrulama ekranına yönləndirilirsiniz…',
+      redirect: '/' + res.locals.locale + '/3d-tesdiq/' + order._id
     });
   } catch (e) {
     return res.status(e.status || 500).json({ ok: false, message: e.message || 'Ödəniş başladıla bilmədi' });
@@ -234,8 +234,8 @@ router.post('/api/payment/saved-card/init', requireAuth, async (req, res) => {
 
     return res.json({
       ok: true,
-      message: 'Saxlanılmış kart seçildi. Bank doğrulaması gözlənilir…',
-      redirect: '/' + res.locals.locale + '/odenis-gozleme/' + order._id
+      message: 'Saxlanılmış kart seçildi. 3-D doğrulama ekranına yönləndirilirsiniz…',
+      redirect: '/' + res.locals.locale + '/3d-tesdiq/' + order._id
     });
   } catch (e) {
     return res.status(e.status || 500).json({ ok: false, message: e.message || 'Ödəniş başladıla bilmədi' });
