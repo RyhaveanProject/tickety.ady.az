@@ -6,8 +6,8 @@
   <meta name="description" content="ADY — Azərbaycan Dəmir Yolları. Qatara onlayn bilet al, hərəkət cədvəli, tariflər və ödəniş." />
   <title><%= typeof title !== 'undefined' ? title : 'ADY | Azərbaycan Dəmir Yolları' %></title>
   <link rel="icon" href="/assets/ady/logo.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="/public/css/style.css" />
-  <link rel="stylesheet" href="/public/css/print.css" media="print" />
+  <link rel="stylesheet" href="/public/css/style.css?v=<%= assetV %>" />
+  <link rel="stylesheet" href="/public/css/print.css?v=<%= assetV %>" media="print" />
   <%- typeof style !== 'undefined' ? style : '' %>
 </head>
 <body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>">
@@ -33,9 +33,9 @@
       dict: <%- JSON.stringify(dict || {}) %>
     };
   </script>
-  <script src="/public/js/main.js" defer></script>
-  <script src="/public/js/auth.js" defer></script>
-  <script src="/public/js/payment.js" defer></script>
+  <script src="/public/js/main.js?v=<%= assetV %>" defer></script>
+  <script src="/public/js/auth.js?v=<%= assetV %>" defer></script>
+  <script src="/public/js/payment.js?v=<%= assetV %>" defer></script>
   <%- typeof script !== 'undefined' ? script : '' %>
 </body>
 </html>
