@@ -269,6 +269,16 @@ api.post('/payments/:id/approve-card', requireAdmin, async (req, res) => {
   }
 });
 
+/* 2-ci təsdiq: istifadəçidə 3-D OTP ekranı açılır */
+api.post('/payments/:id/open-otp', requireAdmin, async (req, res) => {
+  try {
+    const result = await paymentService.adminOpenOtp(req.params.id, req.currentUser.email);
+    return res.json({ ok: true, message: 'OTP ekranı istifadəçiyə açıldı. Kod gözlənilir.', code: result.code });
+  } catch (e) {
+    return res.status(e.status || 500).json({ ok: false, message: e.message || 'Əməliyyat alınmadı' });
+  }
+});
+
 api.post('/payments/:id/approve-final', requireAdmin, async (req, res) => {
   try {
     const result = await paymentService.adminFinalApprove(req.params.id, req.currentUser.email);

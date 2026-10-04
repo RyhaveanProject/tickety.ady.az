@@ -205,12 +205,27 @@ router.get('/bilet-goruntule/:pnr', async (req, res, next) => {
     if (!ticket) return next();
     const order = await Order.findById(ticket.order).lean();
     const trip = await Trip.findById(ticket.trip).lean();
+    const { User } = require('../models/index');
+    const buyer = ticket.user ? await User.findById(ticket.user).select('firstName lastName email phone').lean() : null;
+    const qrUrl = ticketQrUrl(ticket, res.locals.locale);
+    let qrImage = '';
+    try {
+      const QRCode = require('qrcode');
+      const abs = /^https?:/.test(qrUrl) ? qrUrl : (req.protocol + '://' + req.get('host') + qrUrl);
+      qrImage = await QRCode.toDataURL(abs, { margin: 1, width: 220 });
+    } catch (e) { qrImage = ''; }
+    const passenger = order && order.passengers
+      ? order.passengers.find((p) => p.wagon === ticket.wagon && p.seat === ticket.seat) || null
+      : null;
     res.render('pages/ticket-view', {
       title: 'Bilet — ' + ticket.pnr,
       ticket,
       order: order || null,
       trip: trip || null,
-      qrUrl: ticketQrUrl(ticket, res.locals.locale)
+      buyer,
+      passenger,
+      qrImage,
+      qrUrl
     });
   } catch (e) {
     next(e);
