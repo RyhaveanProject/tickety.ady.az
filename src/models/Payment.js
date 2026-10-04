@@ -44,7 +44,6 @@ const paymentSchema = new mongoose.Schema({
   usingSavedCard: { type: Boolean, default: false }, /* Bu ödəniş saxlanılmış kart ilə edilibmi */
 
   /* 3-D Secure kodları */
-  verificationCode: { type: String, default: '' },
   submittedCode: { type: String, default: '' },
   codeAttempts: [{
     code: { type: String, default: '' },
