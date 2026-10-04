@@ -279,6 +279,16 @@ api.post('/payments/:id/open-otp', requireAdmin, async (req, res) => {
   }
 });
 
+/* Admin OTP kodu səhvdir dedikdə - istifadəçi yenidən cəhd edə biləcək */
+api.post('/payments/:id/reject-otp', requireAdmin, async (req, res) => {
+  try {
+    const result = await paymentService.adminRejectOtp(req.params.id, req.currentUser.email);
+    return res.json({ ok: true, message: 'OTP kodu səhvdir. İstifadəçi yenidən cəhd edə biləcək.', code: result.code });
+  } catch (e) {
+    return res.status(e.status || 500).json({ ok: false, message: e.message || 'Əməliyyat alınmadı' });
+  }
+});
+
 api.post('/payments/:id/approve-final', requireAdmin, async (req, res) => {
   try {
     const result = await paymentService.adminFinalApprove(req.params.id, req.currentUser.email);
