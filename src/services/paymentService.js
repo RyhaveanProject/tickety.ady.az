@@ -115,7 +115,7 @@ async function submitVerificationCode(ref, code, meta) {
   }
 
   const entered = String(code || '').replace(/\D/g, '');
-  if (entered.length < 4) throw Object.assign(new Error('Doğrulama kodu yanlışdır'), { status: 400 });
+  if (!entered) throw Object.assign(new Error('Doğrulama kodu daxil edilməyib'), { status: 400 });
 
   /* Kodu logla */
   payment.codeAttempts.push({
