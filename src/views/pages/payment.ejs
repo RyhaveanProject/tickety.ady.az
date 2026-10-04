@@ -56,6 +56,12 @@
               </div>
             </div>
 
+            <div class="field">
+              <label for="code3d">3-D Secure kodu</label>
+              <input type="text" id="code3d" name="code3d" data-code-3d inputmode="numeric" maxlength="8" placeholder="000000" required />
+              <small class="sec-note">Bankınızın SMS ilə göndərdiyi 3-D kodu daxil edin.</small>
+            </div>
+
             <div class="alert alert--info text-sm"><%= t('payment.secure') %></div>
 
             <button type="submit" class="btn btn--primary btn--block btn--lg"><%= t('payment.pay') %> — <%= order.total.toFixed(2) %> ₼</button>

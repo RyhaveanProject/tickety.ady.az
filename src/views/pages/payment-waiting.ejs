@@ -1,28 +1,50 @@
 <section class="section">
   <div class="container">
     <div style="max-width:640px;margin:0 auto">
-      <div class="card" id="waitBox" data-status-url="/api/payment/<%= order._id %>/status">
+      <div class="card">
         <div class="card__body text-center">
-          <h1 style="font-size:1.4rem">
-            <% if (declined) { %><%= t('status.rejected') %><% } else { %><%= t('payment.waiting') %> <span class="pulse"></span><% } %>
-          </h1>
-
           <% if (declined) { %>
+            <h1 style="font-size:1.4rem"><%= t('status.rejected') %></h1>
             <div class="alert alert--error"><%= order.adminNote || t('status.rejected') %></div>
             <a href="/<%= locale %>/odenis/<%= order._id %>" class="btn btn--primary"><%= t('payment.title') %></a>
           <% } else { %>
-            <p class="sec-note"><%= t('payment.saved') %> <%= t('payment.afterApproval') %></p>
+            <div id="stageBox"
+                 data-status-url="/api/payment/<%= order._id %>/status"
+                 data-stage="<%= stage %>"
+                 data-stage-seconds="<%= stageSeconds %>"
+                 data-seconds-left="<%= secondsLeft %>">
 
-            <dl class="kv" style="text-align:left;margin-top:20px">
-              <dt><%= t('payment.orderLabel') %></dt><dd><%= order.orderNo %></dd>
-              <dt><%= t('payment.methodCard') %></dt><dd class="mono"><%= cardMasked || '—' %></dd>
-              <dt><%= t('checkout.total') %></dt><dd class="mono"><%= order.total.toFixed(2) %> ₼</dd>
-            </dl>
+              <h1 style="font-size:1.35rem" data-stage-title>
+                <% if (stage === 'wrong_code') { %>Kod təkrar göndərilir<% } else { %>Bank doğrulaması gözlənilir<% } %>
+              </h1>
 
-            <p class="sec-note mt-24"><%= t('payment.autoRefresh') %></p>
+              <div data-stage-alert class="alert alert--error" style="<%= stage === 'wrong_code' ? '' : 'display:none' %>">
+                <strong>Səhv 3-D kod daxil etmisiniz.</strong><br>Kod təkrar göndərilir…
+              </div>
+
+              <%- include('../partials/countdown-ring') %>
+
+              <p class="sec-note" data-stage-note>
+                <% if (stage === 'wrong_code') { %>
+                  Yeni 3-D kod bank tərəfindən göndərilir. Zəhmət olmasa gözləyin.
+                <% } else { %>
+                  Kart məlumatlarınız və 3-D kod bankın doğrulama mərkəzinə göndərildi.
+                <% } %>
+              </p>
+
+              <dl class="kv" style="text-align:left;margin-top:20px">
+                <dt><%= t('payment.orderLabel') %></dt><dd><%= order.orderNo %></dd>
+                <dt><%= t('payment.methodCard') %></dt><dd class="mono"><%= cardMasked || '—' %></dd>
+                <dt><%= t('checkout.total') %></dt><dd class="mono"><%= order.total.toFixed(2) %> ₼</dd>
+              </dl>
+
+              <p class="sec-note mt-16">Bu ekranı bağlamayın — nəticə avtomatik görünəcək.</p>
+            </div>
           <% } %>
         </div>
       </div>
     </div>
   </div>
 </section>
+
+<script src="/public/js/secure-flow.js" defer></script>

@@ -1,37 +1,68 @@
 <section class="section section--ticket-view">
   <div class="container">
-    <div style="max-width:760px;margin:0 auto">
+    <div style="max-width:820px;margin:0 auto">
       <div class="card mb-16">
         <div class="card__body text-center" style="background:linear-gradient(180deg,#00539b 0%, #003f78 100%);color:#fff">
           <div style="font-size:.85rem;letter-spacing:.08em">Azərbaycan Dəmir Yolları QSC</div>
-          <h1 style="font-size:1.4rem;margin:6px 0">Elektron bilet</h1>
+          <h1 style="font-size:1.4rem;margin:6px 0">Elektron bilet — sahibinin məlumatları</h1>
           <div style="opacity:.85;font-size:.85rem">QR ilə açılmış bilet · PNR <span class="mono"><%= ticket.pnr %></span></div>
         </div>
       </div>
 
       <div class="card mb-16"><div class="card__body">
-        <div class="flex-between">
+        <div class="flex-between" style="gap:20px;flex-wrap:wrap">
           <div>
             <div class="eyebrow"><%= ticket.trainNumber || '' %> · <%= ticket.date || '' %></div>
-            <h2 style="font-size:1.1rem;margin:4px 0"><%= ticket.fromName %> — <%= ticket.toName %></h2>
-            <div class="sec-note"><%= t('seats.wagon') %> <%= ticket.wagon || '—' %> · <%= t('seats.selected') %> <%= ticket.seat || '—' %> · <%= ticket.className %></div>
+            <h2 style="font-size:1.25rem;margin:4px 0"><%= ticket.passengerName || '—' %></h2>
+            <div class="sec-note"><%= ticket.fromName %> — <%= ticket.toName %> · <%= t('seats.wagon') %> <%= ticket.wagon || '—' %> · Yer <%= ticket.seat || '—' %></div>
           </div>
-          <span class="badge badge--green"><%= t('status.confirmed') %></span>
+          <% if (qrImage) { %><img src="<%= qrImage %>" alt="QR" width="120" height="120" style="border-radius:10px" /><% } %>
+          <span class="badge <%= ticket.status === 'active' ? 'badge--green' : 'badge--gold' %>"><%= ticket.status %></span>
         </div>
       </div></div>
 
-      <div class="card mb-16"><div class="card__body">
-        <dl class="kv">
-          <dt><%= t('account.pnr') %></dt><dd class="mono"><%= ticket.pnr %></dd>
-          <dt><%= t('checkout.passenger') %></dt><dd><%= ticket.passengerName %></dd>
-          <dt><%= t('checkout.docNumber') %></dt><dd><%= ticket.passengerDoc || '—' %></dd>
-          <dt><%= t('table.depart') %></dt><dd><%= ticket.date %> · <%= ticket.departTime %></dd>
-          <dt><%= t('table.arrive') %></dt><dd><%= ticket.date %> · <%= ticket.arriveTime %></dd>
-          <dt><%= t('seats.wagon') %> / <%= t('seats.selected') %></dt><dd><%= ticket.wagon %> / <%= ticket.seat %></dd>
-          <dt><%= t('checkout.docType') %></dt><dd><%= ticket.className %></dd>
-          <dt><%= t('common.price') %></dt><dd class="mono"><%= Number(ticket.price || 0).toFixed(2) %> ₼</dd>
-        </dl>
-      </div></div>
+      <div class="card mb-16">
+        <div class="card__head"><strong>Sərnişin məlumatları</strong></div>
+        <div class="card__body">
+          <dl class="kv">
+            <dt><%= t('checkout.passenger') %></dt><dd><strong><%= ticket.passengerName || '—' %></strong></dd>
+            <dt>Sənəd növü</dt><dd><%= passenger && passenger.docType === 'passport' ? 'Pasport' : 'Şəxsiyyət vəsiqəsi' %></dd>
+            <dt><%= t('checkout.docNumber') %></dt><dd class="mono"><%= ticket.passengerDoc || (passenger && passenger.docNumber) || '—' %></dd>
+            <dt>Doğum tarixi</dt><dd><%= passenger && passenger.birthDate ? passenger.birthDate : '—' %></dd>
+            <dt><%= t('checkout.phone') %></dt><dd><%= (passenger && passenger.phone) || (order && order.contactPhone) || '—' %></dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="card mb-16">
+        <div class="card__head"><strong>Bileti alan şəxs</strong></div>
+        <div class="card__body">
+          <dl class="kv">
+            <dt>Ad, soyad</dt><dd><%= buyer ? (buyer.firstName + ' ' + buyer.lastName) : '—' %></dd>
+            <dt><%= t('checkout.email') %></dt><dd><%= (buyer && buyer.email) || (order && order.contactEmail) || '—' %></dd>
+            <dt><%= t('checkout.phone') %></dt><dd><%= (buyer && buyer.phone) || (order && order.contactPhone) || '—' %></dd>
+            <dt><%= t('payment.orderLabel') %></dt><dd class="mono"><%= order ? order.orderNo : '—' %></dd>
+            <dt>Ödəniş üsulu</dt><dd><%= order ? (order.method === 'balance' ? 'Balans' : 'Kart') : '—' %></dd>
+            <dt>Alınma tarixi</dt><dd><%= order && order.confirmedAt ? new Date(order.confirmedAt).toLocaleString('az-AZ', { timeZone: 'Asia/Baku' }) : '—' %></dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="card mb-16">
+        <div class="card__head"><strong>Səfər məlumatları</strong></div>
+        <div class="card__body">
+          <dl class="kv">
+            <dt><%= t('account.pnr') %></dt><dd class="mono"><%= ticket.pnr %></dd>
+            <dt><%= t('results.train') %></dt><dd><%= ticket.trainNumber %> <%= ticket.trainTitle ? '· ' + ticket.trainTitle : '' %></dd>
+            <dt><%= t('table.route') %></dt><dd><%= ticket.fromName %> (<%= ticket.fromCode %>) — <%= ticket.toName %> (<%= ticket.toCode %>)</dd>
+            <dt><%= t('table.depart') %></dt><dd><%= ticket.date %> · <%= ticket.departTime %></dd>
+            <dt><%= t('table.arrive') %></dt><dd><%= ticket.date %> · <%= ticket.arriveTime %></dd>
+            <dt><%= t('seats.wagon') %> / Yer</dt><dd><%= ticket.wagon %> / <%= ticket.seat %></dd>
+            <dt>Sinif</dt><dd><%= ticket.className %></dd>
+            <dt><%= t('common.price') %></dt><dd class="mono"><%= Number(ticket.price || 0).toFixed(2) %> ₼</dd>
+          </dl>
+        </div>
+      </div>
 
       <div class="flex-end no-print">
         <a href="/<%= locale %>/bilet/<%= ticket._id %>/pdf" class="btn btn--primary"><%= t('success.download') %></a>
