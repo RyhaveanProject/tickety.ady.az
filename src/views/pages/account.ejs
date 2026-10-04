@@ -2,7 +2,6 @@
   <div class="container">
     <div class="section__head">
       <div><div class="eyebrow"><%= t('nav.profile') %></div><h1><%= t('account.title') %></h1></div>
-      <div class="badge badge--gold"><%= t('account.balance') %>: <%= (user.balance || 0).toFixed(2) %> ₼</div>
     </div>
 
     <div class="layout-aside">
@@ -12,7 +11,7 @@
         <div class="grid grid--3 mb-24">
           <div class="stat"><div class="stat__label"><%= t('nav.myTickets') %></div><div class="stat__value"><%= tickets.length %></div></div>
           <div class="stat"><div class="stat__label"><%= t('nav.myOrders') %></div><div class="stat__value"><%= orders.length %></div></div>
-          <div class="stat"><div class="stat__label"><%= t('account.balance') %></div><div class="stat__value"><%= (user.balance || 0).toFixed(2) %></div></div>
+          
         </div>
 
         <div class="card mb-24">

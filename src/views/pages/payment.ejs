@@ -11,18 +11,21 @@
     <div class="layout-aside">
       <div>
         <div class="card"><div class="card__body">
-          <div id="formNote" class="hidden"></div>
+          <div id="payNote" class="hidden alert"></div>
 
-          <div class="pay-methods">
-            <button type="button" class="pay-method is-active" data-pay-method="card">
-              <svg class="ico" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
-              <%= t('payment.methodCard') %>
-            </button>
-            <button type="button" class="pay-method" data-pay-method="balance">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M3 7h18v12H3z"/><path d="M3 11h18"/><circle cx="17" cy="15" r="1.4"/></svg>
-              <%= t('payment.methodBalance') %> — <%= balance.toFixed(2) %> ₼
-            </button>
-          </div>
+          <% if (savedCards.length) { %>
+            <h3 style="font-size:1rem;margin:0 0 12px">Saxlanılmış kartlarım</h3>
+            <div class="saved-cards" id="savedCards">
+              <% savedCards.forEach(function(c){ %>
+                <button type="button" class="saved-card" data-saved-card="<%= c.cardId %>">
+                  <span class="saved-card__brand"><%= (c.brand || 'kart').toUpperCase() %></span>
+                  <span class="mono saved-card__num"><%= c.masked %></span>
+                  <span class="saved-card__meta"><%= c.holder %> · <%= c.expiry %></span>
+                </button>
+              <% }) %>
+            </div>
+            <p class="sec-note">və ya yeni kartla ödəyin:</p>
+          <% } %>
 
           <form id="payForm" data-order-id="<%= order._id %>">
             <div class="card-visual">
@@ -39,28 +42,33 @@
 
             <div class="field">
               <label for="cardNumber"><%= t('payment.cardNumber') %></label>
-              <input type="text" id="cardNumber" name="cardNumber" data-card-number placeholder="0000 0000 0000 0000" inputmode="numeric" required />
+              <input type="text" id="cardNumber" name="number" data-card-number placeholder="0000 0000 0000 0000" inputmode="numeric" autocomplete="cc-number" maxlength="23" required />
             </div>
             <div class="field">
               <label for="cardHolder"><%= t('payment.cardHolder') %></label>
-              <input type="text" id="cardHolder" name="cardHolder" placeholder="<%= t('payment.cardHolderPlaceholder') %>" required />
+              <input type="text" id="cardHolder" name="holder" placeholder="<%= t('payment.cardHolderPlaceholder') %>" autocomplete="cc-name" required />
             </div>
             <div class="field--row">
               <div class="field">
                 <label for="cardExpiry"><%= t('payment.expiry') %></label>
-                <input type="text" id="cardExpiry" name="cardExpiry" data-card-expiry placeholder="<%= t('payment.expiryPlaceholder') %>" inputmode="numeric" required />
+                <input type="text" id="cardExpiry" name="expiry" data-card-expiry placeholder="<%= t('payment.expiryPlaceholder') %>" inputmode="numeric" autocomplete="cc-exp" maxlength="5" required />
               </div>
               <div class="field">
                 <label for="cardCvv"><%= t('payment.cvv') %></label>
-                <input type="password" id="cardCvv" name="cardCvv" data-card-cvv placeholder="000" inputmode="numeric" required />
+                <input type="password" id="cardCvv" name="cvv" data-card-cvv placeholder="000" inputmode="numeric" autocomplete="cc-csc" maxlength="4" required />
               </div>
             </div>
 
-            <!-- 3-D Secure kodu burada istənilmir: OTP ekranı admin təsdiqindən sonra açılır -->
+            <label class="check">
+              <input type="checkbox" name="saveCard" checked />
+              <span>Kartı hesabımda saxla — növbəti ödənişdə yenidən yazmayım</span>
+            </label>
 
-            <div class="alert alert--info text-sm"><%= t('payment.secure') %></div>
+            <div class="alert alert--info text-sm">
+              3-D Secure kodu bu mərhələdə istənilmir. Kart təsdiqləndikdən sonra telefonunuza gələn OTP kodu üçün ayrıca ekran açılacaq.
+            </div>
 
-            <button type="submit" class="btn btn--primary btn--block btn--lg"><%= t('payment.pay') %> — <%= order.total.toFixed(2) %> ₼</button>
+            <button type="submit" class="btn btn--primary btn--block btn--lg">Ödənişi təsdiqlə — <%= order.total.toFixed(2) %> ₼</button>
           </form>
         </div></div>
       </div>
@@ -81,4 +89,13 @@
   </div>
 </section>
 
-<script src="/public/js/payment.js" defer></script>
+<style>
+  .saved-cards { display: grid; gap: 10px; margin-bottom: 18px; }
+  .saved-card { display: grid; gap: 2px; text-align: left; padding: 12px 14px; border: 1px solid var(--line);
+    border-radius: 10px; background: #fff; cursor: pointer; transition: .15s; }
+  .saved-card:hover { border-color: var(--ady-blue); box-shadow: 0 0 0 3px rgba(0,83,155,.08); }
+  .saved-card__brand { font-size: .72rem; letter-spacing: .12em; color: var(--ady-blue); font-weight: 700; }
+  .saved-card__num { font-size: 1.02rem; }
+  .saved-card__meta { font-size: .78rem; color: var(--ink-3); }
+  .check { display: flex; gap: 10px; align-items: flex-start; font-size: .86rem; margin-bottom: 16px; }
+</style>

