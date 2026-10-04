@@ -1,7 +1,6 @@
 const path = require('path');
 const express = require('express');
 const helmet = require('helmet');
-const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const expressLayouts = require('express-ejs-layouts');
@@ -24,13 +23,22 @@ app.set('layout', 'layouts/main');
 app.set('layout extractScripts', true);
 app.set('layout extractStyles', true);
 
-/* ==================== Təhlükəsizlik / log ==================== */
+/* ==================== Təhlükəsizlik / məxfilik / log ==================== */
+const privacy = require('./src/middleware/privacy');
+privacy.scrubConsole();            /* bütün console çıxışları skrab olunur */
+app.disable('x-powered-by');
+app.disable('etag');
+app.use(privacy.blockProbes);      /* .env, .git, mənbə kodu kimi yollar bağlıdır */
+app.use(privacy.anonymizeRequest); /* real İP və barmaq izi başlıqları silinir, təsadüfi dəyərlə əvəzlənir */
 app.use(helmet({
   contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false
+  crossOriginEmbedderPolicy: false,
+  referrerPolicy: { policy: 'no-referrer' },
+  hsts: { maxAge: 63072000, includeSubDomains: true, preload: true }
 }));
+app.use(privacy.hardenResponse);
 if (config.nodeEnv !== 'test') {
-  app.use(morgan(config.nodeEnv === 'production' ? 'combined' : 'dev'));
+  app.use(privacy.privacyLogger);  /* İP / UA / sorğu parametrləri loga düşmür */
 }
 
 /* ==================== Gövdə / statik ==================== */
