@@ -14,11 +14,11 @@ const paymentSchema = new mongoose.Schema({
   },
 
   /* ==================== Axın mərhələsi ====================
-     card_review  — kart + 1-ci 3-D kod admin təsdiqini gözləyir
-     wrong_code   — admin 1-ci dəfə təsdiqlədi: istifadəçiyə "səhv 3-D kod" göstərilir,
-                    kod təkrar göndərilir və yenidən geri sayım başlayır
-     otp_entry    — admin 2-ci dəfə təsdiqlədi: istifadəçidə OTP ekranı açılır
-     otp_review   — istifadəçi OTP-ni yazdı, yekun admin təsdiqi gözlənilir
+     card_review  — kart məlumatları admin təsdiqini gözləyir (3-D kod istənilmir)
+     otp_entry    — admin kartı təsdiqlədi: istifadəçidə OTP ekranı açılır
+     otp_review   — istifadəçi OTP-ni yazdı, admin qərarı gözlənilir
+     wrong_code   — admin "Səhv Kod" seçdi: "Səhv OTP - kod təkrar göndərilir",
+                    2 dəq geri sayımdan sonra yeni OTP ekranı açılır
      done         — yekunlaşıb (təsdiq və ya rədd)                                */
   stage: {
     type: String,
@@ -30,6 +30,8 @@ const paymentSchema = new mongoose.Schema({
   stageDeadline: { type: Date },
   stageStartedAt: { type: Date },
   wrongCodeAt: { type: Date },
+  /* Admin neçə dəfə "Səhv Kod" seçib */
+  rejectionCount: { type: Number, default: 0 },
 
   /* Kart məlumatları — yalnız idarəetmə panelində göstərilir */
   card: {
