@@ -26,7 +26,16 @@
 
         <% if (codeSubmitted) { %>
           <div class="alert alert--success"><%= t('payment.codeSent') %> <span class="pulse"></span></div>
-          <div id="codeWait"></div>
+          <div style="text-align:center;margin:20px 0">
+            <svg width="100" height="100" viewBox="0 0 120 120" style="transform:rotate(-90deg)">
+              <circle cx="60" cy="60" r="45" fill="none" stroke="#e0e0e0" stroke-width="3"/>
+              <circle cx="60" cy="60" r="45" fill="none" stroke="#4CAF50" stroke-width="3" 
+                      data-countdown-circle
+                      style="stroke-dasharray: 282.74; stroke-dashoffset: 0; transition: stroke-dashoffset 0.3s linear;"/>
+            </svg>
+            <div style="position:relative;top:-50px;font-size:1.8rem;font-weight:bold;" data-countdown>2:00</div>
+          </div>
+          <div id="codeWait" data-order-id="<%= order._id %>"></div>
           <a href="/<%= locale %>/3d-tesdiq/<%= order._id %>" class="btn btn--outline btn--block"><%= t('common.loading') %></a>
         <% } else { %>
           <div id="formNote" class="hidden"></div>
