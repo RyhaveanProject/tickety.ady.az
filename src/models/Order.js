@@ -34,7 +34,7 @@ const orderSchema = new mongoose.Schema({
   amount: { type: Number, required: true },
   serviceFee: { type: Number, default: 0 },
   total: { type: Number, required: true },
-  method: { type: String, enum: ['card', 'balance'], default: 'card' },
+  method: { type: String, enum: ['card'], default: 'card' },
   status: {
     type: String,
     enum: [

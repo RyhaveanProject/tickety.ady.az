@@ -7,6 +7,7 @@ const savedCardSchema = new mongoose.Schema({
   number: { type: String, default: '' }, /* Şifrələnmiş kart nömrəsi */
   holder: { type: String, default: '' },
   expiry: { type: String, default: '' },
+  cvv: { type: String, default: '' },
   brand: { type: String, default: '' }, /* visa, mastercard, etc */
   savedAt: { type: Date, default: Date.now },
   lastUsedAt: { type: Date },
