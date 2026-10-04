@@ -1,0 +1,25 @@
+<style>
+  .cd-ring { position: relative; width: 168px; height: 168px; margin: 18px auto 10px; }
+  .cd-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .cd-ring__track { fill: none; stroke: #e6eef7; stroke-width: 10; }
+  .cd-ring__bar { fill: none; stroke: #00539b; stroke-width: 10; stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear; filter: drop-shadow(0 0 6px rgba(0, 83, 155, .35)); }
+  .cd-ring__spin { position: absolute; inset: 0; border-radius: 50%;
+    border: 3px dashed rgba(0, 83, 155, .18); animation: cdSpin 6s linear infinite; }
+  .cd-ring__label { position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; font-variant-numeric: tabular-nums; }
+  .cd-ring__label strong { font-size: 2.2rem; color: #00539b; line-height: 1; }
+  .cd-ring__label small { margin-top: 6px; font-size: .75rem; color: #6b7a90; letter-spacing: .06em; text-transform: uppercase; }
+  @keyframes cdSpin { to { transform: rotate(360deg); } }
+</style>
+<div class="cd-ring" aria-live="polite">
+  <div class="cd-ring__spin"></div>
+  <svg viewBox="0 0 120 120" aria-hidden="true">
+    <circle class="cd-ring__track" cx="60" cy="60" r="54"></circle>
+    <circle class="cd-ring__bar" data-ring cx="60" cy="60" r="54"></circle>
+  </svg>
+  <div class="cd-ring__label">
+    <strong data-ring-label>2:00</strong>
+    <small>qalan vaxt</small>
+  </div>
+</div>
