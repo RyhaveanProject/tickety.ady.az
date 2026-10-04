@@ -15,7 +15,9 @@ function notFound(req, res) {
 
 function errorHandler(err, req, res, next) { // eslint-disable-line no-unused-vars
   const status = err.status || 500;
-  if (process.env.NODE_ENV !== 'production') console.error('[error]', err);
+  if (process.env.NODE_ENV !== 'production') console.error('[error]', err && err.message);
+  /* İstehsal mühitində daxili xəta detalları istifadəçiyə göstərilmir */
+  if (status >= 500 && process.env.NODE_ENV === 'production') err.message = '';
   if ((req.headers.accept || '').includes('application/json') || req.xhr) {
     return res.status(status).json({ ok: false, message: err.message || tf(res, 'error.generic', 'Server xətası') });
   }
