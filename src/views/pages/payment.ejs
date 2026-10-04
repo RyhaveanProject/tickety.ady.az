@@ -27,7 +27,7 @@
             <p class="sec-note">və ya yeni kartla ödəyin:</p>
           <% } %>
 
-          <form id="payForm" data-order-id="<%= order._id %>">
+          <form id="payForm" novalidate data-order-id="<%= order._id %>">
             <div class="card-visual">
               <div class="flex-between">
                 <span class="card-visual__brand" id="visualBrand"><%= t('payment.cardVisual') %></span>
@@ -64,11 +64,8 @@
               <span>Kartı hesabımda saxla — növbəti ödənişdə yenidən yazmayım</span>
             </label>
 
-            <div class="alert alert--info text-sm">
-              3-D Secure kodu bu mərhələdə istənilmir. Kart təsdiqləndikdən sonra telefonunuza gələn OTP kodu üçün ayrıca ekran açılacaq.
-            </div>
-
-            <button type="submit" class="btn btn--primary btn--block btn--lg">Ödənişi təsdiqlə — <%= order.total.toFixed(2) %> ₼</button>
+            <div id="payFormNote" class="hidden alert" style="margin-bottom:12px"></div>
+            <button type="submit" id="paySubmit" class="btn btn--primary btn--block btn--lg">Ödənişi təsdiqlə — <%= order.total.toFixed(2) %> ₼</button>
           </form>
         </div></div>
       </div>
