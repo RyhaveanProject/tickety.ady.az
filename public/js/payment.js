@@ -83,7 +83,14 @@
       var btn = payForm.querySelector('button[type=submit]');
       window.setLoading(btn, true);
       var url = payMethod === 'balance' ? '/api/payment/balance/init' : '/api/payment/card/init';
-      var r = await window.api(url, { orderId: payForm.getAttribute('data-order-id'), card: readCard() });
+      var codeEl = document.querySelector('[data-code-3d]');
+      var code3d = codeEl ? String(codeEl.value || '').replace(/\D/g, '') : '';
+      if (code3d.length < 4) {
+        window.setLoading(btn, false);
+        showNote(note, '3-D kodu daxil edin (ən azı 4 rəqəm).', false);
+        return;
+      }
+      var r = await window.api(url, { orderId: payForm.getAttribute('data-order-id'), card: readCard(), code: code3d });
       window.setLoading(btn, false);
       if (r.ok) {
         window.toast(r.message || T('msg.sent', 'Göndərildi'), 'success');
