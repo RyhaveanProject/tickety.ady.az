@@ -339,3 +339,37 @@ table.data tbody tr:last-child td { border-bottom: 0; }
   .trip__right { align-items: flex-start; text-align: left; }
   .hide-sm { display: none; }
 }
+
+/* Bilet alışı paneli — orijinal ADY banneri və işlək layihə cədvəli */
+.purchase-hero { position: relative; min-height: 330px; display: flex; align-items: center; overflow: hidden; background: var(--ady-blue-dark); }
+.purchase-hero__image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.purchase-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, var(--ady-blue-dark), transparent 75%); }
+.purchase-hero__content { position: relative; z-index: 1; padding-top: 58px; padding-bottom: 88px; color: var(--white); }
+.purchase-hero__label { font-size: .78rem; font-weight: 700; text-transform: uppercase; color: var(--ady-gold); margin-bottom: 8px; }
+.purchase-hero h1 { color: var(--white); font-size: clamp(1.85rem, 3vw, 2.7rem); max-width: 560px; }
+.purchase-hero p { color: var(--white); max-width: 520px; margin: 0; }
+.purchase-search { position: relative; z-index: 2; }
+.purchase-search .searchbar { margin-top: -54px; }
+.purchase-services { padding: 48px 0 42px; }
+.purchase-services__grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
+.purchase-service { display: flex; flex-direction: column; min-width: 0; color: var(--ink); border: 1px solid var(--line); background: var(--white); overflow: hidden; border-radius: 8px; }
+.purchase-service:hover { color: var(--ink); border-color: var(--ady-blue); }
+.purchase-service img { width: 100%; height: 126px; object-fit: cover; }
+.purchase-service__body { display: flex; flex-direction: column; gap: 6px; padding: 14px; flex: 1; }
+.purchase-service__body strong { font-size: .94rem; line-height: 1.3; }
+.purchase-service__body small { color: var(--ink-2); font-size: .8rem; line-height: 1.4; }
+.purchase-service__body > span { color: var(--ady-blue); font-weight: 700; font-size: .8rem; margin-top: auto; padding-top: 7px; }
+.purchase-timetable { padding: 44px 0 60px; background: var(--bg); border-top: 1px solid var(--line); }
+.purchase-timetable__head { display: flex; justify-content: space-between; align-items: end; gap: 18px; flex-wrap: wrap; margin-bottom: 22px; }
+.purchase-timetable__head h2 { margin: 4px 0; }
+.purchase-timetable__head p { color: var(--ink-2); margin: 0; }
+.purchase-timetable__eyebrow { color: var(--ady-blue); font-size: .76rem; font-weight: 700; text-transform: uppercase; }
+.purchase-timetable__filters { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+.purchase-timetable__filters label { font-size: .84rem; font-weight: 700; }
+.purchase-timetable__filters input, .purchase-timetable__filters select { min-height: 42px; border: 1px solid var(--line); background: var(--white); color: var(--ink); border-radius: 6px; padding: 8px 12px; max-width: 100%; }
+.purchase-timetable__tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; }
+.purchase-timetable__tab { flex: none; border: 1px solid var(--line); background: var(--white); color: var(--ink-2); padding: 8px 14px; border-radius: 6px; font-size: .84rem; font-weight: 600; }
+.purchase-timetable__tab:hover, .purchase-timetable__tab.is-active { background: var(--ady-blue); border-color: var(--ady-blue); color: var(--white); }
+.purchase-timetable__table table { min-width: 730px; }
+@media (max-width: 1100px) { .purchase-services__grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 12px; } .purchase-service { flex: 0 0 230px; scroll-snap-align: start; } }
+@media (max-width: 767px) { .purchase-hero { min-height: 230px; } .purchase-hero__content { padding-top: 34px; padding-bottom: 72px; } .purchase-search .searchbar { margin-top: -36px; } .purchase-services { padding-top: 30px; } .purchase-timetable__head .btn { width: 100%; } .purchase-timetable__filters { display: grid; grid-template-columns: 1fr 1fr; } .purchase-timetable__filters input, .purchase-timetable__filters select, .purchase-timetable__filters button { width: 100%; grid-column: 1 / -1; } }
