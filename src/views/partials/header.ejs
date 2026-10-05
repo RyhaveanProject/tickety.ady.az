@@ -1,64 +1,181 @@
-<div class="topbar">
-  <div class="container topbar__inner">
-    <div class="topbar__left">
-      <a href="tel:1822" class="topbar__link">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-        <span>1822</span>
+<%
+  /* Dizayn mənbəyindəki sprite adları ilə sosial şəbəkə uyğunluğu */
+  var spriteByKey = {
+    facebook: 'svg-fb', instagram: 'svg-instagram', youtube: 'svg-youtube', x: 'svg-twitter-x',
+    linkedin: 'svg-linkedin', tiktok: 'svg-tiktok', telegram: 'svg-telegram', whatsapp: 'svg-whatsapp'
+  };
+  var socialList = (socials && socials.length) ? socials : [];
+  /* Dizayn mənbəyindəki sabit kanallar (konfiqurasiya boş olduqda) */
+  if (!socialList.length) {
+    socialList = [
+      { key: 'facebook', name: 'Facebook', url: 'https://www.facebook.com/AzerbaycanDemirYollari/' },
+      { key: 'instagram', name: 'Instagram', url: 'https://www.instagram.com/azerbaycandemiryollari/' },
+      { key: 'youtube', name: 'YouTube', url: 'https://www.youtube.com/channel/UCFqqewJ4sgEySlMb-vr1dbg' },
+      { key: 'x', name: 'X', url: 'https://twitter.com/Azdemiryollari' },
+      { key: 'linkedin', name: 'LinkedIn', url: 'https://www.linkedin.com/company/azerbaycandemiryollari' },
+      { key: 'tiktok', name: 'TikTok', url: 'https://www.tiktok.com/@azerbaycandemiryollari' },
+      { key: 'telegram', name: 'Telegram', url: 'https://t.me/azerbaycandemiryollari' },
+      { key: 'whatsapp', name: 'WhatsApp', url: 'https://whatsapp.com/channel/0029Va8GeTq1t90Zoclrp31L' }
+    ];
+  }
+  var qsParts = Object.keys(query || {}).filter(function (k) { return k !== 'lang'; })
+    .map(function (k) { return k + '=' + encodeURIComponent(query[k]); });
+  var qs = qsParts.length ? '?' + qsParts.join('&') : '';
+  var cleanPath = (typeof pathNoLocale !== 'undefined' && pathNoLocale) ? pathNoLocale : '/';
+  if (cleanPath !== '/' && cleanPath.slice(-1) !== '/') cleanPath = cleanPath + '/';
+  var u = cleanPath;
+%>
+<input type="checkbox" class="d-none" id="open-burger" />
+<input type="checkbox" class="d-none" id="search_toggle" />
+
+<header class="header header-main">
+  <div class="container-fluid">
+    <div class="header__wrapper">
+      <a class="header__logo" href="/<%= locale %>" aria-label="ADY — Azərbaycan Dəmir Yolları">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="32"><use xlink:href="#svg-ady"></use></svg>
       </a>
-      <a href="mailto:<%= site.supportEmail %>" class="topbar__link hide-sm"><%= site.supportEmail %></a>
-      <span class="topbar__link hide-sm"><%= site.supportPhoneLandline %></span>
-    </div>
-    <div class="topbar__right">
-      <a href="/<%= locale %>/bilet-yoxlama" class="topbar__link"><%= t('nav.verify') %></a>
-      <div class="lang">
-        <%/* Dil dəyişdikdə eyni səhifə yeni dildə açılır (URL prefiksi olmayan yol + sorğu saxlanılır)
-           Əvvəlki versiya `req.path`-ı əlavə edirdi və /en saytında pathNoLocale yoxsa /en/en/... alınırdı. */%>
-        <% var qsParts = Object.keys(query || {}).filter(function(k){ return k !== 'lang'; })
-             .map(function(k){ return k + '=' + encodeURIComponent(query[k]); }); %>
-        <% var qs = qsParts.length ? '?' + qsParts.join('&') : ''; %>
-        <% var cleanPath = (typeof pathNoLocale !== 'undefined' && pathNoLocale) ? pathNoLocale : '/'; %>
-        <% if (cleanPath !== '/' && cleanPath.slice(-1) !== '/') cleanPath = cleanPath + '/'; %>
-        <% ['az','en','ru'].forEach(function(l){ %>
-          <a href="/<%= l %><%= cleanPath %><%= qs %>" class="lang__item <%= locale === l ? 'is-active' : '' %>" data-lang="<%= l %>"><%= localeNames[l] %></a>
-        <% }) %>
-        <script src="/public/js/lang-switch.js" defer></script>
+
+      <div class="header__block">
+        <div class="header__top">
+          <nav class="header__nav">
+            <ul class="header__menu">
+              <li><a href="https://corp.ady.az/az">Korporativ</a></li>
+              <li><a href="/<%= locale %>" class="active">Sərnişin daşımaları</a></li>
+              <li><a href="https://freight.ady.az/az">Yük daşımaları</a></li>
+              <li><a href="https://corp.ady.az/az/media">Media</a></li>
+              <li><a href="https://corp.ady.az/az/bloqlar">BLOQ</a></li>
+              <li><a href="https://portal.ady.az">E-PORTAL</a></li>
+              <li><a href="/<%= locale %>/elaqe">Əlaqə</a></li>
+            </ul>
+          </nav>
+
+          <div class="header__tools">
+            <a href="tel:<%= site.supportPhone %>" class="header__phone">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><use xlink:href="#svg-phone"></use></svg>
+              <%= site.supportPhone %>
+            </a>
+            <ul class="social">
+              <% socialList.slice(0, 2).forEach(function (s) { %>
+                <li>
+                  <a target="_blank" rel="noopener" href="<%= s.url %>" aria-label="<%= s.name %>">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><use xlink:href="#<%= spriteByKey[s.key] || 'svg-link' %>"></use></svg>
+                  </a>
+                </li>
+              <% }) %>
+            </ul>
+            <div class="header__lang">
+              <div class="header__lang__selected"><%= localeNames[locale] %></div>
+              <ul class="header__lang__list">
+                <% ['az', 'en', 'ru'].filter(function (l) { return l !== locale; }).forEach(function (l) { %>
+                  <li><a href="/<%= l %><%= cleanPath %><%= qs %>" data-lang="<%= l %>"><%= localeNames[l] %></a></li>
+                <% }) %>
+              </ul>
+            </div>
+
+            <% if (currentUser) { %>
+              <div class="header__profile d-none d-lg-block">
+                <a href="/<%= locale %>/kabinet" class="header__profile__img" title="<%= t('nav.profile') %>">
+                  <span class="ady-avatar"><%= currentUser.firstName.charAt(0) %><%= currentUser.lastName.charAt(0) %></span>
+                </a>
+              </div>
+            <% } else { %>
+              <div class="ady-header-auth d-none d-lg-flex">
+                <a href="/<%= locale %>/login" class="ady-auth-link"><%= t('nav.login') %></a>
+                <a href="/<%= locale %>/qeydiyyat" class="ady-auth-btn"><%= t('nav.register') %></a>
+              </div>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="header__bottom">
+          <nav class="header__nav">
+            <ul class="header__menu">
+              <li class="header__menu__sub__item header__menu__sub__item---have-sub">
+                <a href="/<%= locale %>/bilet-axtar">Biletlər</a>
+                <ul class="header__sub">
+                  <li class="header__sub__main d-flex d-md-none align-items-center">
+                    <span class="close-sub"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="16"><use xlink:href="#svg-arrow-left"></use></svg></span>
+                    <a href="/<%= locale %>/bilet-axtar">Biletlər</a>
+                  </li>
+                  <li><a href="/<%= locale %>/bilet-axtar">Bilet al</a></li>
+                  <li><a href="/<%= locale %>/hereket-cedveli">Hərəkət cədvəli</a></li>
+                  <li><a href="/<%= locale %>/populyar-istiqametler">Populyar istiqamətlər</a></li>
+                  <li><a href="/<%= locale %>/bilet-yoxlama">Bilet yoxlama</a></li>
+                </ul>
+              </li>
+
+              <li class="header__menu__sub__item header__menu__sub__item---have-sub">
+                <a href="/<%= locale %>/tarifler-ve-odenis/gedis-haqqi-tarifleri">Tariflər və ödəniş</a>
+                <ul class="header__sub">
+                  <li class="header__sub__main d-flex d-md-none align-items-center">
+                    <span class="close-sub"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="16"><use xlink:href="#svg-arrow-left"></use></svg></span>
+                    <a href="/<%= locale %>/tarifler-ve-odenis/gedis-haqqi-tarifleri">Tariflər və ödəniş</a>
+                  </li>
+                  <li><a href="/<%= locale %>/tarifler-ve-odenis/gedis-haqqi-tarifleri">Gediş haqqı tarifləri</a></li>
+                  <li><a href="/<%= locale %>/tarifler-ve-odenis/odenis-usullari">Ödəniş üsulları</a></li>
+                  <li><a href="/<%= locale %>/tarifler-ve-odenis/bilet-almaq-ucun-teleb-olunan-senedler">Bilet almaq üçün tələb olunan sənədlər</a></li>
+                  <li><a href="/<%= locale %>/tarifler-ve-odenis/gedis-haqqinin-qaytarilmasi">Gediş haqqının qaytarılması</a></li>
+                  <li><a href="/<%= locale %>/tarifler-ve-odenis/elektron-bilet">Elektron bilet satışına dair qaydalar</a></li>
+                </ul>
+              </li>
+
+              <li class="header__menu__sub__item header__menu__sub__item---have-sub">
+                <a href="/<%= locale %>/dasima-qaydalari/usaqlarla-seyahet">Daşıma qaydaları</a>
+                <ul class="header__sub">
+                  <li class="header__sub__main d-flex d-md-none align-items-center">
+                    <span class="close-sub"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="16"><use xlink:href="#svg-arrow-left"></use></svg></span>
+                    <a href="/<%= locale %>/dasima-qaydalari/usaqlarla-seyahet">Daşıma qaydaları</a>
+                  </li>
+                  <li><a href="/<%= locale %>/dasima-qaydalari/usaqlarla-seyahet">Uşaqlarla səyahət</a></li>
+                  <li><a href="/<%= locale %>/dasima-qaydalari/el-yuklerinin-dasinmasi">Əl yüklərinin daşınması</a></li>
+                  <li><a href="/<%= locale %>/dasima-qaydalari/heyvanlarin-dasinmasi">Heyvanların daşınması</a></li>
+                </ul>
+              </li>
+
+              <li class="header__menu__sub__item header__menu__sub__item---have-sub">
+                <a href="/<%= locale %>/stansiya-ve-vagzallar/stansiya-ve-vagzallar">Stansiya və vağzallar</a>
+                <ul class="header__sub">
+                  <li class="header__sub__main d-flex d-md-none align-items-center">
+                    <span class="close-sub"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="16"><use xlink:href="#svg-arrow-left"></use></svg></span>
+                    <a href="/<%= locale %>/stansiya-ve-vagzallar/stansiya-ve-vagzallar">Stansiya və vağzallar</a>
+                  </li>
+                  <li><a href="/<%= locale %>/stansiya-ve-vagzallar/stansiya-ve-vagzallar">Stansiya və dayanacaqlar</a></li>
+                  <li><a href="/<%= locale %>/stansiya-ve-vagzallar/marsrutlar">Marşrutlar</a></li>
+                </ul>
+              </li>
+
+              <li class="header__menu__sub__item header__menu__sub__item---have-sub">
+                <a href="/<%= locale %>/sualim-var/suallar">Sualım var</a>
+                <ul class="header__sub">
+                  <li class="header__sub__main d-flex d-md-none align-items-center">
+                    <span class="close-sub"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="16"><use xlink:href="#svg-arrow-left"></use></svg></span>
+                    <a href="/<%= locale %>/sualim-var/suallar">Sualım var</a>
+                  </li>
+                  <li><a href="/<%= locale %>/sualim-var/suallar">Tez-tez verilən suallar</a></li>
+                  <li><a href="/<%= locale %>/komek">Kömək</a></li>
+                </ul>
+              </li>
+
+              <li class="header__menu__sub__item"><a href="/<%= locale %>/xeberler">Xəbərlər</a></li>
+              <li class="header__menu__sub__item"><a href="/<%= locale %>/elaqe">Əlaqə</a></li>
+            </ul>
+          </nav>
+
+          <form action="/<%= locale %>/bilet-axtar" method="GET" class="header__search d-none d-lg-flex">
+            <div class="header__search__input">
+              <input type="text" minlength="2" name="q" placeholder="Axtarış" />
+            </div>
+            <button class="header__search__button" type="submit" aria-label="Axtarış">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><use xlink:href="#svg-search"></use></svg>
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
-
-<header class="header">
-  <div class="container header__inner">
-    <a href="/<%= locale %>" class="brand">
-      <img src="/assets/ady/ady-mark.png" alt="ADY — Azərbaycan Dəmir Yolları" class="brand__logo" style="height:44px;width:auto;border-radius:8px" />
-      <span class="brand__text">
-        <strong>ADY</strong>
-        <small><%= t('brand.railways') %></small>
-      </span>
-    </a>
-
-    <button class="burger" id="burger" aria-label="Menyu" aria-expanded="false">
-      <span></span><span></span><span></span>
-    </button>
-
-    <nav class="nav" id="mainNav">
-      <a href="/<%= locale %>/bilet-axtar" class="nav__link nav__link--cta">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3a3 3 0 0 1 0-6V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
-        <%= t('nav.tickets') %>
-      </a>
-      <a href="/<%= locale %>/populyar-istiqametler" class="nav__link <%= path.indexOf('populyar') > -1 ? 'is-active' : '' %>"><%= t('nav.destinations') %></a>
-      <a href="/<%= locale %>/tarifler-ve-odenis/gedis-haqqi-tarifleri" class="nav__link <%= path.indexOf('tarif') > -1 ? 'is-active' : '' %>"><%= t('nav.tariffs') %></a>
-      <a href="/<%= locale %>/sualim-var/suallar" class="nav__link <%= path.indexOf('sualim') > -1 ? 'is-active' : '' %>"><%= t('nav.myQuestion') %></a>
-      <a href="/<%= locale %>/stansiya-ve-vagzallar/stansiya-ve-vagzallar" class="nav__link <%= path.indexOf('stansiya') > -1 ? 'is-active' : '' %>"><%= t('nav.stations') %></a>
-      <a href="/<%= locale %>/hereket-cedveli" class="nav__link <%= path.indexOf('hereket-cedveli') > -1 ? 'is-active' : '' %>"><%= t('nav.timetable') %></a>
-      <a href="/<%= locale %>/xeberler" class="nav__link <%= path.indexOf('xeber') > -1 ? 'is-active' : '' %>"><%= t('nav.news') %></a>
-      <a href="/<%= locale %>/elaqe" class="nav__link <%= path.indexOf('elaqe') > -1 ? 'is-active' : '' %>"><%= t('nav.contact') %></a>
 
       <% if (currentUser) { %>
-        <div class="nav__user" id="userMenu">
+        <div class="ady-header-user d-none d-lg-block">
           <button class="nav__userBtn" id="userMenuBtn" aria-expanded="false">
             <span class="avatar"><%= currentUser.firstName.charAt(0) %><%= currentUser.lastName.charAt(0) %></span>
-            <span class="hide-sm"><%= currentUser.firstName %></span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
           </button>
           <div class="dropdown" id="userDropdown">
@@ -69,19 +186,18 @@
             <button class="dropdown__item dropdown__item--danger" data-logout><%= t('nav.logout') %></button>
           </div>
         </div>
-      <% } else { %>
-        <a href="/<%= locale %>/login" class="btn btn--ghost btn--sm"><%= t('nav.login') %></a>
-        <a href="/<%= locale %>/qeydiyyat" class="btn btn--primary btn--sm"><%= t('nav.register') %></a>
       <% } %>
-    </nav>
+
+      <label for="open-burger" class="header__burger d-block d-lg-none"><i></i></label>
+    </div>
   </div>
 </header>
 
 <% if (typeof notice !== 'undefined' && notice) { %>
-  <div class="notice" id="noticeBar">
-    <div class="container notice__inner">
+  <div class="ady-notice" id="noticeBar">
+    <div class="container-fluid ady-notice__inner">
       <span><%= notice %></span>
-      <button type="button" class="notice__close" id="noticeClose" aria-label="Bağla">×</button>
+      <button type="button" class="ady-notice__close" id="noticeClose" aria-label="Bağla">×</button>
     </div>
   </div>
 <% } %>

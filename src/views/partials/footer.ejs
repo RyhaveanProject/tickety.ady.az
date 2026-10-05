@@ -1,76 +1,101 @@
+<%
+  var spriteByKey2 = {
+    facebook: 'svg-fb', instagram: 'svg-instagram', youtube: 'svg-youtube', x: 'svg-twitter-x',
+    linkedin: 'svg-linkedin', tiktok: 'svg-tiktok', telegram: 'svg-telegram', whatsapp: 'svg-whatsapp'
+  };
+  var socialList2 = (socials && socials.length) ? socials : [
+    { key: 'facebook', name: 'Facebook', url: 'https://www.facebook.com/AzerbaycanDemirYollari/' },
+    { key: 'instagram', name: 'Instagram', url: 'https://www.instagram.com/azerbaycandemiryollari/' },
+    { key: 'youtube', name: 'YouTube', url: 'https://www.youtube.com/channel/UCFqqewJ4sgEySlMb-vr1dbg' },
+    { key: 'x', name: 'X', url: 'https://twitter.com/Azdemiryollari' },
+    { key: 'linkedin', name: 'LinkedIn', url: 'https://www.linkedin.com/company/azerbaycandemiryollari' },
+    { key: 'tiktok', name: 'TikTok', url: 'https://www.tiktok.com/@azerbaycandemiryollari' },
+    { key: 'telegram', name: 'Telegram', url: 'https://t.me/azerbaycandemiryollari' },
+    { key: 'whatsapp', name: 'WhatsApp', url: 'https://whatsapp.com/channel/0029Va8GeTq1t90Zoclrp31L' }
+  ];
+  var playUrl = (apps && apps.play) ? apps.play : 'https://ady.onelink.me/KE2R/snvxxwtl';
+  var appleUrl = (apps && apps.apple) ? apps.apple : 'https://ady.onelink.me/KE2R/snvxxwtl';
+%>
 <footer class="footer">
-  <div class="container">
+  <div class="container-fluid">
     <div class="footer__top">
-      <div class="footer__brand">
-        <img src="/assets/ady/logo-white.svg" alt="ADY — Azərbaycan Dəmir Yolları" class="footer__logo" />
-        <p class="footer__desc"><%= t('footer.desc') %></p>
-        <div class="footer__contacts">
+      <nav class="footer__nav" data-aos-duration="700" data-aos="fade-up">
+        <ul class="footer__menu">
+          <li><a href="/<%= locale %>/tarifler-ve-odenis/gedis-haqqi-tarifleri">Tariflər və ödəniş</a></li>
+          <li><a href="/<%= locale %>/sualim-var/suallar">Sualım var</a></li>
+          <li><a href="/<%= locale %>/stansiya-ve-vagzallar/stansiya-ve-vagzallar">Stansiyalar və dayanacaqlar</a></li>
+          <li><a href="/<%= locale %>/stansiya-ve-vagzallar/marsrutlar">Marşrutlar</a></li>
+          <li><a href="/<%= locale %>/xeberler">Xəbərlər</a></li>
+          <li><a href="/<%= locale %>/elaqe">Əlaqə</a></li>
+        </ul>
+      </nav>
+      <ul class="social">
+        <% socialList2.forEach(function (s, i) { %>
+          <li data-aos-duration="700" data-aos="fade-up" data-aos-delay="<%= (i + 1) * 100 %>">
+            <a target="_blank" rel="noopener" href="<%= s.url %>" aria-label="<%= s.name %>">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><use xlink:href="#<%= spriteByKey2[s.key] || 'svg-link' %>"></use></svg>
+            </a>
+          </li>
+        <% }) %>
+      </ul>
+    </div>
+
+    <div class="ady-footer-cols">
+      <div class="ady-footer-col">
+        <h4><%= t('nav.tickets') %></h4>
+        <a href="/<%= locale %>/bilet-axtar"><%= t('nav.tickets') %></a>
+        <a href="/<%= locale %>/hereket-cedveli"><%= t('nav.timetable') %></a>
+        <a href="/<%= locale %>/populyar-istiqametler"><%= t('nav.destinations') %></a>
+        <a href="/<%= locale %>/bilet-yoxlama"><%= t('nav.verify') %></a>
+      </div>
+      <div class="ady-footer-col">
+        <h4><%= t('nav.tariffs') %></h4>
+        <a href="/<%= locale %>/tarifler-ve-odenis/gedis-haqqi-tarifleri"><%= t('footer.fares') %></a>
+        <a href="/<%= locale %>/tarifler-ve-odenis/gedis-haqqinin-qaytarilmasi"><%= t('footer.refund') %></a>
+        <a href="/<%= locale %>/tarifler-ve-odenis/odenis-usullari"><%= t('footer.paymentMethods') %></a>
+      </div>
+      <div class="ady-footer-col">
+        <h4>Sualım var</h4>
+        <a href="/<%= locale %>/sualim-var/suallar">Suallar</a>
+        <a href="/<%= locale %>/dasima-qaydalari/usaqlarla-seyahet"><%= t('nav.children') %></a>
+        <a href="/<%= locale %>/dasima-qaydalari/el-yuklerinin-dasinmasi"><%= t('nav.luggage') %></a>
+        <a href="/<%= locale %>/dasima-qaydalari/heyvanlarin-dasinmasi"><%= t('nav.pets') %></a>
+        <a href="/<%= locale %>/komek"><%= t('nav.help') %></a>
+      </div>
+      <div class="ady-footer-col">
+        <h4>Stansiyalar və dayanacaqlar</h4>
+        <a href="/<%= locale %>/stansiya-ve-vagzallar/stansiya-ve-vagzallar"><%= t('footer.stationsTitle') %></a>
+        <a href="/<%= locale %>/stansiya-ve-vagzallar/marsrutlar"><%= t('footer.routes') %></a>
+        <a href="/<%= locale %>/haqqimizda"><%= t('nav.about') %></a>
+        <a href="/<%= locale %>/elaqe"><%= t('nav.contact') %></a>
+      </div>
+      <div class="ady-footer-col ady-footer-col--sub">
+        <h4><%= t('footer.subscribe') %></h4>
+        <form id="subscribeForm" class="subscribe">
+          <input type="email" name="email" placeholder="<%= t('footer.email') %>" required />
+          <button type="submit" class="btn btn-blue"><%= t('footer.subscribeBtn') %></button>
+        </form>
+        <p class="ady-footer-note" id="subscribeNote"></p>
+        <div class="ady-footer-pay"><span>Visa</span><span>Mastercard</span><span>MilliKart</span></div>
+        <div class="ady-footer-contacts">
           <a href="tel:<%= site.supportPhone %>">Çağrı mərkəzi: <%= site.supportPhone %></a>
           <a href="mailto:<%= site.supportEmail %>"><%= site.supportEmail %></a>
           <span><%= site.address %></span>
         </div>
-        <% if (socials && socials.length) { %>
-          <div class="footer__socials">
-            <% socials.forEach(function(s){ %>
-              <a href="<%= s.url %>" target="_blank" rel="noopener" title="<%= s.name %>">
-                <img src="/assets/ady/social-<%= s.key %>.svg" alt="<%= s.name %>" />
-              </a>
-            <% }) %>
-          </div>
-        <% } %>
-        <div class="footer__apps">
-          <a href="<%= apps && apps.play || '#' %>" target="_blank" rel="noopener"><img src="/assets/ady/google-play.svg" alt="Google Play" /></a>
-          <a href="<%= apps && apps.apple || '#' %>" target="_blank" rel="noopener"><img src="/assets/ady/app-store.svg" alt="App Store" /></a>
-        </div>
-      </div>
-
-      <div class="footer__cols">
-        <div class="footer__col">
-          <h4><%= t('nav.tickets') %></h4>
-          <a href="/<%= locale %>/bilet-axtar"><%= t('nav.tickets') %></a>
-          <a href="/<%= locale %>/hereket-cedveli"><%= t('nav.timetable') %></a>
-          <a href="/<%= locale %>/populyar-istiqametler"><%= t('nav.destinations') %></a>
-          <a href="/<%= locale %>/bilet-yoxlama"><%= t('nav.verify') %></a>
-        </div>
-        <div class="footer__col">
-          <h4><%= t('nav.tariffs') %></h4>
-          <a href="/<%= locale %>/tarifler-ve-odenis/gedis-haqqi-tarifleri"><%= t('footer.fares') %></a>
-          <a href="/<%= locale %>/tarifler-ve-odenis/gedis-haqqinin-qaytarilmasi"><%= t('footer.refund') %></a>
-          <a href="/<%= locale %>/tarifler-ve-odenis/odenis-usullari"><%= t('footer.paymentMethods') %></a>
-        </div>
-        <div class="footer__col">
-          <h4>Sualım var</h4>
-          <a href="/<%= locale %>/sualim-var/suallar">Suallar</a>
-          <a href="/<%= locale %>/dasima-qaydalari/usaqlarla-seyahet"><%= t('nav.children') %></a>
-          <a href="/<%= locale %>/dasima-qaydalari/el-yuklerinin-dasinmasi"><%= t('nav.luggage') %></a>
-          <a href="/<%= locale %>/dasima-qaydalari/heyvanlarin-dasinmasi"><%= t('nav.pets') %></a>
-          <a href="/<%= locale %>/komek"><%= t('nav.help') %></a>
-        </div>
-        <div class="footer__col">
-          <h4>Stansiyalar və dayanacaqlar</h4>
-          <a href="/<%= locale %>/stansiya-ve-vagzallar/stansiya-ve-vagzallar"><%= t('footer.stationsTitle') %></a>
-          <a href="/<%= locale %>/stansiya-ve-vagzallar/marsrutlar"><%= t('footer.routes') %></a>
-          <a href="/<%= locale %>/haqqimizda"><%= t('nav.about') %></a>
-          <a href="/<%= locale %>/elaqe"><%= t('nav.contact') %></a>
-        </div>
-      </div>
-
-      <div class="footer__subscribe">
-        <h4><%= t('footer.subscribe') %></h4>
-        <form id="subscribeForm" class="subscribe">
-          <input type="email" name="email" placeholder="<%= t('footer.email') %>" required />
-          <button type="submit" class="btn btn--gold"><%= t('footer.subscribeBtn') %></button>
-        </form>
-        <p class="footer__note" id="subscribeNote"></p>
-        <div class="footer__pay">
-          <span>Visa</span><span>Mastercard</span><span>MilliKart</span>
-        </div>
       </div>
     </div>
 
-    <div class="footer__bottom">
-      <span>© <%= year %> "Azərbaycan Dəmir Yolları" QSC. Bütün hüquqlar qorunur.</span>
-      <span><a href="tel:1822" style="color:#f2a900">1822</a></span>
+    <div class="footer__bottom" data-aos-duration="700" data-aos="fade-up">
+      <p>
+        © <%= year %> "Azərbaycan Dəmir Yolları" QSC. Bütün hüquqlar qorunur.
+        <a class="footer__phone" href="tel:<%= site.supportPhone %>" aria-label="<%= site.supportPhone %>">
+          <svg xmlns="http://www.w3.org/2000/svg" width="66" height="24"><use xlink:href="#svg-phone"></use></svg>
+        </a>
+      </p>
+      <div class="footer__bottom__app">
+        <a href="<%= playUrl %>" target="_blank" rel="noopener"><img src="/ady-design/images/google-play.svg" alt="Google Play" /></a>
+        <a href="<%= appleUrl %>" target="_blank" rel="noopener"><img src="/ady-design/images/app-store.svg" alt="App Store" /></a>
+      </div>
     </div>
   </div>
 </footer>
