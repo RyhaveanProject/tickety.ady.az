@@ -2,15 +2,34 @@
 <html lang="<%= locale %>">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+  <meta name="format-detection" content="telephone=no" />
   <meta name="description" content="ADY — Azərbaycan Dəmir Yolları. Qatara onlayn bilet al, hərəkət cədvəli, tariflər və ödəniş." />
   <title><%= typeof title !== 'undefined' ? title : 'ADY | Azərbaycan Dəmir Yolları' %></title>
-  <link rel="icon" href="/assets/ady/logo.svg" type="image/svg+xml" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/ady-design/images/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/ady-design/images/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/ady-design/images/apple-touch-icon.png" />
+  <link rel="manifest" href="/ady-design/site.webmanifest" />
+  <meta name="theme-color" content="#ffffff" />
+
+  <!-- Layihənin funksional üslubu (daxili səhifələr) -->
   <link rel="stylesheet" href="/public/css/style.css?v=<%= assetV %>" />
+  <!-- Dizayn mənbəyinin üslubları (ticket.ady.az görünüşü) -->
+  <link rel="stylesheet" href="/ady-design/css/stylesheet.css?v=<%= assetV %>" />
+  <link rel="stylesheet" href="/ady-design/css/style.css?v=<%= assetV %>" />
+  <link rel="stylesheet" href="/ady-design/css/aos.css?v=<%= assetV %>" />
+  <link rel="stylesheet" href="/ady-design/css/loading.css?v=<%= assetV %>" />
+  <!-- Uyğunlaşdırma qatı: dizayn tokenləri + layihənin komponentləri -->
+  <link rel="stylesheet" href="/public/css/ady-theme.css?v=<%= assetV %>" />
   <link rel="stylesheet" href="/public/css/print.css?v=<%= assetV %>" media="print" />
   <%- typeof style !== 'undefined' ? style : '' %>
 </head>
 <body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>">
+
+  <div class="svg-placeholder" style="border:0;clip:rect(0 0 0 0);height:1px;margin:-1px;overflow:hidden;padding:0;position:absolute;width:1px"></div>
+  <script src="/ady-design/js/svg-symbols.js?v=<%= assetV %>"></script>
+  <script>try { document.querySelector('.svg-placeholder').innerHTML = window.SVG_SPRITE || ''; } catch (e) {}</script>
+
   <a href="#main" class="skip-link"><%= t('common.skipToContent') %></a>
 
   <%- include('../partials/header') %>
@@ -36,6 +55,12 @@
   <script src="/public/js/main.js?v=<%= assetV %>" defer></script>
   <script src="/public/js/auth.js?v=<%= assetV %>" defer></script>
   <script src="/public/js/payment.js?v=<%= assetV %>" defer></script>
+  <script src="/ady-design/js/aos.js?v=<%= assetV %>" defer></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      if (window.AOS) { try { AOS.init({ disable: 'mobile', once: true }); } catch (e) {} }
+    });
+  </script>
   <%- typeof script !== 'undefined' ? script : '' %>
 </body>
 </html>
