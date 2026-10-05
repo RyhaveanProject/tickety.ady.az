@@ -1,20 +1,20 @@
 <section class="section">
-  <div class="container">
+  <div class="container-fluid">
     <div style="max-width:520px;margin:0 auto">
       <div class="card">
         <div class="card__body">
-          <div class="eyebrow"><%= t('nav.login') %></div>
+          <div class="ady-eyebrow"><%= t('nav.login') %></div>
           <h1 style="font-size:1.5rem"><%= t('nav.login') %></h1>
           <p class="sec-note mb-24"><%= t('auth.loginHint') %></p>
 
           <div id="formNote" class="hidden mb-16"></div>
 
-          <div class="timetable-tabs" style="margin-bottom:16px">
-            <button type="button" class="tab is-active" data-tab="emailTab" data-tab-group="loginMode"><%= t('auth.tabEmail') %></button>
-            <button type="button" class="tab" data-tab="phoneTab" data-tab-group="loginMode"><%= t('checkout.phone') %></button>
+          <div class="ady-tabs" style="margin-bottom:16px">
+            <button type="button" class="ady-tab is-active" data-tab="emailTab" data-tab-group="loginMode"><%= t('auth.tabEmail') %></button>
+            <button type="button" class="ady-tab" data-tab="phoneTab" data-tab-group="loginMode"><%= t('checkout.phone') %></button>
           </div>
 
-          <div data-panel="emailTab" data-panel-group="loginMode" class="is-active">
+          <div data-panel="emailTab" data-panel-group="loginMode" class="ady-panel is-active">
             <form id="loginForm" autocomplete="on">
               <div class="field">
                 <label for="email"><%= t('auth.emailFieldLabel') %></label>
@@ -27,7 +27,7 @@
               <div class="field">
                 <a href="/<%= locale %>/sifre-berpasi" class="text-sm"><%= t('auth.forgotShort') %></a>
               </div>
-              <button type="submit" class="btn btn--primary btn--block btn--lg"><%= t('nav.login') %></button>
+              <button type="submit" class="btn btn-blue btn--block btn--lg"><%= t('nav.login') %></button>
             </form>
 
             <p class="text-sm text-center mt-24 mb-0">
@@ -35,7 +35,7 @@
             </p>
           </div>
 
-          <div data-panel="phoneTab" data-panel-group="loginMode">
+          <div data-panel="phoneTab" data-panel-group="loginMode" class="ady-panel">
             <form id="phoneLoginForm" autocomplete="on">
               <div class="field">
                 <label for="phone"><%= t('checkout.phone') %></label>
@@ -45,16 +45,13 @@
                 <label for="phonePassword"><%= t('auth.passwordFieldLabel') %></label>
                 <input type="password" id="phonePassword" name="password" required autocomplete="current-password" />
               </div>
-              <div class="field">
-                <a href="/<%= locale %>/sifre-berpasi" class="text-sm"><%= t('auth.forgotShort') %></a>
-              </div>
-              <button type="submit" class="btn btn--primary btn--block btn--lg"><%= t('nav.login') %></button>
+              <button type="submit" class="btn btn-blue btn--block btn--lg"><%= t('nav.login') %></button>
             </form>
-
-            <p class="text-sm text-center mt-24 mb-0">
-              <%= t('auth.noAccount') %> <a href="/<%= locale %>/qeydiyyat"><%= t('nav.register') %></a>
-            </p>
           </div>
+
+          <p class="text-sm text-center mt-24 mb-0">
+            <a href="/<%= locale %>/bilet-axtar">Bilet almaq üçün giriş tələb olunmur — davam et</a>
+          </p>
         </div>
       </div>
     </div>
@@ -70,11 +67,10 @@
       var note = document.getElementById('formNote');
       var btn = phoneForm.querySelector('button[type=submit]');
       window.setLoading(btn, true);
-      var payload = {
+      var r = await window.api('/api/auth/login', {
         phone: phoneForm.querySelector('[name=phone]').value,
         password: phoneForm.querySelector('[name=password]').value
-      };
-      var r = await window.api('/api/auth/login', payload);
+      });
       window.setLoading(btn, false);
       if (r.ok) { window.location.href = r.redirect || '/'; return; }
       note.className = 'alert alert--error mb-16';
