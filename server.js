@@ -53,7 +53,7 @@ app.use('/public', express.static(path.join(__dirname, 'public'), {
 }));
 app.use('/assets', express.static(path.join(__dirname, 'public', 'assets')));
 /* Dizayn mənbəyindən (ticket.ady.az) köçürülmüş vizual resurslar */
-app.use('/ady-design', express.static(path.join(__dirname, 'public', 'ady-design'), {
+app.use('/ady-design', express.static(path.join(__dirname, 'public', 'ady-desing'), {
   maxAge: config.nodeEnv === 'production' ? '7d' : 0
 }));
 
