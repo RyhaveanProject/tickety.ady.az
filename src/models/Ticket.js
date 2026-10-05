@@ -3,7 +3,10 @@ const mongoose = require('mongoose');
 const ticketSchema = new mongoose.Schema({
   pnr: { type: String, required: true, unique: true, index: true },
   order: { type: mongoose.Schema.Types.ObjectId, ref: 'Order', required: true, index: true },
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+  /* Qonaq biletlərində istifadəçi hesabı olmur */
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
+  isGuest: { type: Boolean, default: false },
+  guestEmail: { type: String, default: '' },
   trip: { type: mongoose.Schema.Types.ObjectId, ref: 'Trip', required: true },
   trainNumber: { type: String, default: '' },
   trainTitle: { type: String, default: '' },

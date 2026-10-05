@@ -4,7 +4,8 @@ const crypto = require('crypto');
 const paymentSchema = new mongoose.Schema({
   transactionId: { type: String, required: true, unique: true, index: true },
   order: { type: mongoose.Schema.Types.ObjectId, ref: 'Order', default: null, index: true },
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+  /* Qonaq ödənişlərində istifadəçi hesabı olmur */
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
   amount: { type: Number, required: true },
   method: { type: String, enum: ['card'], default: 'card', index: true },
   status: {

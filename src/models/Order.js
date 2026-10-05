@@ -17,7 +17,11 @@ const passengerSchema = new mongoose.Schema({
 
 const orderSchema = new mongoose.Schema({
   orderNo: { type: String, required: true, unique: true, index: true },
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+  /* Qonaq sifarişlərində istifadəçi hesabı olmur — sifariş identifikatoru ilə idarə olunur */
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
+  isGuest: { type: Boolean, default: false, index: true },
+  guestEmail: { type: String, default: '' },
+  guestPhone: { type: String, default: '' },
   trip: { type: mongoose.Schema.Types.ObjectId, ref: 'Trip', required: true },
   trainNumber: { type: String, default: '' },
   trainTitle: { type: String, default: '' },
