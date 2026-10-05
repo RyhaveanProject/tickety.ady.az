@@ -14,7 +14,15 @@ async function datesRange() {
 }
 
 /* ==================== Ana səhifə ==================== */
-router.get('/', async (req, res, next) => {
+/* ==================== Giriş səhifəsi ====================
+   Sayta daxil olan istifadəçi birbaşa BİLET ALMA bölməsinə yönləndirilir.
+   Dashboard / login səhifəsi ilk açılan səhifə DEYİL. */
+router.get('/', (req, res) => {
+  res.redirect('/' + res.locals.locale + '/bilet-axtar');
+});
+
+/* ==================== Ana səhifə (ayrıca ünvan) ==================== */
+router.get('/ana-sehife', async (req, res, next) => {
   try {
     const { today, maxDate } = await datesRange();
     const [stations, destinations, news, faqs, timetable] = await Promise.all([

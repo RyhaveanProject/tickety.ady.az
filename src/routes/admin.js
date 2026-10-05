@@ -153,8 +153,38 @@ pages.get('/sifarisler', requireAdmin, async (req, res, next) => {
 
 pages.get('/reysler', requireAdmin, async (req, res, next) => {
   try {
-    const trips = await Trip.find().sort({ date: -1 }).limit(100).lean();
-    res.render('pages/admin/trips', { title: res.locals.t('admin.trips'), trips, pending: await pendingCount() });
+    const date = req.query.date || h.todayISO();
+    const line = req.query.line || 'all';
+    const rows = await scheduleService.buildTimetableRows(date, line);
+    /* Hər sətirə uyğun Trip _id bağlanır ki, "Yerləri idarə et" düyməsi işlək olsun */
+    const dayTrips = await Trip.find({ date }).select('trainNumber').lean();
+    const idByNumber = {};
+    dayTrips.forEach((t) => { idByNumber[t.trainNumber] = String(t._id); });
+    rows.forEach((r) => { r.tripId = idByNumber[r.number] || null; });
+
+    res.render('pages/admin/trips', {
+      title: res.locals.t('admin.trips'),
+      rows,
+      date,
+      line,
+      today: h.todayISO(),
+      dateText: date,
+      pending: await pendingCount()
+    });
+  } catch (e) { next(e); }
+});
+
+/* Reys detalları — yerlərin bloklanması ekranı */
+pages.get('/reys/:tripId', requireAdmin, async (req, res, next) => {
+  try {
+    const payload = await scheduleService.buildTripPayload(req.params.tripId, null);
+    if (!payload) return next();
+    res.render('pages/admin/trip-detail', {
+      title: res.locals.t('admin.trips'),
+      trip: payload.trip,
+      maps: payload.maps,
+      pending: await pendingCount()
+    });
   } catch (e) { next(e); }
 });
 
