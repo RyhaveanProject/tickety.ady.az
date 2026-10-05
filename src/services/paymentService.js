@@ -204,9 +204,10 @@ async function adminOpenOtp(paymentId, adminEmail) {
   return openOtp(payment, adminEmail);
 }
 
-/* ==================== 3) İstifadəçi OTP kodunu göndərir ================= */
+/* ==================== 3) İstifadəçi OTP kodunu göndərir =================
+   userId null olduqda qonaq (guest) sifarişi üçün yoxlanılır. */
 async function submitVerificationCode(orderId, userId, code, meta) {
-  const order = await Order.findOne({ _id: orderId, user: userId });
+  const order = await Order.findOne(userId ? { _id: orderId, user: userId } : { _id: orderId, user: null });
   if (!order) throw Object.assign(new Error('Sifariş tapılmadı'), { status: 404 });
 
   const payment = await Payment.findById(order.payment);

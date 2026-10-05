@@ -27,8 +27,10 @@ function priceFor(trip, fromCode, toCode, classCode) {
   return { price: pricing.fare(trip, fromCode, toCode, cls), title: cls.title };
 }
 
-/* Gözləyən sifariş yaradır (ödənişdən əvvəl) */
+/* Gözləyən sifariş yaradır (ödənişdən əvvəl).
+   user null ola bilər — bu halda sifariş qonaq (guest) kimi yaradılır. */
 async function createPendingOrder(user, payload) {
+  const guest = !user;
   const trip = await Trip.findById(payload.tripId);
   if (!trip) throw Object.assign(new Error('Reys tapılmadı'), { status: 404 });
   if (trip.status !== 'active') throw Object.assign(new Error('Reys aktiv deyil'), { status: 400 });
@@ -87,7 +89,10 @@ async function createPendingOrder(user, payload) {
   const serviceFee = 0;
   const order = await Order.create({
     orderNo: h.generateOrderNo(),
-    user: user._id,
+    user: user ? user._id : null,
+    isGuest: guest,
+    guestEmail: guest ? (payload.contactEmail || '') : '',
+    guestPhone: guest ? (payload.contactPhone || '') : '',
     trip: trip._id,
     trainNumber: trip.trainNumber,
     trainTitle: trip.trainTitle,
@@ -99,8 +104,8 @@ async function createPendingOrder(user, payload) {
     departTime: fromStop.depart || fromStop.arrive,
     arriveTime: toStop.arrive || toStop.depart,
     passengers: normalizedPassengers,
-    contactPhone: payload.contactPhone || user.phone || '',
-    contactEmail: payload.contactEmail || user.email || '',
+    contactPhone: payload.contactPhone || (user && user.phone) || '',
+    contactEmail: payload.contactEmail || (user && user.email) || '',
     amount: Math.round(amount * 100) / 100,
     serviceFee,
     total: Math.round((amount + serviceFee) * 100) / 100,
@@ -131,7 +136,9 @@ async function issueTickets(order) {
     const ticket = await Ticket.create({
       pnr,
       order: order._id,
-      user: order.user,
+      user: order.user || null,
+      isGuest: !!order.isGuest,
+      guestEmail: order.guestEmail || order.contactEmail || '',
       trip: order.trip,
       trainNumber: order.trainNumber,
       trainTitle: order.trainTitle,
@@ -167,6 +174,7 @@ async function issueTickets(order) {
   return tickets;
 }
 
+/* Qonaq biletində istifadəçi hesabı yoxdursa balans qaytarma addımı ötürülür */
 /* Biletin qaytarılması */
 async function refundTicket(ticket) {
   if (ticket.status !== 'active') throw Object.assign(new Error('Bilet aktiv deyil'), { status: 400 });
@@ -196,7 +204,7 @@ async function refundTicket(ticket) {
     }
   }
 
-  const user = await User.findById(ticket.user);
+  const user = ticket.user ? await User.findById(ticket.user) : null;
   if (user) {
     const fee = Math.round(refundAmount * (config.rules.refundServiceFeePercent / 100) * 100) / 100;
     refundAmount = Math.round((refundAmount - fee) * 100) / 100;
