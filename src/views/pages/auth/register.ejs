@@ -1,9 +1,9 @@
 <section class="section">
-  <div class="container">
+  <div class="container-fluid">
     <div style="max-width:620px;margin:0 auto">
       <div class="card">
         <div class="card__body">
-          <div class="eyebrow"><%= t('nav.register') %></div>
+          <div class="ady-eyebrow"><%= t('nav.register') %></div>
           <h1 style="font-size:1.5rem"><%= t('nav.register') %></h1>
           <p class="sec-note mb-24"><%= t('auth.registerHint') %></p>
 
@@ -22,13 +22,15 @@
               <label for="email"><%= t('auth.emailFieldLabel') %></label>
               <input type="email" id="email" name="email" required autocomplete="email" />
             </div>
-            <div class="field">
-              <label for="password"><%= t('auth.passwordFieldLabel') %></label>
-              <input type="password" id="password" name="password" required autocomplete="new-password" minlength="6" />
-            </div>
-            <div class="field">
-              <label for="passwordRepeat"><%= t('auth.passwordRepeatLabel') %></label>
-              <input type="password" id="passwordRepeat" name="passwordRepeat" required minlength="6" />
+            <div class="field--row">
+              <div class="field">
+                <label for="password"><%= t('auth.passwordFieldLabel') %></label>
+                <input type="password" id="password" name="password" required autocomplete="new-password" minlength="6" />
+              </div>
+              <div class="field">
+                <label for="passwordRepeat"><%= t('auth.passwordRepeatLabel') %></label>
+                <input type="password" id="passwordRepeat" name="passwordRepeat" required minlength="6" />
+              </div>
             </div>
             <div class="field">
               <label for="phone"><%= t('checkout.phone') %></label>
@@ -42,11 +44,12 @@
               </label>
             </div>
 
-            <button type="submit" class="btn btn--primary btn--block btn--lg"><%= t('auth.submitRegisterBtn') %></button>
+            <button type="submit" class="btn btn-blue btn--block btn--lg"><%= t('auth.submitRegisterBtn') %></button>
           </form>
 
           <p class="text-sm text-center mt-24 mb-0">
-            <a href="/<%= locale %>/login"><%= t('nav.login') %></a>
+            <a href="/<%= locale %>/login"><%= t('nav.login') %></a> ·
+            <a href="/<%= locale %>/bilet-axtar">Bilet almaq üçün qeydiyyat tələb olunmur</a>
           </p>
         </div>
       </div>
