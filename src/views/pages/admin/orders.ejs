@@ -28,7 +28,14 @@
                 <% var u = userMap[String(o.user)]; %>
                 <tr>
                   <td class="mono"><%= o.orderNo %></td>
-                  <td><%= u ? [u.firstName, u.lastName].join(' ') : '—' %><br /><span class="sec-note"><%= u ? u.email : '' %></span></td>
+                  <td>
+                    <% if (u) { %>
+                      <%= [u.firstName, u.lastName].join(' ') %><br /><span class="sec-note"><%= u.email %></span>
+                    <% } else { %>
+                      <span class="badge badge--gold">Qonaq</span><br />
+                      <span class="sec-note"><%= o.guestEmail || o.contactEmail || '—' %></span>
+                    <% } %>
+                  </td>
                   <td><%= o.fromName %> — <%= o.toName %><br /><span class="sec-note"><%= o.trainNumber %></span></td>
                   <td><%= o.date %> <%= o.departTime %></td>
                   <td><%= o.passengers.map(function(p){ return p.wagon + '/' + p.seat; }).join(', ') %></td>
