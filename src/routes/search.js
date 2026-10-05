@@ -10,12 +10,25 @@ const router = express.Router();
 
 router.get('/bilet-axtar', async (req, res, next) => {
   try {
-    const stations = await Station.find({ active: true }).sort({ order: 1 }).lean();
+    const today = h.todayISO();
+    const maxDate = await scheduleService.maxSaleDate();
+    const requestedDate = typeof req.query.date === 'string' ? req.query.date : '';
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) && requestedDate >= today && requestedDate <= maxDate
+      ? requestedDate : today;
+    const lines = ['absheron', 'domestic', 'georgia', 'international'];
+    const line = lines.includes(req.query.line) ? req.query.line : 'absheron';
+    const [stations, timetableRows] = await Promise.all([
+      Station.find({ active: true }).sort({ order: 1 }).lean(),
+      scheduleService.buildTimetableRows(date, line)
+    ]);
     res.render('pages/ticket-search', {
       title: res.locals.t('search.pageTitle'),
       stations,
-      today: h.todayISO(),
-      maxDate: await scheduleService.maxSaleDate(),
+      timetableRows,
+      line,
+      date,
+      today,
+      maxDate,
       prefill: {
         from: req.query.from || '',
         to: req.query.to || '',
