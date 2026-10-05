@@ -52,6 +52,10 @@ app.use('/public', express.static(path.join(__dirname, 'public'), {
   maxAge: config.nodeEnv === 'production' ? '7d' : 0
 }));
 app.use('/assets', express.static(path.join(__dirname, 'public', 'assets')));
+/* Dizayn mənbəyindən (ticket.ady.az) köçürülmüş vizual resurslar */
+app.use('/ady-design', express.static(path.join(__dirname, 'public', 'ady-design'), {
+  maxAge: config.nodeEnv === 'production' ? '7d' : 0
+}));
 
 /* ==================== Sessiya ==================== */
 const sessionMw = buildSessionMiddleware();
@@ -145,6 +149,9 @@ app.use('/', bookingRoutes);
 app.use('/', accountRoutes);
 app.use('/', searchRoutes);
 
+/* Footer abunə və əlaqə formaları dil prefiksisiz '/api/...' ünvanına müraciət edir */
+app.use('/', pageRoutes);
+
 /* İdarəetmə API-si dil prefiksindən asılı deyil */
 app.use('/api/admin', adminRoutes.api);
 
@@ -152,7 +159,8 @@ app.use('/api/admin', adminRoutes.api);
 const localesPattern = config.locales.join('|');
 app.get('/', (req, res) => {
   const locale = req.cookies.locale && config.locales.indexOf(req.cookies.locale) > -1 ? req.cookies.locale : config.defaultLocale;
-  res.redirect('/' + locale);
+  /* Bilet alma bölməsi əsas giriş səhifəsidir */
+  res.redirect('/' + locale + '/bilet-axtar');
 });
 
 /* Dil prefiksli marşrutlarda lokal (tərcüməçi) ŞƏRTSİZ quraşdırılır —
@@ -271,7 +279,7 @@ async function start() {
   scheduleSync();
 
   const port = process.env.PORT || config.port;
-  try { require('./src/services/keepAlive').start(); } catch (e) { console.warn('[keepalive]', e.message); }
+  try { require('./src/routes/keepAlive').start(); } catch (e) { console.warn('[keepalive]', e.message); }
   app.listen(port, () => {
     console.log('ADY bilet portalı işə düşdü — port ' + port);
     console.log('Mühit: ' + config.nodeEnv + ' | Canlı mənbə: ' + config.liveSourceUrl);
