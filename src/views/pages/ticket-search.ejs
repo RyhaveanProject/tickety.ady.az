@@ -1,49 +1,89 @@
-<section class="section">
-  <div class="container-fluid">
-    <div class="ady-section-head">
-      <div>
-        <div class="ady-eyebrow"><%= t('nav.tickets') %></div>
-        <h1><%= t('search.pageTitle') %></h1>
-        <p><%= t('search.pageSub') %></p>
-      </div>
-      <% if (!currentUser) { %>
-        <div class="ady-guest-note">
-          <span>Bilet almaq üçün qeydiyyat tələb olunmur.</span>
-          <a href="/<%= locale %>/login" class="btn btn-blue-transparent btn--small"><%= t('nav.login') %></a>
-        </div>
-      <% } %>
-    </div>
+<section class="purchase-hero" aria-labelledby="purchase-title">
+  <img class="purchase-hero__image" src="/ady-design/images/veb-sayt-banner-2.jpg" alt="ADY sərnişin qatarı" />
+  <div class="container purchase-hero__content">
+    <div class="purchase-hero__label"><%= t('brand.railways') %></div>
+    <h1 id="purchase-title"><%= t('search.pageTitle') %></h1>
+    <p><%= t('search.pageSub') %></p>
+  </div>
+</section>
 
-    <div class="ady-search-card ady-search-card--page">
-      <%- include('../partials/search-form', { stations: stations, today: today, maxDate: maxDate, prefill: prefill }) %>
-    </div>
+<section class="purchase-search" aria-label="<%= t('search.pageTitle') %>">
+  <div class="container">
+    <%- include('../partials/search-form', { stations: stations, today: today, maxDate: maxDate, prefill: prefill }) %>
+  </div>
+</section>
 
-    <div class="grid grid--3" style="margin-top:34px">
-      <div class="card"><div class="card__body">
-        <h3><%= t('search.howTitle') %></h3>
-        <ol class="ady-list">
-          <li><%= t('search.how1') %></li>
-          <li><%= t('search.how2') %></li>
-          <li><%= t('search.how3') %></li>
-          <li><%= t('search.how4') %></li>
-        </ol>
-      </div></div>
-      <div class="card"><div class="card__body">
-        <h3><%= t('search.rulesTitle') %></h3>
-        <ul class="ady-list">
-          <li><%= t('search.rule1', rules.maxTicketsPerOrder) %></li>
-          <li><%= t('search.rule2', rules.salesOpenDaysBefore) %></li>
-          <li><%= t('search.rule3', rules.salesCloseHoursBefore) %></li>
-        </ul>
-      </div></div>
-      <div class="card"><div class="card__body">
-        <h3><%= t('search.payTitle') %></h3>
-        <p class="sec-note"><%= t('search.payText') %></p>
-      </div></div>
+<section class="purchase-services" aria-label="Xidmətlər">
+  <div class="container">
+    <div class="purchase-services__grid">
+      <a class="purchase-service" href="/<%= locale %>/populyar-istiqametler">
+        <img src="/ady-design/images/xeyyam.png" alt="" loading="lazy" />
+        <span class="purchase-service__body"><strong>Populyar istiqamətlər</strong><small>ADY ilə Azərbaycanı kəşf et</small><span>Ətraflı oxu &rarr;</span></span>
+      </a>
+      <a class="purchase-service" href="/<%= locale %>/dasima-qaydalari/usaqlarla-seyahet">
+        <img src="/ady-design/images/frame-980-1.png" alt="" loading="lazy" />
+        <span class="purchase-service__body"><strong>Uşaqlarla səyahət</strong><small>Uşaqların qatarla səyahət etməsi üçün qaydalar</small><span>Ətraflı oxu &rarr;</span></span>
+      </a>
+      <a class="purchase-service" href="/<%= locale %>/tarifler-ve-odenis/yerinde-odenis">
+        <img src="/ady-design/images/fiziki-kart.png" alt="" loading="lazy" />
+        <span class="purchase-service__body"><strong>Ödəniş üsulları</strong><small>Bilet ödənişləri haqqında məlumat</small><span>Ətraflı oxu &rarr;</span></span>
+      </a>
+      <a class="purchase-service" href="/<%= locale %>/dasima-qaydalari/el-yuklerinin-dasinmasi">
+        <img src="/ady-design/images/canta-sayt-illustrasiya.png" alt="" loading="lazy" />
+        <span class="purchase-service__body"><strong>Əl yüklərinin daşınması</strong><small>Qatarda əl yükləri üçün qaydalar</small><span>Ətraflı oxu &rarr;</span></span>
+      </a>
+      <a class="purchase-service" href="/<%= locale %>/dasima-qaydalari/heyvanlarin-dasinmasi">
+        <img src="/ady-design/images/group-5711-1.png" alt="" loading="lazy" />
+        <span class="purchase-service__body"><strong>Heyvanların daşınması</strong><small>Ev heyvanları ilə səyahət qaydaları</small><span>Ətraflı oxu &rarr;</span></span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="purchase-timetable" aria-labelledby="purchase-timetable-title">
+  <div class="container">
+    <div class="purchase-timetable__head">
+      <div><span class="purchase-timetable__eyebrow"><%= t('nav.timetable') %></span><h2 id="purchase-timetable-title"><%= t('timetable.title') %></h2><p><%= t('timetable.sub') %></p></div>
+      <a class="btn btn--outline" href="/<%= locale %>/hereket-cedveli?date=<%= date %>&line=<%= line %>"><%= t('home.fullTimetable') %> &rarr;</a>
+    </div>
+    <form class="purchase-timetable__filters" action="/<%= locale %>/bilet-axtar" method="get">
+      <label for="purchase-date"><%= t('timetable.date') %></label>
+      <input id="purchase-date" name="date" type="date" value="<%= date %>" min="<%= today %>" max="<%= maxDate %>" required />
+      <label for="purchase-line"><%= t('timetable.line') %></label>
+      <select id="purchase-line" name="line">
+        <option value="absheron" <%= line === 'absheron' ? 'selected' : '' %>><%= t('home.absheronTitle') %></option>
+        <option value="domestic" <%= line === 'domestic' ? 'selected' : '' %>><%= t('home.domestic') %></option>
+        <option value="georgia" <%= line === 'georgia' ? 'selected' : '' %>><%= t('home.georgia') %></option>
+        <option value="international" <%= line === 'international' ? 'selected' : '' %>><%= t('home.international') %></option>
+      </select>
+      <button class="btn btn--primary" type="submit"><%= t('timetable.show') %></button>
+    </form>
+    <nav class="purchase-timetable__tabs" aria-label="<%= t('timetable.line') %>">
+      <% [['absheron', t('home.absheronTitle')], ['domestic', t('home.domestic')], ['georgia', t('home.georgia')], ['international', t('home.international')]].forEach(function(item){ %>
+        <a href="/<%= locale %>/bilet-axtar?date=<%= date %>&line=<%= item[0] %>#purchase-timetable-title" class="purchase-timetable__tab <%= line === item[0] ? 'is-active' : '' %>" <%= line === item[0] ? 'aria-current="page"' : '' %>><%= item[1] %></a>
+      <% }) %>
+    </nav>
+    <div class="table-wrap purchase-timetable__table">
+      <table class="data">
+        <thead><tr><th><%= t('table.train') %></th><th><%= t('table.route') %></th><th><%= t('table.depart') %></th><th><%= t('table.arrive') %></th><th><%= t('table.price') %></th><th></th></tr></thead>
+        <tbody>
+          <% if (!timetableRows.length) { %><tr><td colspan="6"><%= t('results.none') %></td></tr><% } %>
+          <% timetableRows.slice(0, 12).forEach(function(trip){ %>
+            <tr>
+              <td class="num"><strong><%= trip.number %></strong></td>
+              <td><%= trip.from %> &mdash; <%= trip.to %></td>
+              <td class="num"><%= trip.depart %></td>
+              <td class="num"><%= trip.arrive %></td>
+              <td class="num"><%= trip.minPrice.toFixed(2) %> ₼</td>
+              <td><a class="btn btn--sm btn--primary" href="/<%= locale %>/reysler?from=<%= encodeURIComponent(trip.fromCode) %>&to=<%= encodeURIComponent(trip.toCode) %>&date=<%= date %>&passengers=1"><%= t('home.buyTicket') %></a></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
     </div>
   </div>
 </section>
 
 <script>
-  window.ADY_STATIONS = <%- JSON.stringify(stations.map(function (s) { return { code: s.code, name: s.name, nameEn: s.nameEn, region: s.region }; })) %>;
+  window.ADY_STATIONS = <%- JSON.stringify(stations.map(function(s){ return { code: s.code, name: s.name, nameEn: s.nameEn, region: s.region }; })) %>;
 </script>
