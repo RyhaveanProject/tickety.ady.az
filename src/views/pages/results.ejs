@@ -1,19 +1,19 @@
 <section class="section">
-  <div class="container">
-    <div class="section__head">
+  <div class="container-fluid">
+    <div class="ady-section-head">
       <div>
-        <div class="eyebrow"><%= fromName %> — <%= toName %></div>
+        <div class="ady-eyebrow"><%= fromName %> — <%= toName %></div>
         <h1><%= t('results.title') %></h1>
         <p><%= dateText %> · <%= results.length %> <%= t('results.found') %></p>
       </div>
-      <a href="/<%= locale %>/bilet-axtar" class="btn btn--outline"><%= t('results.change') %></a>
+      <a href="/<%= locale %>/bilet-axtar" class="btn btn-blue-transparent"><%= t('results.change') %></a>
     </div>
 
     <% if (!results.length) { %>
       <div class="alert alert--warn"><%= t('results.none') %></div>
     <% } %>
 
-    <% results.forEach(function(r){ %>
+    <% results.forEach(function (r) { %>
       <div class="trip">
         <div>
           <div class="trip__route">
@@ -41,11 +41,11 @@
         <div class="trip__right">
           <div class="trip__price"><%= r.minPrice.toFixed(2) %> ₼<small> <%= t('results.from') %></small></div>
           <div class="trip__classes">
-            <% r.classes.forEach(function(c){ %>
+            <% r.classes.forEach(function (c) { %>
               <span class="chip"><%= c.title %> · <%= c.price.toFixed(2) %> ₼</span>
             <% }) %>
           </div>
-          <a href="/<%= locale %>/yer-secimi/<%= r.tripId %>?from=<%= from %>&to=<%= to %>&passengers=<%= passengers %>" class="btn btn--primary btn--sm"><%= t('results.select') %></a>
+          <a href="/<%= locale %>/yer-secimi/<%= r.tripId %>?from=<%= from %>&to=<%= to %>&passengers=<%= passengers %>" class="btn btn-blue btn--small"><%= t('results.select') %></a>
         </div>
       </div>
     <% }) %>

@@ -1,18 +1,21 @@
+<%
+  var buyer = user || null;
+%>
 <section class="section">
-  <div class="container">
-    <div class="section__head">
+  <div class="container-fluid">
+    <div class="ady-section-head">
       <div>
-        <div class="eyebrow"><%= trip.trainNumber %> · <%= trip.date %></div>
+        <div class="ady-eyebrow"><%= trip.trainNumber %> · <%= trip.date %></div>
         <h1><%= t('checkout.title') %></h1>
         <p><%= t('checkout.sub') %></p>
       </div>
-      <a href="/<%= locale %>/yer-secimi/<%= trip._id %>?from=<%= from %>&to=<%= to %>&passengers=<%= seats.length %>" class="btn btn--outline"><%= t('seats.back') %></a>
+      <a href="/<%= locale %>/yer-secimi/<%= trip._id %>?from=<%= from %>&to=<%= to %>&passengers=<%= seats.length %>" class="btn btn-blue-transparent"><%= t('seats.back') %></a>
     </div>
 
     <div class="layout-aside">
       <div>
         <div class="card mb-16"><div class="card__body">
-          <h3 style="font-size:1rem"><%= t('table.route') %></h3>
+          <h3><%= t('table.route') %></h3>
           <dl class="kv">
             <dt><%= t('results.train') %></dt><dd><%= trip.trainNumber %> · <%= trip.trainTitle %></dd>
             <dt><%= t('common.date') %></dt><dd><%= trip.date %></dd>
@@ -22,40 +25,45 @@
         </div></div>
 
         <div class="card"><div class="card__body">
-          <!-- ✅ FİX: formNote element'i görmə olmağı təmin et -->
           <div id="formNote" class="hidden"></div>
 
-          <h3 style="font-size:1rem"><%= t('checkout.contact') %></h3>
+          <% if (!buyer) { %>
+            <div class="alert alert--info">
+              <strong>Qeydiyyat tələb olunmur.</strong>
+              Əlaqə məlumatlarını doldurub ödənişə keçin. Bilet PNR kodu ilə e-poçtunuza göndərilir.
+              <a href="/<%= locale %>/login?next=<%= encodeURIComponent('/' + locale + '/rezervasyon/' + trip._id) %>">Hesabınız var?</a>
+            </div>
+          <% } %>
+
+          <h3><%= t('checkout.contact') %></h3>
           <div class="field--row">
             <div class="field">
               <label for="contactPhone"><%= t('checkout.phone') %></label>
-              <!-- ✅ FİX: name attribute'ı əlavə edildi -->
-              <input type="tel" id="contactPhone" name="contactPhone" value="<%= user.phone || '' %>" required />
+              <input type="tel" id="contactPhone" name="contactPhone" value="<%= buyer ? (buyer.phone || '') : '' %>" placeholder="+994" required />
             </div>
             <div class="field">
               <label for="contactEmail"><%= t('checkout.email') %></label>
-              <!-- ✅ FİX: name attribute'ı əlavə edildi -->
-              <input type="email" id="contactEmail" name="contactEmail" value="<%= user.email %>" required />
+              <input type="email" id="contactEmail" name="contactEmail" value="<%= buyer ? buyer.email : '' %>" required />
             </div>
           </div>
 
-          <% seats.forEach(function(s, i){ %>
+          <% seats.forEach(function (s, i) { %>
             <hr />
-            <h3 style="font-size:1rem"><%= t('checkout.passenger') %> <%= i + 1 %> <span class="badge badge--blue"><%= t('seats.wagon') %> <%= s.wagon %> · <%= s.seat %></span></h3>
+            <h3><%= t('checkout.passenger') %> <%= i + 1 %> <span class="badge badge--blue"><%= t('seats.wagon') %> <%= s.wagon %> · <%= s.seat %></span></h3>
             <div class="field--row">
               <div class="field">
                 <label><%= t('checkout.lastName') %></label>
-                <input type="text" data-p-lastname="<%= i %>" value="<%= i === 0 ? user.lastName : '' %>" required />
+                <input type="text" data-p-lastname="<%= i %>" value="<%= i === 0 && buyer ? buyer.lastName : '' %>" required />
               </div>
               <div class="field">
                 <label><%= t('checkout.firstName') %></label>
-                <input type="text" data-p-firstname="<%= i %>" value="<%= i === 0 ? user.firstName : '' %>" required />
+                <input type="text" data-p-firstname="<%= i %>" value="<%= i === 0 && buyer ? buyer.firstName : '' %>" required />
               </div>
             </div>
             <div class="field--row">
               <div class="field">
                 <label><%= t('checkout.middleName') %></label>
-                <input type="text" data-p-middlename="<%= i %>" value="<%= i === 0 ? (user.middleName || '') : '' %>" />
+                <input type="text" data-p-middlename="<%= i %>" value="<%= i === 0 && buyer ? (buyer.middleName || '') : '' %>" />
               </div>
               <div class="field">
                 <label><%= t('checkout.birthDate') %></label>
@@ -81,8 +89,8 @@
 
       <div class="summary">
         <div class="card"><div class="card__body">
-          <h3 style="font-size:1rem"><%= t('checkout.summary') %></h3>
-          <% seats.forEach(function(s){ %>
+          <h3><%= t('checkout.summary') %></h3>
+          <% seats.forEach(function (s) { %>
             <div class="summary__row">
               <span><%= t('seats.wagon') %> <%= s.wagon %> · <%= s.seat %> — <%= s.className %></span>
               <span class="mono"><%= s.price.toFixed(2) %> ₼</span>
@@ -96,22 +104,20 @@
             <span><%= t('checkout.total') %></span>
             <span class="mono"><%= total.toFixed(2) %> ₼</span>
           </div>
-          <button type="button" class="btn btn--primary btn--block btn--lg mt-16" id="toPayment"><%= t('checkout.next') %></button>
+          <button type="button" class="btn btn-blue btn--block btn--lg mt-16" id="toPayment"><%= t('checkout.next') %></button>
         </div></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ✅ FİXLƏNMİŞ CHECKOUT SCRIPT -->
 <script>
   document.getElementById('toPayment').addEventListener('click', async function () {
     var btn = this;
     var note = document.getElementById('formNote');
-    var seats = <%- JSON.stringify(seats.map(function(s){ return { wagon: s.wagon, seat: s.seat, classCode: s.classCode }; })) %>;
+    var seats = <%- JSON.stringify(seats.map(function (s) { return { wagon: s.wagon, seat: s.seat, classCode: s.classCode }; })) %>;
     var passengers = [];
 
-    // ✅ FİX 1: Validation error göstərilmə
     function showError(message) {
       if (!note) return;
       note.classList.remove('hidden');
@@ -120,42 +126,23 @@
       window.toast(message, 'error');
     }
 
-    // ✅ FİX 2: Form validasiyası əlavə edildi
     var contactPhone = document.getElementById('contactPhone');
     var contactEmail = document.getElementById('contactEmail');
-    
-    if (!contactPhone || !contactPhone.value.trim()) {
-      showError('Əlaqə telefonu vacibdir');
-      return;
-    }
-    if (!contactEmail || !contactEmail.value.trim()) {
-      showError('Əlaqə e-poçtu vacibdir');
-      return;
-    }
 
-    // ✅ FİX 3: Sərnişin validasiyası
+    if (!contactPhone || !contactPhone.value.trim()) { showError('Əlaqə telefonu vacibdir'); return; }
+    if (!contactEmail || !contactEmail.value.trim()) { showError('Əlaqə e-poçtu vacibdir'); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(contactEmail.value.trim())) { showError('E-poçt ünvanı yanlışdır'); return; }
+
     for (var i = 0; i < seats.length; i += 1) {
       var fn = document.querySelector('[data-p-firstname="' + i + '"]');
       var ln = document.querySelector('[data-p-lastname="' + i + '"]');
       var bd = document.querySelector('[data-p-birthdate="' + i + '"]');
       var dn = document.querySelector('[data-p-docnumber="' + i + '"]');
 
-      if (!fn || !fn.value.trim()) {
-        showError('Sərnişin ' + (i + 1) + ': Adı daxil edin');
-        return;
-      }
-      if (!ln || !ln.value.trim()) {
-        showError('Sərnişin ' + (i + 1) + ': Soyadı daxil edin');
-        return;
-      }
-      if (!bd || !bd.value) {
-        showError('Sərnişin ' + (i + 1) + ': Doğum tarixini seçin');
-        return;
-      }
-      if (!dn || !dn.value.trim()) {
-        showError('Sərnişin ' + (i + 1) + ': Sənəd nömrəsini daxil edin');
-        return;
-      }
+      if (!fn || !fn.value.trim()) { showError('Sərnişin ' + (i + 1) + ': Adı daxil edin'); return; }
+      if (!ln || !ln.value.trim()) { showError('Sərnişin ' + (i + 1) + ': Soyadı daxil edin'); return; }
+      if (!bd || !bd.value) { showError('Sərnişin ' + (i + 1) + ': Doğum tarixini seçin'); return; }
+      if (!dn || !dn.value.trim()) { showError('Sərnişin ' + (i + 1) + ': Sənəd nömrəsini daxil edin'); return; }
 
       passengers.push({
         firstName: fn.value.trim(),
@@ -180,19 +167,14 @@
         contactPhone: contactPhone.value.trim(),
         contactEmail: contactEmail.value.trim()
       });
-      
+
       window.setLoading(btn, false);
 
       if (r.ok) {
-        if (!note) return;
-        note.classList.add('hidden');
+        if (note) note.classList.add('hidden');
         window.toast(r.message || 'Sifariş yaradıldı', 'success');
-        // Sifariş yaradıldıqdan sonra ödəniş səhifəsinə yönləndirin
-        setTimeout(function () {
-          window.location.href = r.redirect;
-        }, 500);
+        setTimeout(function () { window.location.href = r.redirect; }, 500);
       } else {
-        // ✅ FİX 4: Error göstərişi
         showError(r.message || 'Sifariş yaradıla bilmədi');
       }
     } catch (err) {

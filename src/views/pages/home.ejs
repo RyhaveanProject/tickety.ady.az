@@ -1,145 +1,133 @@
+<!-- ==================== Hero + bilet alma (əsas giriş bölməsi) ==================== -->
 <section class="hero">
-  <img class="hero__banner" src="/assets/ady/banner-1.svg" alt="<%= t('home.heroBannerAlt') %>" />
-  <div class="hero__inner">
-    <div class="eyebrow"><%= t('brand.railways') %></div>
-    <h1><%= t('home.heroTitle') %></h1>
-    <p class="hero__sub"><%= t('home.heroSub') %></p>
-    <div class="hero__stats">
-      <div class="hero__stat"><strong><%= timetable.absheron.length %></strong><span><%= t('home.statAbsheron') %></span></div>
-      <div class="hero__stat"><strong><%= timetable.domestic.length %></strong><span><%= t('home.statDomestic') %></span></div>
-      <div class="hero__stat"><strong><%= timetable.georgia.length %></strong><span><%= t('home.statGeorgia') %></span></div>
-      <div class="hero__stat"><strong><%= stations.length %></strong><span><%= t('home.statStations') %></span></div>
-    </div>
+  <div class="hero__media">
+    <img src="/ady-design/images/veb-sayt-banner-2.jpg"
+         srcset="/ady-design/images/veb-sayt-banner-2.jpg 1x, /ady-design/images/veb-sayt-banner-2_1.jpg 2x"
+         width="1920" alt="<%= t('home.heroTitle') %>" />
   </div>
-</section>
-
-<div class="container">
-  <%- include('../partials/search-form', { stations: stations, today: serverDate, maxDate: serverDateMax, prefill: null }) %>
-</div>
-
-<!-- ==================== Xidmət kartları ==================== -->
-<section class="section section--tight">
-  <div class="container">
-    <div class="grid grid--4">
-      <% homeCards.forEach(function(c){ %>
-        <a href="/<%= locale %>/<%= c.href %>" class="card">
-          <img src="<%= c.image %>" alt="<%= c.title %>" style="width:100%;height:130px;object-fit:cover" />
-          <div class="card__body">
-            <h3 style="font-size:1rem"><%= c.title %></h3>
-            <p style="color:var(--ink-2);font-size:.875rem;margin:0 0 10px"><%= c.text %></p>
-            <span class="feature__link"><%= c.action %></span>
-          </div>
-        </a>
-      <% }) %>
-      <a href="/<%= locale %>/hereket-cedveli" class="card">
-        <img src="/assets/ady/card-popular.svg" alt="<%= t('home.timetableCardTitle') %>" style="width:100%;height:130px;object-fit:cover" />
-        <div class="card__body">
-          <h3 style="font-size:1rem"><%= t('home.timetableCardTitle') %></h3>
-          <p style="color:var(--ink-2);font-size:.875rem;margin:0 0 10px"><%= t('home.timetableCardText') %></p>
-          <span class="feature__link"><%= t('common.readMore') %></span>
-        </div>
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- ==================== Populyar istiqamətlər — üfüqi karusel ==================== -->
-<section class="section">
-  <div class="container">
-    <div class="section__head">
-      <div>
-        <div class="eyebrow"><%= t('home.travel') %></div>
-        <h2><%= t('home.popular') %></h2>
-        <p><%= t('home.discover') %></p>
-      </div>
-      <div class="rail-nav">
-        <a href="/<%= locale %>/populyar-istiqametler" class="btn btn--outline"><%= t('home.seeAll') %></a>
-        <button type="button" class="rail-arrow" id="railPrev" aria-label="<%= t('common.prev') %>">‹</button>
-        <button type="button" class="rail-arrow" id="railNext" aria-label="<%= t('common.next') %>">›</button>
+  <div class="search">
+    <div class="container-fluid">
+      <div class="ady-search-card">
+        <%- include('../partials/search-form', { stations: stations, today: serverDate, maxDate: serverDateMax, prefill: null }) %>
       </div>
     </div>
-
-    <div class="dest-rail" id="destRail">
-      <% destinations.forEach(function(d){ %>
-        <a href="/<%= locale %>/populyar-istiqametler/<%= d.slug %>" class="feature dest-card">
-          <div class="feature__img"><img src="<%= d.image %>" alt="<%= d.title %>" loading="lazy" /></div>
-          <div class="feature__body">
-            <h3><%= d.title %></h3>
-            <div class="feature__meta">
-              <span><strong><%= d.priceFrom.toFixed(2) %></strong> <%= t('home.aznFrom') %></span>
-              <span><%= d.durationText %></span>
-              <span><%= d.distanceKm %> km</span>
-            </div>
-            <span class="feature__link"><%= t('home.readMore') %></span>
-          </div>
-        </a>
-      <% }) %>
-    </div>
   </div>
 </section>
 
-<!-- ==================== Abşeron dairəvi xətti ==================== -->
-<section class="section" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
-  <div class="container">
-    <div class="section__head">
+<!-- ==================== Xidmət kartları (usefully) ==================== -->
+<section class="usefully">
+  <div class="usefully__slider" id="usefullyRail">
+    <a href="/<%= locale %>/populyar-istiqametler" class="usefully__item">
+      <span class="usefully__img"><img src="/ady-design/images/xeyyam.png" srcset="/ady-design/images/xeyyam.png 1x, /ady-design/images/xeyyam_1.png 2x" alt="Populyar istiqamətlər" /></span>
+      <div class="usefully__desc">
+        <h5>Populyar istiqamətlər</h5>
+        <p>ADY ilə Azərbaycanı kəşf et</p>
+        <span class="more">Ətraflı oxu <img src="/ady-design/images/arrow-right.svg" alt="" /></span>
+      </div>
+    </a>
+    <a href="/<%= locale %>/dasima-qaydalari/usaqlarla-seyahet" class="usefully__item">
+      <span class="usefully__img"><img src="/ady-design/images/frame-980-1.png" srcset="/ady-design/images/frame-980-1.png 1x, /ady-design/images/frame-980-1_1.png 2x" alt="Uşaqlarla səyahət" /></span>
+      <div class="usefully__desc">
+        <h5>Uşaqlarla səyahət</h5>
+        <p>Uşaqların qatarla səyahət etməsi üçün qaydalar.</p>
+        <span class="more">Ətraflı oxu <img src="/ady-design/images/arrow-right.svg" alt="" /></span>
+      </div>
+    </a>
+    <a href="/<%= locale %>/tarifler-ve-odenis/odenis-usullari" class="usefully__item">
+      <span class="usefully__img"><img src="/ady-design/images/fiziki-kart.png" srcset="/ady-design/images/fiziki-kart.png 1x, /ady-design/images/fiziki-kart_1.png 2x" alt="Fiziki kartın balansının artırılması" /></span>
+      <div class="usefully__desc">
+        <h5>Fiziki kartın balansının artırılması</h5>
+        <p>Vaxta qənaət üçün balansını indi artır.</p>
+        <span class="more">Balansın artırılması <img src="/ady-design/images/arrow-right.svg" alt="" /></span>
+      </div>
+    </a>
+    <a href="/<%= locale %>/dasima-qaydalari/el-yuklerinin-dasinmasi" class="usefully__item">
+      <span class="usefully__img"><img src="/ady-design/images/canta-sayt-illustrasiya.png" srcset="/ady-design/images/canta-sayt-illustrasiya.png 1x, /ady-design/images/canta-sayt-illustrasiya_1.png 2x" alt="Əl yüklərinin daşınması" /></span>
+      <div class="usefully__desc">
+        <h5>Əl yüklərinin daşınması</h5>
+        <p>Qatarda əl yüklərinin daşınması qaydaları.</p>
+        <span class="more">Ətraflı oxu <img src="/ady-design/images/arrow-right.svg" alt="" /></span>
+      </div>
+    </a>
+    <a href="/<%= locale %>/dasima-qaydalari/heyvanlarin-dasinmasi" class="usefully__item">
+      <span class="usefully__img"><img src="/ady-design/images/group-5711-1.png" srcset="/ady-design/images/group-5711-1.png 1x, /ady-design/images/group-5711-1_1.png 2x" alt="Heyvanların daşınması" /></span>
+      <div class="usefully__desc">
+        <h5>Heyvanların daşınması</h5>
+        <p>Sərnişin qatarında heyvanların daşınmasına dair qaydalar.</p>
+        <span class="more">Ətraflı oxu <img src="/ady-design/images/arrow-right.svg" alt="" /></span>
+      </div>
+    </a>
+  </div>
+  <div class="ady-rail-nav">
+    <button type="button" class="ady-rail-arrow" id="railPrev" aria-label="<%= t('common.prev') %>">‹</button>
+    <button type="button" class="ady-rail-arrow" id="railNext" aria-label="<%= t('common.next') %>">›</button>
+  </div>
+</section>
+
+<!-- ==================== Abşeron dairəvi xətti (tablo) ==================== -->
+<section class="tablo">
+  <div class="container-fluid">
+    <div class="tablo__top ady-section-head">
       <div>
-        <div class="eyebrow"><%= t('nav.timetable') %></div>
+        <div class="ady-eyebrow"><%= t('nav.timetable') %></div>
         <h2><%= t('home.absheronTitle') %></h2>
         <p><%= serverDate %> · <%= t('home.absheronSub') %></p>
       </div>
-      <a href="/<%= locale %>/hereket-cedveli" class="btn btn--outline"><%= t('home.fullTimetable') %></a>
+      <a href="/<%= locale %>/hereket-cedveli" class="btn btn-blue-transparent"><%= t('home.fullTimetable') %></a>
     </div>
 
-    <div class="table-wrap">
-      <table class="data">
-        <thead>
-          <tr>
-            <th><%= t('table.train') %></th>
-            <th><%= t('stn.BAK') %></th><th><%= t('stn.BIL') %></th><th><%= t('stn.XRD') %></th><th><%= t('stn.SUM') %></th>
-            <th><%= t('table.price') %></th><th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% timetable.absheron.slice(0, 12).forEach(function(trip){ %>
+    <div class="tablo__table">
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
             <tr>
-              <td class="num"><strong><%= trip.number %></strong></td>
-              <% ['BAK','BIL','XRD','SUM'].forEach(function(code){ %>
-                <% var st = trip.stopMap[code]; %>
-                <td class="num"><%= st ? (st.depart || st.arrive || '—') : '—' %></td>
-              <% }) %>
-              <td class="num"><%= (trip.minPrice || 0).toFixed(2) %> ₼</td>
-              <td><a href="/<%= locale %>/reysler?from=BAK&to=SUM&date=<%= serverDate %>&passengers=1" class="btn btn--sm btn--primary"><%= t('home.buyTicket') %></a></td>
+              <th><%= t('table.train') %></th>
+              <th><%= t('stn.BAK') %></th><th><%= t('stn.BIL') %></th><th><%= t('stn.XRD') %></th><th><%= t('stn.SUM') %></th>
+              <th><%= t('table.price') %></th><th></th>
             </tr>
-          <% }) %>
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            <% timetable.absheron.slice(0, 12).forEach(function (trip) { %>
+              <tr>
+                <td class="num"><strong><%= trip.number %></strong></td>
+                <% ['BAK', 'BIL', 'XRD', 'SUM'].forEach(function (code) { %>
+                  <% var st = trip.stopMap[code]; %>
+                  <td class="num"><%= st ? (st.depart || st.arrive || '—') : '—' %></td>
+                <% }) %>
+                <td class="num"><%= (trip.minPrice || 0).toFixed(2) %> ₼</td>
+                <td><a href="/<%= locale %>/reysler?from=BAK&to=SUM&date=<%= serverDate %>&passengers=1" class="btn btn-blue btn--small"><%= t('home.buyTicket') %></a></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </section>
 
 <!-- ==================== Ölkədaxili və beynəlxalq reyslər ==================== -->
 <section class="section">
-  <div class="container">
-    <div class="timetable-tabs">
-      <button class="tab is-active" data-tab="domestic" data-tab-group="homeLines"><%= t('home.domestic') %></button>
-      <button class="tab" data-tab="georgia" data-tab-group="homeLines"><%= t('home.georgia') %></button>
-      <button class="tab" data-tab="international" data-tab-group="homeLines"><%= t('home.international') %></button>
+  <div class="container-fluid">
+    <div class="ady-tabs">
+      <button class="ady-tab is-active" data-tab="domestic" data-tab-group="homeLines"><%= t('home.domestic') %></button>
+      <button class="ady-tab" data-tab="georgia" data-tab-group="homeLines"><%= t('home.georgia') %></button>
+      <button class="ady-tab" data-tab="international" data-tab-group="homeLines"><%= t('home.international') %></button>
     </div>
 
-    <% ['domestic','georgia','international'].forEach(function(lineKey){ %>
-      <div data-panel="<%= lineKey %>" data-panel-group="homeLines" class="<%= lineKey === 'domestic' ? 'is-active' : '' %>">
+    <% ['domestic', 'georgia', 'international'].forEach(function (lineKey) { %>
+      <div data-panel="<%= lineKey %>" data-panel-group="homeLines" class="ady-panel <%= lineKey === 'domestic' ? 'is-active' : '' %>">
         <div class="table-wrap">
           <table class="data">
             <thead><tr><th><%= t('table.train') %></th><th><%= t('table.route') %></th><th><%= t('table.depart') %></th><th><%= t('table.arrive') %></th><th><%= t('table.price') %></th><th></th></tr></thead>
             <tbody>
-              <% timetable[lineKey].forEach(function(trip){ %>
+              <% timetable[lineKey].forEach(function (trip) { %>
                 <tr>
                   <td class="num"><strong><%= trip.number %></strong></td>
                   <td><%= trip.title %></td>
                   <td class="num"><%= trip.depart %></td>
                   <td class="num"><%= trip.arrive %></td>
                   <td class="num"><%= trip.minPrice.toFixed(2) %> ₼</td>
-                  <td><a href="/<%= locale %>/reysler?from=<%= trip.from %>&to=<%= trip.to %>&date=<%= serverDate %>&passengers=1" class="btn btn--sm btn--primary"><%= t('home.buyTicket') %></a></td>
+                  <td><a href="/<%= locale %>/reysler?from=<%= trip.from %>&to=<%= trip.to %>&date=<%= serverDate %>&passengers=1" class="btn btn-blue btn--small"><%= t('home.buyTicket') %></a></td>
                 </tr>
               <% }) %>
             </tbody>
@@ -150,21 +138,49 @@
   </div>
 </section>
 
+<!-- ==================== Populyar istiqamətlər ==================== -->
+<section class="section">
+  <div class="container-fluid">
+    <div class="ady-section-head">
+      <div>
+        <div class="ady-eyebrow"><%= t('home.travel') %></div>
+        <h2><%= t('home.popular') %></h2>
+        <p><%= t('home.discover') %></p>
+      </div>
+      <a href="/<%= locale %>/populyar-istiqametler" class="btn btn-blue-transparent"><%= t('home.seeAll') %></a>
+    </div>
+    <div class="grid grid--4">
+      <% destinations.forEach(function (d) { %>
+        <a href="/<%= locale %>/populyar-istiqametler/<%= d.slug %>" class="card ady-dest">
+          <div class="ady-dest__img"><img src="<%= d.image %>" alt="<%= d.title %>" loading="lazy" /></div>
+          <div class="card__body">
+            <h3><%= d.title %></h3>
+            <div class="ady-dest__meta">
+              <span><strong><%= d.priceFrom.toFixed(2) %></strong> ₼</span>
+              <span><%= d.durationText %></span>
+            </div>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
 <!-- ==================== Xəbərlər ==================== -->
-<section class="section section--tight">
-  <div class="container">
-    <div class="section__head">
-      <div><div class="eyebrow"><%= t('nav.news') %></div><h2><%= t('home.news') %></h2></div>
-      <a href="/<%= locale %>/xeberler" class="btn btn--outline"><%= t('home.allNews') %></a>
+<section class="section">
+  <div class="container-fluid">
+    <div class="ady-section-head">
+      <div><div class="ady-eyebrow"><%= t('nav.news') %></div><h2><%= t('home.news') %></h2></div>
+      <a href="/<%= locale %>/xeberler" class="btn btn-blue-transparent"><%= t('home.allNews') %></a>
     </div>
     <div class="grid grid--3">
-      <% news.forEach(function(n){ %>
-        <a href="/<%= locale %>/xeberler/<%= n.slug %>" class="feature">
-          <div class="feature__body">
-            <div class="news-card__meta"><span><%= new Date(n.publishedAt).toLocaleDateString(dateLocale) %></span></div>
+      <% news.forEach(function (n) { %>
+        <a href="/<%= locale %>/xeberler/<%= n.slug %>" class="card ady-news">
+          <div class="card__body">
+            <div class="ady-news__meta"><%= new Date(n.publishedAt).toLocaleDateString(dateLocale) %></div>
             <h3><%= n.title %></h3>
             <p><%= n.excerpt %></p>
-            <span class="feature__link"><%= t('home.readMore') %></span>
+            <span class="ady-more"><%= t('home.readMore') %></span>
           </div>
         </a>
       <% }) %>
@@ -173,14 +189,14 @@
 </section>
 
 <!-- ==================== FAQ ==================== -->
-<section class="section section--tight" style="background:#fff;border-top:1px solid var(--line)">
-  <div class="container">
-    <div class="section__head">
-      <div><div class="eyebrow"><%= t('home.questionEyebrow') %></div><h2><%= t('home.faq') %></h2></div>
-      <a href="/<%= locale %>/sualim-var/suallar" class="btn btn--outline"><%= t('home.allFaq') %></a>
+<section class="section">
+  <div class="container-fluid">
+    <div class="ady-section-head">
+      <div><div class="ady-eyebrow"><%= t('home.questionEyebrow') %></div><h2><%= t('home.faq') %></h2></div>
+      <a href="/<%= locale %>/sualim-var/suallar" class="btn btn-blue-transparent"><%= t('home.allFaq') %></a>
     </div>
     <div class="grid grid--2">
-      <% faqs.forEach(function(f){ %>
+      <% faqs.forEach(function (f) { %>
         <div class="faq">
           <div class="faq__q"><%= f.question %></div>
           <div class="faq__a"><%= f.answer %></div>
@@ -191,57 +207,47 @@
 </section>
 
 <!-- ==================== Abunə ==================== -->
-<section class="section section--tight">
-  <div class="container">
-    <div class="card" style="background:linear-gradient(135deg,#00539b,#003c73);border:0">
-      <div class="card__body" style="display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap">
-        <div>
-          <h2 style="color:#fff;margin-bottom:6px"><%= t('footer.subscribe') %></h2>
-          <p style="color:#cfe0f0;margin:0"><%= t('home.subscribeText') %></p>
-        </div>
-        <form class="subscribe" style="min-width:320px" id="subscribeForm">
-          <input type="email" name="email" placeholder="<%= t('footer.email') %>" required />
-          <button type="submit" class="btn btn--gold"><%= t('footer.subscribeBtn') %></button>
-        </form>
+<section class="section">
+  <div class="container-fluid">
+    <div class="ady-subscribe">
+      <div>
+        <h2><%= t('footer.subscribe') %></h2>
+        <p><%= t('home.subscribeText') %></p>
       </div>
+      <form class="subscribe ady-subscribe__form" id="subscribeForm">
+        <input type="email" name="email" placeholder="<%= t('footer.email') %>" required />
+        <button type="submit" class="btn btn-blue"><%= t('footer.subscribeBtn') %></button>
+      </form>
     </div>
   </div>
 </section>
 
 <script>
-  window.ADY_STATIONS = <%- JSON.stringify(stations.map(function(s){ return { code: s.code, name: s.name, nameEn: s.nameEn, region: s.region }; })) %>;
+  window.ADY_STATIONS = <%- JSON.stringify(stations.map(function (s) { return { code: s.code, name: s.name, nameEn: s.nameEn, region: s.region }; })) %>;
 </script>
 <script>
-  /* ====== Populyar istiqamətlər karuseli: avto-sürüşdürmə + ox düymələri ====== */
+  /* Populyar xidmət kartları karuseli: ox düymələri + avto-sürüşdürmə */
   (function () {
-    var rail = document.getElementById('destRail');
+    var rail = document.getElementById('usefullyRail');
     if (!rail) return;
     var nextBtn = document.getElementById('railNext');
     var prevBtn = document.getElementById('railPrev');
     var timer = null;
-
     function step() {
-      var card = rail.querySelector('.dest-card');
-      return card ? card.getBoundingClientRect().width + 16 : 300;
+      var card = rail.querySelector('.usefully__item');
+      return card ? card.getBoundingClientRect().width + 24 : 320;
     }
     function maxLeft() { return rail.scrollWidth - rail.clientWidth; }
-
     function go(dir) {
       var target = rail.scrollLeft + dir * step();
-      if (dir > 0 && target >= maxLeft() - 4) {
-        rail.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        rail.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
-      }
+      if (dir > 0 && target >= maxLeft() - 4) rail.scrollTo({ left: 0, behavior: 'smooth' });
+      else rail.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
     }
-
     if (nextBtn) nextBtn.addEventListener('click', function () { go(1); restart(); });
     if (prevBtn) prevBtn.addEventListener('click', function () { go(-1); restart(); });
-
     function start() { timer = setInterval(function () { go(1); }, 4000); }
     function stop() { if (timer) { clearInterval(timer); timer = null; } }
     function restart() { stop(); start(); }
-
     rail.addEventListener('mouseenter', stop);
     rail.addEventListener('mouseleave', start);
     rail.addEventListener('touchstart', stop, { passive: true });

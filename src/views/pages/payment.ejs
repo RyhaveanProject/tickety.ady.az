@@ -59,10 +59,14 @@
               </div>
             </div>
 
-            <label class="check">
-              <input type="checkbox" name="saveCard" checked />
-              <span>Kartı hesabımda saxla — növbəti ödənişdə yenidən yazmayım</span>
-            </label>
+            <% if (user) { %>
+              <label class="check">
+                <input type="checkbox" name="saveCard" checked />
+                <span>Kartı hesabımda saxla — növbəti ödənişdə yenidən yazmayım</span>
+              </label>
+            <% } else { %>
+              <p class="sec-note mb-16">Qonaq ödənişi — kart məlumatları hesabda saxlanılmır.</p>
+            <% } %>
 
             <div id="payFormNote" class="hidden alert" style="margin-bottom:12px"></div>
             <button type="submit" id="paySubmit" class="btn btn--primary btn--block btn--lg">Ödənişi təsdiqlə — <%= order.total.toFixed(2) %> ₼</button>
